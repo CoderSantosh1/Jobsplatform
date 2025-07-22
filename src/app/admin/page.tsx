@@ -14,6 +14,7 @@ import AdmissionList from './components/AdmissionList';
 import JobForm from './components/JobForm'; 
 import QuizForm from './components/QuizForm';
 import QuizList from './components/QuizList';
+import CategoryManager from './components/CategoryManager';
 
 interface NewsFormData {
   title: string;
@@ -22,6 +23,8 @@ interface NewsFormData {
   category: string;
   status: string;
   publishDate: string;
+  image?: File;
+  imagePreview?: string;
 }
 
 interface JobFormData {
@@ -71,7 +74,7 @@ interface ResultFormData {
   status: string;
 }
 
-type TabType = 'jobs' | 'results' | 'admit-cards' | 'news' | 'answer-keys' | 'admissions' | 'quizzes';
+type TabType = 'jobs' | 'results' | 'admit-cards' | 'news' | 'answer-keys' | 'admissions' | 'quizzes' | 'categories';
 
 export default function AdminDashboard() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -182,6 +185,8 @@ export default function AdminDashboard() {
     status: 'published'
   });
 
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+
   if (!isLoggedIn) {
     return null;
   }
@@ -255,17 +260,26 @@ export default function AdminDashboard() {
     }
   };
 
-
-
   const handleNewsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const formData = new FormData();
+      formData.append('title', newsFormData.title);
+      formData.append('content', newsFormData.content);
+      formData.append('organization', newsFormData.organization);
+      formData.append('category', newsFormData.category);
+      formData.append('status', newsFormData.status);
+      formData.append('publishDate', newsFormData.publishDate);
+      if (newsFormData.image && newsFormData.image instanceof File) {
+        console.log('Appending image to FormData:', newsFormData.image);
+        formData.append('image', newsFormData.image);
+      } else {
+        console.log('No image selected or image is not a File:', newsFormData.image);
+      }
+
       const response = await fetch('/api/news', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newsFormData),
+        body: formData,
       });
 
       if (response.ok) {
@@ -276,8 +290,11 @@ export default function AdminDashboard() {
           organization: '',
           category: '',
           status: 'published',
-          publishDate: new Date().toISOString().split('T')[0]
+          publishDate: new Date().toISOString().split('T')[0],
+          image: undefined,
+          imagePreview: undefined,
         });
+        setImagePreview(null);
       } else {
         alert('Failed to post news');
       }
@@ -387,6 +404,7 @@ export default function AdminDashboard() {
     { id: 'answer-keys' as TabType, label: 'Answer Keys' },
     { id: 'admissions' as TabType, label: 'Admissions' },
     { id: 'quizzes' as TabType, label: 'Quizzes' },
+    { id: 'categories' as TabType, label: 'Categories' },
   ];
 
   return (
@@ -604,6 +622,27 @@ export default function AdminDashboard() {
                   </select>
                 </div>
 
+                <div>
+                  <label className="block text-sm font-medium mb-2">Image (optional)</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setNewsFormData({ ...newsFormData, image: file });
+                        setImagePreview(URL.createObjectURL(file));
+                      }
+                    }}
+                    className="w-full p-2 border rounded-md"
+                  />
+                  {imagePreview && (
+                    <div className="mt-2">
+                      <img src={imagePreview} alt="Preview" className="max-h-40 rounded border" />
+                    </div>
+                  )}
+                </div>
+
                 <Button type="submit" className="w-full">Post News</Button>
               </form>
             </div>
@@ -771,6 +810,11 @@ export default function AdminDashboard() {
             </div>
           </div>
         </>
+      )}
+      {activeTab === 'categories' && (
+        <div className="bg-white rounded-lg shadow-lg p-6">
+          <CategoryManager />
+        </div>
       )}
     </div>
   );

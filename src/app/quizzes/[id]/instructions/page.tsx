@@ -1,4 +1,6 @@
 "use client"
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -21,6 +23,7 @@ import {
   FileText,
 } from "lucide-react"
 import { instructions } from "./lang"
+import AuthModal from '@/components/AuthModal'
 
 const statusLegend = {
   en: [
@@ -43,6 +46,8 @@ export default function QuizInstructions({ params }: { params: { id: string } })
   const router = useRouter()
   const [lang, setLang] = useState<'en' | 'hi' | null>(null)
   const [isMobile, setIsMobile] = useState<boolean | null>(null)
+  const [showRegister, setShowRegister] = useState(false);
+  const [user, setUser] = useState<{ name: string; mobile: string } | null>(null);
 
   useEffect(() => {
     // Set language from localStorage or default to 'en'
@@ -56,6 +61,28 @@ export default function QuizInstructions({ params }: { params: { id: string } })
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, [])
+
+  // Registration check
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const userData = localStorage.getItem('user');
+      if (!userData) {
+        setShowRegister(true);
+      } else {
+        try {
+          setUser(JSON.parse(userData));
+        } catch {
+          setShowRegister(true);
+        }
+      }
+    }
+  }, []);
+
+  const handleRegister = (user: { name: string; mobile: string }) => {
+    localStorage.setItem('user', JSON.stringify(user));
+    setUser(user);
+    setShowRegister(false);
+  };
 
   // Only generate particles on client
   const [particles, setParticles] = useState<{left: number, top: number, duration: number, delay: number}[]>([]);
@@ -88,7 +115,13 @@ export default function QuizInstructions({ params }: { params: { id: string } })
     setLang((prev) => (prev === 'en' ? 'hi' : 'en'))
   }
 
+  if (showRegister) {
+    return <AuthModal onSuccess={handleRegister} />;
+  }
+
   return (
+    <>
+    <Header />
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-black p-2">
       {/* Floating particles background - Reduced for mobile */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
@@ -330,5 +363,7 @@ export default function QuizInstructions({ params }: { params: { id: string } })
         </div>
       </div>
     </div>
+    <Footer />
+    </>
   )
 }
