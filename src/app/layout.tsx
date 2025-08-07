@@ -25,7 +25,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <meta name="google-site-verification" content="KpO7IT-JrAfXS5vKDai0XcwaVUS-JzRDwsl1kBtfoyI" />
-        <meta name="google-adsense-account" content="ca-pub-7649078598124252" />
+        <meta name="google-adsense-account" content="ca-pub-6447497690677792" />
         <link rel="icon" type="image/png" href="/logo-color-new.jpg" />
         <meta property="og:title" content="Sarkariresultsnow - Latest Govt Job Results, Admit Cards & News" />
         <meta property="og:description" content="Get the latest updates on government job results, admit cards, sarkari news, and more. Stay informed with Sarkariresultsnow for all your govt job needs." />
