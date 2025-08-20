@@ -32,16 +32,7 @@ export default function RootLayout({
         <meta property="og:image" content="https://www.sarkariresultsnow.com/og-image.png" />
         <meta property="og:url" content="https://www.sarkariresultsnow.com/" />
         <meta name="description" content="SarkariResultsNow provides all Sarkari Result, Admit Card, Government Jobs and Free Test Series , Latest Notifications." />
-       <script type="text/javascript">
-	atOptions = {
-		'key' : 'f4d5663d12ff9c80d71b549f15e7634c',
-		'format' : 'iframe',
-		'height' : 300,
-		'width' : 160,
-		'params' : {}
-	};
-</script>
-<script type="text/javascript" src="//www.highperformanceformat.com/f4d5663d12ff9c80d71b549f15e7634c/invoke.js"></script>
+      
       </head>
       <body className={`${inter.className} antialiased`} suppressHydrationWarning>
         <ThemeProvider
