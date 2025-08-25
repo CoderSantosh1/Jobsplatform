@@ -190,8 +190,8 @@ export default function Home() {
   return (
     <>
       <Header />
-      <div className="bg-[#f5f7f2]">
-        <main className="flex flex-col items-center justify-center bg-[#f5f7f2] w-full max-w-7xl mx-auto px-2 sm:px-4">
+      <div className="bg-[#fFfFff] min-h-screen">
+        <main className="flex flex-col items-center justify-center bg-[#fFfFf] w-full max-w-7xl mx-auto px-2 sm:px-4">
           <div className="w-full space-y-6 py-4">
             <div className="w-full  overflow-hidden">
               <div className="inline-block whitespace-nowrap animate-marquee text-sm sm:text-base">
@@ -486,8 +486,8 @@ export default function Home() {
             </div>
 
             {/* Quiz Section */}
-            <div className="mt-8 px-4 sm:px-6 w-full max-w-screen overflow-x-hidden">
-              <div className="text-center">
+            <div className="mt-8 px-4 sm:px-6 w-full max-w-screen bg-[#ffff] overflow-x-hidden">
+              <div className="text-center bg-[#ffff] ">
                 <h2 className="text-blue-500 font-bold text-base sm:text-lg md:text-xl animate-marquee">
                   <a
                     href="/quizzes"
@@ -509,8 +509,8 @@ export default function Home() {
                   </p>
                 </div>
               ) : (
-                <div className="w-full mt-6">
-                  <div className="bg-white border border-orange-500 rounded-md overflow-hidden shadow-sm w-full">
+                <div className="w-full mt-6 bg-[#ffff]">
+                  <div className="bg-[#ffff]  border border-orange-500 rounded-md overflow-hidden shadow-sm w-full">
                     <div className="bg-red-600 text-[#f5f7f2] font-bold text-sm sm:text-base py-2 px-4 text-center w-full">
                       Free Test Series for All Government Exams
                     </div>
@@ -527,7 +527,7 @@ export default function Home() {
                             .map((quiz) => (
                               <li
                                 key={quiz._id}
-                                className="py-3 px-2 sm:px-4 bg-[#f5f7f2] text-center break-words w-full"
+                                className="py-3 px-2 sm:px-4 bg-[#ffff] text-center break-words w-full"
                               >
                                 <a
                                   href="/quizzes"
@@ -558,7 +558,7 @@ export default function Home() {
       </div>
 
       {/* Announcement Bars */}
-      <div className="bg-[#f5f7f2] mb-4">
+      <div className="bg-[#FFF] mb-4">
         <div className="flex flex-col items-center  justify-center bg-[#f5f7f2]  w-5/14 max-w-7xl mx-auto px-4 ">
           <AnnouncementBar title="Sarkari Results 5+2 Latest Job">
             Most Recent Sarkari Work, Sarkari Test Result, Most Recent On The
