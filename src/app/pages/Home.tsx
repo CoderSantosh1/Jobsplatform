@@ -285,7 +285,7 @@ export default function Home() {
                   <tbody>
                     {Array.from({
                       length: Math.min(
-                        10,
+                        5,
                         Math.max(results.length, jobs.length, news.length)
                       ),
                     }).map((_, index) => (
@@ -331,12 +331,12 @@ export default function Home() {
                         </td>
                       </tr>
                     ))}
-                    {(results.length > 10 ||
-                      jobs.length > 10 ||
-                      news.length > 10) && (
+                    {(results.length > 5 ||
+                      jobs.length > 5 ||
+                      news.length > 5) && (
                       <tr className=" hover:bg-[#FFF8CC]">
                         <td className=" text-center ">
-                          {results.length > 10 && (
+                          {results.length > 5 && (
                             <a
                               href="/results"
                               className="text-blue-600 font-semibold hover:underline"
@@ -346,7 +346,7 @@ export default function Home() {
                           )}
                         </td>
                         <td className="p-2 border-x text-center align-top break-words whitespace-pre-wrap">
-                          {jobs.length > 10 && (
+                          {jobs.length > 5 && (
                             <a
                               href="/jobs"
                               className="text-blue-600 font-semibold hover:underline"
@@ -356,7 +356,7 @@ export default function Home() {
                           )}
                         </td>
                         <td className="text-center ">
-                          {news.length > 10 && (
+                          {news.length > 5 && (
                             <a
                               href="/news"
                               className="text-blue-600 font-semibold hover:underline"
@@ -392,7 +392,7 @@ export default function Home() {
                   <tbody>
                     {Array.from({
                       length: Math.min(
-                        10,
+                        5,
                         Math.max(
                           admitCards.length,
                           answerKeys.length,
@@ -444,12 +444,12 @@ export default function Home() {
                         </td>
                       </tr>
                     ))}
-                    {(admitCards.length > 10 ||
-                      answerKeys.length > 10 ||
-                      admissions.length > 10) && (
+                    {(admitCards.length > 5 ||
+                      answerKeys.length > 5 ||
+                      admissions.length > 5) && (
                       <tr className="hover:bg-[#FFF8CC]">
                         <td className="text-center ">
-                          {admitCards.length > 10 && (
+                          {admitCards.length > 5 && (
                             <a
                               href="/admit-cards"
                               className="text-blue-600 font-semibold hover:underline"
@@ -459,7 +459,7 @@ export default function Home() {
                           )}
                         </td>
                         <td className="p-2 border-x text-center align-top break-words whitespace-pre-wrap">
-                          {answerKeys.length > 10 && (
+                          {answerKeys.length > 5 && (
                             <a
                               href="/answer-keys"
                               className="text-blue-600 font-semibold hover:underline"
@@ -469,7 +469,7 @@ export default function Home() {
                           )}
                         </td>
                         <td className="p-2 text-center align-top break-words whitespace-pre-wrap">
-                          {admissions.length > 10 && (
+                          {admissions.length > 5 && (
                             <a
                               href="/admissions"
                               className="text-blue-600 font-semibold hover:underline"
@@ -523,7 +523,7 @@ export default function Home() {
                           className="divide-y divide-orange-300"
                         >
                           {quizzes
-                            .slice(colIndex * 10, colIndex * 10 + 10)
+                            .slice(colIndex * 5, colIndex * 5 + 5)
                             .map((quiz) => (
                               <li
                                 key={quiz._id}
@@ -559,15 +559,15 @@ export default function Home() {
 
       {/* Announcement Bars */}
       <div className="bg-[#f5f7f2] mb-4">
-        <div className="flex flex-col items-center  justify-center bg-[#f5f7f2]  w-10/14 max-w-7xl mx-auto px-4 ">
-          <AnnouncementBar title="Sarkari Results 10+2 Latest Job">
+        <div className="flex flex-col items-center  justify-center bg-[#f5f7f2]  w-5/14 max-w-7xl mx-auto px-4 ">
+          <AnnouncementBar title="Sarkari Results 5+2 Latest Job">
             Most Recent Sarkari Work, Sarkari Test Result, Most Recent On The
             Web And Disconnected Structure, Concede Card, Prospectus,
             Affirmation, Ansawer Key, Grant, Notice Etc.If You Need To Get
             Refreshes Connected With Sarkari Occupations On Sarkari
             Result.Com.Cm Like Concede Warning Like Govt. Test, Sarkari Result,
             Most Recent Bord Result, Bihar Result Tenth And So On You Could
-            Sarkari Result 10+2 Most Recent Occupation At Any Point Website Page
+            Sarkari Result 5+2 Most Recent Occupation At Any Point Website Page
             Consistently.
           </AnnouncementBar>
           <AnnouncementBar title="Sarkari Results">
@@ -582,7 +582,7 @@ export default function Home() {
             Here Like: OFSS Bihar, Bihar Board Tenth Outcome, Sarkari Result
             Bihar Board 2025, Bihar Board Matric 2025, Bihar Police 2025, Bihar
             Board Tenth, Bihar Ssc, Bihar Je, Bihar Common Court, Sarkari Result
-            Bihar Board Result, Bihar Work, Bihar Result, Bihar 10+2 Most Recent
+            Bihar Board Result, Bihar Work, Bihar Result, Bihar 5+2 Most Recent
             Work, Bihar Sarkari Result , Bihar Sarkari Test, Bihar Govt Work,
             Concede Card, Bihar Sarkari Result, Eleventh Affirmation And So
             Forth.
