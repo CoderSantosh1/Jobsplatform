@@ -117,3 +117,83 @@
     }
   }
 }
+@keyframes float {
+  0% {
+    transform: translateY(0) translateX(0);
+    opacity: 0.6;
+  }
+  25% {
+    transform: translateY(-20px) translateX(10px);
+    opacity: 0.9;
+  }
+  50% {
+    transform: translateY(0) translateX(0);
+    opacity: 0.6;
+  }
+  75% {
+    transform: translateY(15px) translateX(-10px);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(0) translateX(0);
+    opacity: 0.6;
+  }
+}
+
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 0.2;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+/* new fn addded */
+
+@layer utilities {
+  @keyframes float {
+    0% {
+      transform: translateY(0) translateX(0);
+      opacity: 0.6;
+    }
+    25% {
+      transform: translateY(-20px) translateX(10px);
+      opacity: 0.9;
+    }
+    50% {
+      transform: translateY(0) translateX(0);
+      opacity: 0.6;
+    }
+    75% {
+      transform: translateY(15px) translateX(-10px);
+      opacity: 0.8;
+    }
+    100% {
+      transform: translateY(0) translateX(0);
+      opacity: 0.6;
+    }
+  }
+
+  @keyframes twinkle {
+    0%,
+    100% {
+      opacity: 0.2;
+      transform: scale(0.8);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.2);
+    }
+  }
+
+  /* Use one class to run both animations together */
+  .animate-sparkle {
+    animation: float var(--float-dur, 5s) ease-in-out infinite
+        var(--float-delay, 0s),
+      twinkle var(--twinkle-dur, 3s) ease-in-out infinite;
+  }
+}
