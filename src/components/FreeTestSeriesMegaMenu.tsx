@@ -99,9 +99,7 @@ const FreeTestSeriesMegaMenu: React.FC = () => {
       {/* Desktop trigger */}
       <Link
         href="/quizzes"
-
-        className="text-[#000000] hover:text-blue-800 font-[600] px-4  hidden md:inline"
-
+        className="text-[#000000] hover:text-blue-800 font-medium px-4  hidden md:inline"
       >
         Free Test Series
       </Link>
@@ -191,10 +189,7 @@ const FreeTestSeriesMegaMenu: React.FC = () => {
                     }
                     className="w-10 h-10 object-contain rounded shadow bg-white"
                   />
-
                   <span className="text-[24px] font-bold text-gray-800">
-  
-
                     {typeof selectedCategory.name === "string"
                       ? selectedCategory.name
                       : "[Invalid name]"}
@@ -210,11 +205,7 @@ const FreeTestSeriesMegaMenu: React.FC = () => {
                             ? selectedCategory.name
                             : ""
                         )}&subcategory=${encodeURIComponent(sub.name)}`}
-
                         className="flex items-center gap-4 bg-white hover:bg-blue-50 border border-red-500 rounded-lg p-1 transition shadow group min-h-[70px] focus:outline-none focus:ring-2 focus:ring-red-300"
-
-  
-
                         tabIndex={0}
                       >
                         <img
@@ -222,9 +213,7 @@ const FreeTestSeriesMegaMenu: React.FC = () => {
                           alt={sub.name}
                           className="w-9 h-9 object-contain rounded bg-white"
                         />
-
                         <span className="flex-1 text-[12px] font-[700] text-gray-700 truncate">
-
                           {sub.name}
                         </span>
                         <span className="ml-2">{RIGHT_ARROW}</span>
@@ -385,10 +374,7 @@ const FreeTestSeriesMegaMenu: React.FC = () => {
                         href={`/quizzes?category=${encodeURIComponent(
                           typeof cat.name === "string" ? cat.name : ""
                         )}&subcategory=${encodeURIComponent(sub.name)}`}
-
                         className="flex items-center bg-white hover:bg-blue-50 border border-gray-200 rounded-xl shadow p-1 gap-3 min-h-[48px] focus:outline-none focus:ring-2 focus:ring-blue-300 transition"
-=======
-                      
                         tabIndex={0}
                       >
                         <img
@@ -396,11 +382,7 @@ const FreeTestSeriesMegaMenu: React.FC = () => {
                           alt={sub.name}
                           className="w-7 h-7 object-contain rounded bg-white"
                         />
-
                         <span className="flex-1 text-[10px] font-[700] text-gray-700 truncate">
-
-                     
-
                           {sub.name}
                         </span>
                         <span className="ml-2">{RIGHT_ARROW}</span>
