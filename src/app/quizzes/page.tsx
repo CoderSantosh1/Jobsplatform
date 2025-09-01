@@ -1,53 +1,64 @@
-"use client"
-import Footer from "@/components/Footer"
-import Header from "@/components/Header"
-import { useEffect, useState, Suspense } from "react"
-import Link from "next/link"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { toast } from "sonner"
-import { Clock, FileText, Trophy, ArrowRight, Sparkles, UserIcon, LogOut, Globe, CheckCircle2 } from "lucide-react"
-import AuthModal from "@/components/AuthModal"
-import { useRouter } from "next/navigation"
+"use client";
+import Footer from "@/components/Footer";
+import Header from "@/components/Header";
+import { useEffect, useState, Suspense } from "react";
+import Link from "next/link";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+
+import {
+  Clock,
+  FileText,
+  Trophy,
+  ArrowRight,
+  Sparkles,
+  UserIcon,
+  LogOut,
+  Globe,
+  CheckCircle2,
+} from "lucide-react";
+import AuthModal from "@/components/AuthModal";
+import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
-import { Select } from "@/components/ui/select"
+import { Select } from "@/components/ui/select";
 
 interface Question {
-  _id: string
-  text: string
-  options: string[]
-  correctAnswer: number
+  _id: string;
+  text: string;
+  options: string[];
+  correctAnswer: number;
 }
 
 interface Quiz {
-  _id: string
-  title: string
-  description: string
-  timeLimit: number
-  totalMarks: number
+  _id: string;
+  title: string;
+  description: string;
+  timeLimit: number;
+  totalMarks: number;
   questions: Array<{
-    _id: string
-    text: string
-    options: string[]
-    correctAnswer: number
-  }>
+    _id: string;
+    text: string;
+    options: string[];
+    correctAnswer: number;
+  }>;
   attempts?: Array<{
-    _id: string
-    userId: string
-    score: number
-    completedAt: string
-  }>
-  createdAt?: string
-  updatedAt?: string
+    _id: string;
+    userId: string;
+    score: number;
+    completedAt: string;
+  }>;
+  createdAt?: string;
+  updatedAt?: string;
   category: string;
   subcategory: string;
 }
 
 interface Language {
-  code: string
-  name: string
-  nativeName: string
-  flag: string
+  code: string;
+  name: string;
+  nativeName: string;
+  flag: string;
 }
 
 const supportedLanguages: Language[] = [
@@ -61,7 +72,7 @@ const supportedLanguages: Language[] = [
   { code: "kn", name: "Kannada", nativeName: "ಕನ್ನಡ", flag: "🇮🇳" },
   { code: "ml", name: "Malayalam", nativeName: "മലയാളം", flag: "🇮🇳" },
   { code: "pa", name: "Punjabi", nativeName: "ਪੰਜਾਬੀ", flag: "🇮🇳" },
-]
+];
 
 const translations = {
   en: {
@@ -77,7 +88,7 @@ const translations = {
     selectLanguage: "Select Language",
     languageChanged: "Language changed successfully!",
     noQuizzes: "No Quizzes Available",
-    noQuizzesDesc: "There are no quizzes available at the moment.",
+    noQuizzesDesc: "Available quizzes Soon....",
     loading: "Loading...",
     TestInstructions: "Test Instructions",
   },
@@ -91,123 +102,139 @@ const translations = {
     minutes: "मिनट",
     testStart: "परीक्षा शुरू करें",
     language: "भाषा",
-    TestInstructions:"परीक्षण निर्देश",
+    TestInstructions: "परीक्षण निर्देश",
     selectLanguage: "भाषा चुनें",
     languageChanged: "भाषा सफलतापूर्वक बदल दी गई!",
     noQuizzes: "कोई प्रश्नोत्तरी उपलब्ध नहीं",
     noQuizzesDesc: "इस समय कोई प्रश्नोत्तरी उपलब्ध नहीं है COMMING SOON....।",
     loading: "लोड हो रहा है...",
   },
- 
-}
+};
 
 function QuizListContent() {
-  const [quizzes, setQuizzes] = useState<Quiz[]>([])
-  const [loading, setLoading] = useState(true)
-  const [loggedInUser, setLoggedInUser] = useState<{ _id: string; name: string; mobile: string } | null>(null)
-  const [currentLanguage, setCurrentLanguage] = useState<string>("en")
-  const [languageLoading, setLanguageLoading] = useState(false)
-  const router = useRouter()
+  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loggedInUser, setLoggedInUser] = useState<{
+    _id: string;
+    name: string;
+    mobile: string;
+  } | null>(null);
+  const [currentLanguage, setCurrentLanguage] = useState<string>("en");
+  const [languageLoading, setLanguageLoading] = useState(false);
+  const router = useRouter();
   const searchParams = useSearchParams();
   const category = searchParams?.get("category");
   const subcategory = searchParams?.get("subcategory");
 
   // Get current translations
-  const t = translations[currentLanguage as keyof typeof translations] || translations.en
+  const t =
+    translations[currentLanguage as keyof typeof translations] ||
+    translations.en;
 
   useEffect(() => {
     // Get user and language preference from localStorage
     if (typeof window !== "undefined") {
-      const userData = localStorage.getItem("user")
+      const userData = localStorage.getItem("user");
       if (userData) {
         try {
-          setLoggedInUser(JSON.parse(userData))
+          setLoggedInUser(JSON.parse(userData));
         } catch (error) {
-          console.error("Error parsing user data:", error)
+          console.error("Error parsing user data:", error);
         }
       }
 
       // Get saved language preference
-      const savedLanguage = localStorage.getItem("preferredLanguage")
-      if (savedLanguage && supportedLanguages.find((lang) => lang.code === savedLanguage)) {
-        setCurrentLanguage(savedLanguage)
+      const savedLanguage = localStorage.getItem("preferredLanguage");
+      if (
+        savedLanguage &&
+        supportedLanguages.find((lang) => lang.code === savedLanguage)
+      ) {
+        setCurrentLanguage(savedLanguage);
       }
     }
 
     const fetchQuizzes = async () => {
       try {
-        const response = await fetch("/api/quizzes")
+        const response = await fetch("/api/quizzes");
         if (!response.ok) {
-          throw new Error("Failed to fetch quizzes")
+          throw new Error("Failed to fetch quizzes");
         }
-        const data = await response.json()
-        console.log("Fetched quizzes data:", data)
-        setQuizzes(data.data)
+        const data = await response.json();
+        console.log("Fetched quizzes data:", data);
+        setQuizzes(data.data);
       } catch (error) {
-        console.error("Error fetching quizzes:", error)
-        toast.error("Failed to load quizzes")
+        console.error("Error fetching quizzes:", error);
+        toast.error("Failed to load quizzes");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchQuizzes()
-  }, [])
+    fetchQuizzes();
+  }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("user")
-    setLoggedInUser(null)
-    toast.success("Logged out successfully")
-  }
+    localStorage.removeItem("user");
+    setLoggedInUser(null);
+    toast.success("Logged out successfully");
+  };
 
-  const handleAuthSuccess = (user: { _id: string; name: string; mobile: string }) => {
-    setLoggedInUser(user)
-    toast.success(`${t.welcome}, ${user.name}!`)
-  }
+  const handleAuthSuccess = (user: {
+    _id: string;
+    name: string;
+    mobile: string;
+  }) => {
+    setLoggedInUser(user);
+    toast.success(`${t.welcome}, ${user.name}!`);
+  };
 
   const handleLanguageChange = async (languageCode: string) => {
     // Validate language code
-    const selectedLanguage = supportedLanguages.find((lang) => lang.code === languageCode)
+    const selectedLanguage = supportedLanguages.find(
+      (lang) => lang.code === languageCode
+    );
 
     if (!selectedLanguage) {
-      toast.error("Invalid language selection")
-      return
+      toast.error("Invalid language selection");
+      return;
     }
 
     if (languageCode === currentLanguage) {
-      toast.info("Language is already selected")
-      return
+      toast.info("Language is already selected");
+      return;
     }
 
-    setLanguageLoading(true)
+    setLanguageLoading(true);
 
     try {
       // Simulate API call for language change validation
-      await new Promise((resolve) => setTimeout(resolve, 500))
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       // Update language
-      setCurrentLanguage(languageCode)
+      setCurrentLanguage(languageCode);
 
       // Save to localStorage
-      localStorage.setItem("preferredLanguage", languageCode)
+      localStorage.setItem("preferredLanguage", languageCode);
 
       // Show success message
-      const newTranslations = translations[languageCode as keyof typeof translations] || translations.en
+      const newTranslations =
+        translations[languageCode as keyof typeof translations] ||
+        translations.en;
       toast.success(
         <div className="flex items-center gap-2">
           <CheckCircle2 className="w-4 h-4 text-green-500" />
           <span>
             {selectedLanguage.flag} {newTranslations.languageChanged}
           </span>
-        </div>,
-      )
+        </div>
+      );
     } catch (error) {
-      console.error("Error changing language:", error)
-      toast.error("Failed to change language. Please try again.")
+      console.error("Error changing language:", error);
+      toast.error("Failed to change language. Please try again.");
     } finally {
-      setLanguageLoading(false)
+      setLanguageLoading(false);
     }
-  }
+  };
 
   // Filter quizzes based on category and subcategory
   const filteredQuizzes = quizzes.filter((quiz) => {
@@ -227,22 +254,24 @@ function QuizListContent() {
           <p className="text-white font-semibold">{t.loading}</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (filteredQuizzes.length === 0) {
     return (
       <>
-      <Header />
-      <div className="container mx-auto py-8 bg-[#1a124d] ">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4 text-white">{t.noQuizzes}</h1>
-          <p className="text-gray-300 mb-8">{t.noQuizzesDesc}</p>
+        <Header />
+        <div className="container mx-auto py-8 bg-[#1a124d] ">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-4 text-white">
+              {t.noQuizzes}
+            </h1>
+            <p className="text-gray-300 mb-8">{t.noQuizzesDesc}</p>
+          </div>
         </div>
-      </div>
-      <Footer />
+        <Footer />
       </>
-    )
+    );
   }
 
   return (
@@ -262,7 +291,9 @@ function QuizListContent() {
                     <h2 className="text-lg sm:text-xl font-bold text-white">
                       {t.welcome}, {loggedInUser.name}
                     </h2>
-                    <p className="text-emerald-200 text-sm sm:text-base">{t.ready}</p>
+                    <p className="text-emerald-200 text-sm sm:text-base">
+                      {t.ready}
+                    </p>
                   </div>
                 </div>
 
@@ -279,25 +310,23 @@ function QuizListContent() {
                       <option value="hi">हिंदी</option>
                     </select>
                   </div>
-
-                 
                 </div>
               </div>
-
-             
             </CardContent>
           </Card>
         </div>
       )}
 
-      <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-8 text-white flex justify-center">{t.availableTests}</h1>
-       {/* Language Loading Indicator */}
-       {languageLoading && (
-                <div className="mt-4 flex items-center justify-center gap-2 text-emerald-300">
-                  <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-emerald-400"></div>
-                  <span className="text-sm">Changing language...</span>
-                </div>
-              )}
+      <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-8 text-white flex justify-center">
+        {t.availableTests}
+      </h1>
+      {/* Language Loading Indicator */}
+      {languageLoading && (
+        <div className="mt-4 flex items-center justify-center gap-2 text-emerald-300">
+          <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-emerald-400"></div>
+          <span className="text-sm">Changing language...</span>
+        </div>
+      )}
       <div className="grid sm:gap-2 md:grid-cols-2 lg:grid-cols-3 justify-items-center">
         {filteredQuizzes.map((quiz) => (
           <Card
@@ -315,7 +344,7 @@ function QuizListContent() {
             <div className="absolute inset-0 bg-gradient-to-br from-teal-600/10 via-transparent to-coral-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
             {/* Top decorative elements */}
-            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-coral-500 via-amber-500 via-teal-500 to-emerald-500" />
+            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-coral-500  via-teal-500 to-emerald-500" />
             <div className="absolute top-2 right-4 w-3 h-3 bg-coral-400 rounded-full animate-ping" />
             <div className="absolute top-6 right-8 w-2 h-2 bg-teal-400 rounded-full animate-ping delay-300" />
 
@@ -346,7 +375,9 @@ function QuizListContent() {
                   <div className="absolute -top-2 -right-2 w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-br from-coral-500 to-orange-500 rounded-full flex items-center justify-center">
                     <FileText className="w-2 h-2 sm:w-3 sm:h-3 text-white" />
                   </div>
-                  <p className="text-xl sm:text-3xl font-black text-coral-600 mb-1">{quiz.questions.length}</p>
+                  <p className="text-xl sm:text-3xl font-black text-coral-600 mb-1">
+                    {quiz.questions.length}
+                  </p>
                   <p className="text-[10px] sm:text-xs font-bold text-coral-700 uppercase tracking-wider">
                     {t.questions}
                   </p>
@@ -356,21 +387,32 @@ function QuizListContent() {
                   <div className="absolute -top-2 -right-2 w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-br from-amber-500 to-yellow-500 rounded-full flex items-center justify-center">
                     <Trophy className="w-2 h-2 sm:w-3 sm:h-3 text-white" />
                   </div>
-                  <p className="text-xl sm:text-3xl font-black text-amber-600 mb-1">{quiz.totalMarks}</p>
-                  <p className="text-[10px] sm:text-xs font-bold text-amber-700 uppercase tracking-wider">{t.marks}</p>
+                  <p className="text-xl sm:text-3xl font-black text-amber-600 mb-1">
+                    {quiz.totalMarks}
+                  </p>
+                  <p className="text-[10px] sm:text-xs font-bold text-amber-700 uppercase tracking-wider">
+                    {t.marks}
+                  </p>
                 </div>
 
                 <div className="relative text-center p-2 sm:p-4 rounded-2xl bg-gradient-to-br from-teal-100 to-emerald-100 border-2 border-teal-200/50 shadow-lg transform hover:scale-105 transition-transform duration-200">
                   <div className="absolute -top-2 -right-2 w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-br from-teal-500 to-emerald-500 rounded-full flex items-center justify-center">
                     <Clock className="w-2 h-2 sm:w-3 sm:h-3 text-white" />
                   </div>
-                  <p className="text-xl sm:text-3xl font-black text-teal-600 mb-1">{quiz.timeLimit}</p>
-                  <p className="text-[10px] sm:text-xs font-bold text-teal-700 uppercase tracking-wider">{t.minutes}</p>
+                  <p className="text-xl sm:text-3xl font-black text-teal-600 mb-1">
+                    {quiz.timeLimit}
+                  </p>
+                  <p className="text-[10px] sm:text-xs font-bold text-teal-700 uppercase tracking-wider">
+                    {t.minutes}
+                  </p>
                 </div>
               </div>
 
               {/* Action Button with unique design */}
-              <Link href={`/quizzes/${quiz._id}/instructions`} className="block">
+              <Link
+                href={`/quizzes/${quiz._id}/instructions`}
+                className="block"
+              >
                 <Button className="relative w-full bg-gradient-to-r from-coral-500 via-orange-500 to-amber-500 hover:from-coral-600 hover:via-orange-600 hover:to-amber-600 text-white font-bold py-3 sm:py-5 rounded-2xl shadow-2xl hover:shadow-coral-500/25 transition-all duration-300 group/btn overflow-hidden">
                   {/* Button background animation */}
                   <div className="absolute inset-0 bg-gradient-to-r from-teal-500 via-emerald-500 to-cyan-500 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300" />
@@ -395,19 +437,18 @@ function QuizListContent() {
       </div>
       <div className="flex justify-end">
         <Button
-        onClick={handleLogout}
-        variant="outline"
-        className=" border border-emerald-400 text-emerald-400 bg-red-500 hover:text-white hover:border-white transition-colors duration-300"
-      >
-        <LogOut className="w-4 h-4" />
-        {t.logout}
-      </Button>
+          onClick={handleLogout}
+          variant="outline"
+          className=" border border-emerald-400 text-emerald-400 bg-red-500 hover:text-white hover:border-white transition-colors duration-300"
+        >
+          <LogOut className="w-4 h-4" />
+          {t.logout}
+        </Button>
       </div>
-          
+
       <Footer />
     </div>
-   
-  )
+  );
 }
 
 export default function QuizList() {
