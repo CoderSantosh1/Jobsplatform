@@ -101,15 +101,14 @@ const FreeTestSeriesMegaMenu: React.FC = () => {
         href="/quizzes"
         className="text-[#000000] hover:text-blue-800 font-medium px-4  hidden md:inline"
       >
-        Free Test Series
+        Test Series
       </Link>
       {/* Mobile trigger */}
       <button
         className="md:hidden text-[#000000] hover:text-blue-800 font-medium px-4 py-2 flex items-center gap-2"
         aria-label="Open Free Test Series menu"
-        onClick={() => setMobileSidebarOpen((v) => !v)}
       >
-        Free Test Series
+        Test Series
         <svg width="20" height="20" fill="none" viewBox="0 0 20 20">
           <path
             d="M5 8l5 5 5-5"
@@ -123,7 +122,7 @@ const FreeTestSeriesMegaMenu: React.FC = () => {
       {/* Desktop Mega Menu */}
       {open && (
         <div
-          className="absolute left-0 z-50 w-[900px] bg-white border rounded-lg shadow-xl p-0 flex-row animate-fade-in overflow-x-auto min-h-[300px] hidden md:flex"
+          className="absolute  z-50 w-[930px] bg-white border rounded-lg shadow-xl p-0 flex-row animate-fade-in overflow-x-auto min-h-[300px] hidden md:flex"
           role="menu"
           aria-label="Free Test Series Mega Menu"
         >
