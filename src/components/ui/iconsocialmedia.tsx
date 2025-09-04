@@ -5,7 +5,7 @@ function iconsocialmedia() {
     <div className="bg-[#FFF] w-full flex items-center justify-center gap-3 mb-4 mt-4">
       {/* WhatsApp — Ripple Glow */}
       <a
-        href="https://chat.whatsapp.com/YOUR_WHATSAPP_GROUP_LINK"
+        href="https://chat.whatsapp.com/BA5S3uiul7iHKwi4jIeuuf"
         target="_blank"
         rel="noopener noreferrer"
         className="relative overflow-hidden px-5 py-2 bg-green-500 text-white font-semibold rounded-full
