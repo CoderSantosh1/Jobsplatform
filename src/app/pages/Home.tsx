@@ -304,13 +304,6 @@ export default function Home() {
       <div className="bg-[#fff] min-h-screen">
         <main className="flex flex-col items-center justify-center w-full max-w-7xl mx-auto px-2 sm:px-4">
           <div className="w-full space-y-6 py-4">
-            {/* --- marquee, tables, etc. (unchanged) --- */}
-            {/* Your existing marquee + 2 table sections remain here exactly as in your code */}
-            {/* -------------------------------------------------------------- */}
-
-            {/* ---------------- Popular Exams (new wired section) ---------------- */}
-
-            {/* ------------------------------------------------------------------ */}
             <div className="bg-[#fFfFff] min-h-screen">
               <main className="flex flex-col items-center justify-center bg-[#fFfFf] w-full max-w-7xl mx-auto px-2 sm:px-4">
                 <div className="w-full space-y-6 py-4">
