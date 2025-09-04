@@ -112,7 +112,7 @@ const FreeTestSeriesMegaMenu: React.FC = () => {
       </Link>
       {/* Mobile trigger */}
       <button
-        className="md:hidden text-[#000000] hover:text-blue-800 font-medium px-4 py-2 flex items-center gap-2"
+        className="md:hidden text-[#000000] hover:text-blue-800 font-[700] text-[16px] px-4 py-2 flex items-center gap-2"
         aria-label="Open Free Test Series menu"
       >
         Test Series
@@ -135,11 +135,11 @@ const FreeTestSeriesMegaMenu: React.FC = () => {
           aria-label="Free Test Series Mega Menu"
         >
           {/* Sidebar */}
-          <div className="w-48 bg-gray-50 border-r rounded-l-lg flex flex-col py-4 gap-2 shadow-sm px-2 overflow-y-auto max-h-[500px]">
+          <div className="w-[250px] bg-gray-50 border-r rounded-l-lg flex flex-col py-4 gap-2 shadow-sm px-2 overflow-y-auto max-h-[500px]">
             {loading ? (
               <div className="text-center text-gray-400 py-8">Loading...</div>
             ) : categories.length === 0 ? (
-              <div className="text-center text-gray-400 py-8">
+              <div className="text-center text-black-400 py-4">
                 No categories found.
               </div>
             ) : (
@@ -164,16 +164,14 @@ const FreeTestSeriesMegaMenu: React.FC = () => {
                   <img
                     src={getIconUrl(cat.icon)}
                     alt={typeof cat.name === "string" ? cat.name : ""}
-                    className={`w-10 h-10 object-contain rounded bg-white ${
+                    className={`w-5 h-5 object-contain rounded bg-white ${
                       selectedCategory?._id === cat._id ||
                       selectedCategory?.name === cat.name
                         ? "ring-2 ring-blue-300"
                         : ""
                     }`}
                   />
-                  <span className="truncate text-sm font-medium">
-                    {cat.name}
-                  </span>
+                  <span className="text-[14px] font-[600]">{cat.name}</span>
                 </button>
               ))
             )}
@@ -187,7 +185,7 @@ const FreeTestSeriesMegaMenu: React.FC = () => {
                   <img
                     src={getIconUrl(selectedCategory.icon)}
                     alt={selectedCategory.name}
-                    className="w-10 h-10 object-contain rounded shadow bg-white"
+                    className="w-6 h-6 object-contain rounded shadow bg-white"
                   />
                   <span className="text-lg font-bold text-gray-800">
                     {selectedCategory.name}
@@ -201,12 +199,12 @@ const FreeTestSeriesMegaMenu: React.FC = () => {
                         href={`/quizzes?category=${encodeURIComponent(
                           selectedCategory.name
                         )}&subcategory=${encodeURIComponent(sub.name)}`}
-                        className="flex items-center gap-3 bg-white hover:bg-blue-50 border rounded-lg p-2 shadow transition min-h-[60px] focus:outline-none focus:ring-2 focus:ring-blue-300"
+                        className="flex items-center gap-3 bg-white text-[4px] hover:bg-blue-50 border rounded-lg p-2 shadow transition min-h-[60px] focus:outline-none focus:ring-2 focus:ring-blue-300"
                       >
                         <img
                           src={getIconUrl(sub.icon)}
                           alt={sub.name}
-                          className="w-8 h-8 object-contain rounded bg-white"
+                          className="w-5 h-5 object-contain rounded bg-white"
                         />
                         <span className="flex-1 text-[13px] font-semibold text-gray-700 truncate">
                           {sub.name}
@@ -217,7 +215,7 @@ const FreeTestSeriesMegaMenu: React.FC = () => {
                   )}
                   {flattenSubcategories(selectedCategory.subcategories)
                     .length === 0 && (
-                    <div className="text-gray-400 italic col-span-full text-center py-6">
+                    <div className="text-black-500 italic col-span-full text-center py-6">
                       No exams found in this category.
                     </div>
                   )}
@@ -243,7 +241,7 @@ const FreeTestSeriesMegaMenu: React.FC = () => {
           ></div>
 
           {/* Drawer */}
-          <div className="relative w-4/5 max-w-xs bg-white border-r shadow-xl flex flex-col h-full animate-slide-in-left">
+          <div className="relative  bg-white border-r shadow-xl flex flex-col h-full animate-slide-in-left">
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b">
               <span className="font-bold text-lg">Categories</span>
@@ -255,7 +253,6 @@ const FreeTestSeriesMegaMenu: React.FC = () => {
                 ✕
               </button>
             </div>
-
             {/* Scrollable Categories */}
             <div className="flex-1 overflow-y-auto py-2">
               {loading ? (
@@ -268,7 +265,7 @@ const FreeTestSeriesMegaMenu: React.FC = () => {
                 categories.map((cat) => (
                   <button
                     key={cat._id || cat.name}
-                    className={`flex items-center gap-4 px-5 py-3 w-full text-left rounded-lg transition focus:outline-none
+                    className={`flex items-center gap-4 px-5 py-3  w-full text-left rounded-lg transition focus:outline-none
                 ${
                   selectedCategory?._id === cat._id ||
                   selectedCategory?.name === cat.name
@@ -284,9 +281,9 @@ const FreeTestSeriesMegaMenu: React.FC = () => {
                     <img
                       src={getIconUrl(cat.icon)}
                       alt={typeof cat.name === "string" ? cat.name : ""}
-                      className="w-9 h-9 object-contain rounded bg-white"
+                      className="w-4 h-4 object-contain rounded bg-white"
                     />
-                    <span className="truncate text-sm font-medium">
+                    <span className="truncate text-[7px] font-[600]">
                       {cat.name}
                     </span>
                   </button>
@@ -321,7 +318,7 @@ const FreeTestSeriesMegaMenu: React.FC = () => {
                   alt={typeof cat.name === "string" ? cat.name : ""}
                   className="w-8 h-8 object-contain rounded bg-white"
                 />
-                <span className="text-base font-semibold flex-1">
+                <span className="text-[10px] font-[600] flex-1">
                   {typeof cat.name === "string" ? cat.name : "[Invalid name]"}
                 </span>
                 <svg
@@ -360,7 +357,7 @@ const FreeTestSeriesMegaMenu: React.FC = () => {
                           alt={sub.name}
                           className="w-7 h-7 object-contain rounded bg-white"
                         />
-                        <span className="flex-1 text-[10px] font-[700] text-gray-700 truncate">
+                        <span className="flex-1 text-[7px] font-[700] text-gray-700">
                           {sub.name}
                         </span>
                         <span className="ml-2">{RIGHT_ARROW}</span>

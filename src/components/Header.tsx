@@ -96,31 +96,29 @@ export default function Header() {
               ></div>
 
               {/* Sidebar Drawer */}
-              <div className="relative w-full max-w-sm bg-white shadow-lg h-full overflow-y-auto animate-slide-in-left ">
+              <div className="relative  w-[300px] bg-white shadow-lg h-full overflow-y-auto animate-slide-in-left ">
                 {/* Header */}
-                <div className="flex items-center justify-between px-4 py-3 border-b">
-                  {/* Menu Icon - now also closes the drawer */}
-                  <button
-                    onClick={() => setMobileNavOpen(false)}
-                    aria-label="Close menu"
-                    className="p-2 rounded hover:bg-gray-100"
-                  ></button>
 
+                {/* Menu Icon - now also closes the drawer */}
+                <button
+                  onClick={() => setMobileNavOpen(false)}
+                  aria-label="Close menu"
+                  className="p-2 rounded hover:bg-gray-100"
+                ></button>
+
+                {/* Links */}
+                <nav className="flex flex-col py-2">
                   {/* Close Button */}
                   <button
                     onClick={() => setMobileNavOpen(false)}
                     aria-label="Close menu"
-                    className="p-2 rounded hover:bg-gray-100"
+                    className="flex justify-end p-2 rounded hover:bg-gray-100"
                   >
                     ✕
                   </button>
-                </div>
-
-                {/* Links */}
-                <nav className="flex flex-col py-2">
                   <Link
                     href="/"
-                    className="px-4 py-2 text-gray-800 hover:bg-gray-100"
+                    className="px-4 py-2 text-gray-800 font-[600] text-[14px] hover:text-blue-800"
                     onClick={() => setMobileNavOpen(false)}
                   >
                     Home
