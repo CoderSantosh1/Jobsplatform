@@ -206,7 +206,7 @@ const FreeTestSeriesMegaMenu: React.FC = () => {
                           alt={sub.name}
                           className="w-5 h-5 object-contain rounded bg-white"
                         />
-                        <span className="flex-1 text-[13px] font-semibold text-gray-700 truncate">
+                        <span className="flex-1 text-[10px] font-[500] text-black-700 ">
                           {sub.name}
                         </span>
                         {RIGHT_ARROW}
@@ -357,7 +357,7 @@ const FreeTestSeriesMegaMenu: React.FC = () => {
                           alt={sub.name}
                           className="w-7 h-7 object-contain rounded bg-white"
                         />
-                        <span className="flex-1 text-[7px] font-[700] text-gray-700">
+                        <span className="text-[5px] font-[500] text-black-700">
                           {sub.name}
                         </span>
                         <span className="ml-2">{RIGHT_ARROW}</span>
