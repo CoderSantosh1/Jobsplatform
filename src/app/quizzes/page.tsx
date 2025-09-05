@@ -18,17 +18,9 @@ import {
   Globe,
   CheckCircle2,
 } from "lucide-react";
-import AuthModal from "@/components/AuthModal";
 import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
 import { Select } from "@/components/ui/select";
-
-interface Question {
-  _id: string;
-  text: string;
-  options: string[];
-  correctAnswer: number;
-}
 
 interface Quiz {
   _id: string;
