@@ -197,3 +197,12 @@
       twinkle var(--twinkle-dur, 3s) ease-in-out infinite;
   }
 }
+
+
+/* {back btn css} */
+.back-btn {
+  border: 2px solid red;
+  border-radius: 12px;
+  padding: 6px 12px;
+  color: red;
+}
