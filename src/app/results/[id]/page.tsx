@@ -135,18 +135,7 @@ export default function ResultDetails() {
   return (
     <>
       <Navbar />
-      <div className="max-w-7xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
-        <Box sx={{ mb: 2 }}>
-          <IconButton
-            onClick={() => router.back()}
-            sx={{
-              color: "text.secondary",
-              "&:hover": { color: "primary.main" },
-            }}
-          >
-            <ArrowBackIcon />
-          </IconButton>
-        </Box>
+      <div className="max-w-full mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
         <Paper sx={{ p: 4 }}>
           <Typography variant="h4" gutterBottom sx={{ color: "primary.main" }}>
             {result.title}
@@ -220,6 +209,11 @@ export default function ResultDetails() {
             </Box>
           )}
         </Paper>
+        <Box sx={{ mb: 2 }}>
+          <IconButton onClick={() => router.back()} className="back-btn">
+            <ArrowBackIcon sx={{ mr: 1 }} /> Back to home
+          </IconButton>
+        </Box>
       </div>
       <Footer />
     </>
