@@ -3,13 +3,15 @@ import Image from "next/image";
 
 export default function Footer() {
   return (
-    <footer className="bg-gray-100 border-t border-gray-200 ">
+    <footer className="bg-gray-100 border-t border-gray-200">
       <div className="container mx-auto px-4 py-6">
         {/* Footer Navigation */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-6">
-          <div>
+        {/* mobile: 2 columns (centered). md+: 3 columns (left-aligned) */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-8 mb-6 text-center md:text-left items-start px-8 py-8">
+          {/* Quick Links */}
+          <div className="flex flex-col items-center md:items-start">
             <h3 className="text-lg font-bold text-red-600 mb-3">Quick Links</h3>
-            <ul className="space-y-2">
+            <ul className="space-y-2 text-sm">
               <li>
                 <Link href="/" className="text-blue-600 hover:text-blue-800">
                   Home
@@ -41,9 +43,11 @@ export default function Footer() {
               </li>
             </ul>
           </div>
-          <div>
+
+          {/* Resources */}
+          <div className="flex flex-col items-center md:items-start">
             <h3 className="text-lg font-bold text-red-600 mb-3">Resources</h3>
-            <ul className="space-y-2">
+            <ul className="space-y-2 text-sm">
               <li>
                 <Link
                   href="/answer-key"
@@ -78,57 +82,81 @@ export default function Footer() {
               </li>
             </ul>
           </div>
-          <div>
+
+          {/* Contact / Social */}
+          {/* On mobile: span full width (col-span-2) and centered; on md+: normal 3rd column */}
+          <div className="flex flex-col items-center md:items-start col-span-2 md:col-span-1">
             <h3 className="text-lg font-bold text-red-600 mb-3">
               Contact Information
             </h3>
-            <p className="text-gray-700 mb-2">
-              email:{" "}
-              <a href="mailto:sarkariresultsnow.com">
+
+            <p className="text-gray-700 mb-2 text-sm">
+              Email:{" "}
+              <a
+                href="mailto:support@sarkariresultsnow.com"
+                className="text-blue-600 hover:text-blue-800 break-all"
+                aria-label="Email support at sarkariresultsnow"
+              >
                 support@sarkariresultsnow.com
               </a>
             </p>
 
-            <div className="flex space-x-6">
+            <div className="flex items-center justify-center md:justify-start space-x-4 mt-2">
               <a
                 href="https://chat.whatsapp.com/BA5S3uiul7iHKwi4jIeuuf"
-                className="text-blue-600 hover:text-blue-800"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Join our Whatsapp"
+                className="inline-flex items-center p-1 rounded hover:scale-105 transition-transform"
               >
                 <Image
                   src="/whatspp.png"
-                  alt="Whatsapp"
-                  width={24}
-                  height={24}
+                  alt="WhatsApp"
+                  width={28}
+                  height={28}
                 />
               </a>
+
               <a
                 href="https://t.me/+edSF3XKgzRU0MTY1"
-                className="text-blue-600 hover:text-blue-800"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Join our Telegram"
+                className="inline-flex items-center p-1 rounded hover:scale-105 transition-transform"
               >
                 <Image
                   src="/telegram.png"
-                  alt="Telogram"
-                  width={24}
-                  height={24}
+                  alt="Telegram"
+                  width={28}
+                  height={28}
                 />
               </a>
-              <a href="#" className="text-blue-600 hover:text-blue-800">
+
+              <a
+                href="#"
+                aria-label="Facebook (opens in new tab)"
+                className="inline-flex items-center p-1 rounded opacity-90 hover:opacity-100 hover:scale-105 transition"
+              >
                 <Image
                   src="/facebook.png"
                   alt="Facebook"
-                  width={24}
-                  height={24}
+                  width={28}
+                  height={28}
                 />
               </a>
+
               <a
                 href="https://www.instagram.com/sarkariresultsnow/"
-                className="text-blue-600 hover:text-blue-800"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Instagram"
+                className="inline-flex items-center p-1 rounded hover:scale-105 transition-transform"
               >
                 <Image
                   src="/insta.png"
                   alt="Instagram"
-                  width={24}
-                  height={24}
+                  width={28}
+                  height={28}
                 />
               </a>
             </div>
