@@ -12,10 +12,10 @@ export default function ContactPage() {
           Have questions, feedback, or concerns? Fill out the form below or
           email us directly at{" "}
           <a
-            href="mailto:support@sarkariresultsnow.com"
+            href="mailto:sarkariresultsnow@zohomail.in"
             className="text-blue-600 underline"
           >
-            support@sarkariresultsnow.com
+            sarkariresultsnow@zohomail.in
           </a>
           .
         </p>

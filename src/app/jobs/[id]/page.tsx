@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Navbar from "../../../components/Header"
 import Footer from '@/components/Footer';
-import BackImages from "@/assists/back.png"
+
 import Image from 'next/image';
 import GoogleAdsense from '@/components/GoogleAdsense';
 
@@ -404,15 +404,31 @@ export default function JobDetail() {
                 </div>
               </div>
               {job.applyJob && (
-                <div className="mt-4 inline-block border border-blue-700 bg-white rounded-lg shadow w-max">
+                <div className=" mt-4 border border-blue-700 bg-white rounded-lg shadow w-max">
                   <table className="border-collapse">
                     <tbody>
                       {/* First row: Telegram Channel */}
-                      <tr className="border-b border-blue-700">
+                      <tr className="border-b border-blue-700 ">
+                        <td className="py-3 px-4 text-sm font-medium text-gray-800 whitespace-nowrap">
+                          Click Now to Apply:
+                        </td>
+                        <td className="py-3 px-4 border-l border-blue-700">
+                          <a
+                            onClick={() => router.push(job.applyJob)}
+                            className="text-red-500 hover:underline cursor-pointer transition-colors duration-200 hover:text-blue-700 font-semibold"
+                          >
+                            Apply Now
+                          </a>
+                        </td>
+                      </tr>
+
+                      {/* Second row: Apply Job */}
+
+                      <tr>
                         <td className="py-3 px-4 text-sm font-medium text-gray-800 whitespace-nowrap">
                           Join Telegram Channel:
                         </td>
-                        <td className="py-3 px-4">
+                        <td className="py-3 px-4 border-l border-blue-700">
                           <a
                             href="https://t.me/sarkariresultsnow"
                             target="_blank"
@@ -423,39 +439,19 @@ export default function JobDetail() {
                           </a>
                         </td>
                       </tr>
-
-                      {/* Second row: Apply Job */}
-                      <tr>
-                        <td className="py-3 px-4 text-sm font-medium text-gray-800 whitespace-nowrap">
-                          Click Now to Apply:
-                        </td>
-                        <td className="py-3 px-4">
-                          <a
-                            onClick={() => router.push(job.applyJob)}
-                            className="text-red-500 hover:underline cursor-pointer transition-colors duration-200 hover:text-blue-700 font-semibold"
-                          >
-                            Apply Now
-                          </a>
-                        </td>
-                      </tr>
                     </tbody>
                   </table>
                 </div>
               )}
             </div>
 
-            <div className="flex items-center justify-between">
+            {/* Back Button */}
+            <div className="flex justify-between items-center mt-8">
               <button
-                onClick={() => router.push("/")}
-                className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
+                onClick={() => router.back()}
+                className="text-blue-600 hover:text-blue-800"
               >
-                <Image
-                  src={BackImages}
-                  alt="Back"
-                  width={20}
-                  height={20}
-                  className="mr-2 mt-4"
-                />
+                ← Back to Home
               </button>
             </div>
           </div>

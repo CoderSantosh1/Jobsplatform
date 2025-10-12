@@ -93,11 +93,11 @@ export default function Footer() {
             <p className="text-gray-700 mb-2 text-sm">
               Email:{" "}
               <a
-                href="mailto:support@sarkariresultsnow.com"
+                href="mailto:sarkariresultsnow@zohomail.in"
                 className="text-blue-600 hover:text-blue-800 break-all"
                 aria-label="Email support at sarkariresultsnow"
               >
-                support@sarkariresultsnow.com
+                sarkariresultsnow@zohomail.in
               </a>
             </p>
 
@@ -133,7 +133,7 @@ export default function Footer() {
               </a>
 
               <a
-                href="#"
+                href="facebook.com"
                 aria-label="Facebook (opens in new tab)"
                 className="inline-flex items-center p-1 rounded opacity-90 hover:opacity-100 hover:scale-105 transition"
               >

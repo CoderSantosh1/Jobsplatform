@@ -128,30 +128,54 @@ export default function NewsDetail() {
       <div className="container max-w-7xl mx-auto px-4 py-8">
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
           <div className="p-4 sm:p-8">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">{news.title}</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
+              {news.title}
+            </h1>
             <div className="text-gray-600 mb-2">{news.organization}</div>
             <div className="text-sm text-red-500 mb-6">
               Posted Date: {new Date(news.postedDate).toLocaleDateString()}
             </div>
 
-            
-
             {/* News Content */}
             <div className="prose max-w-none text-gray-700 whitespace-pre-line">
               {news.content}
             </div>
-          {/* Image Display - Fully Responsive and Scales on Hover for Desktop */}
-          {news.imageUrl && (
-            <div className="mb-6 flex justify-center">
-              <div className="w-full sm:w-auto max-w-full overflow-hidden rounded border shadow transition-transform duration-300 hover:scale-105">
-                <img
-                  src={news.imageUrl}
-                  alt={news.title}
-                  className="w-full h-auto object-contain"
-                />
-              </div>
+            <div className=" mt-4 border border-blue-700 bg-white rounded-lg shadow w-max">
+              <table className="border-collapse">
+                <tbody>
+
+                  {/* Second row: Apply Job */}
+
+                  <tr>
+                    <td className="py-3 px-4 text-sm font-medium text-gray-800 whitespace-nowrap">
+                      Join Telegram Channel:
+                    </td>
+                    <td className="py-3 px-4 border-l border-blue-700">
+                      <a
+                        href="https://t.me/sarkariresultsnow"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-red-500 hover:underline cursor-pointer transition-colors duration-200 hover:text-blue-700 font-semibold"
+                      >
+                        Join Now
+                      </a>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
-          )}
+            {/* Image Display - Fully Responsive and Scales on Hover for Desktop */}
+            {news.imageUrl && (
+              <div className="mb-6 flex justify-center">
+                <div className="w-full sm:w-auto max-w-full overflow-hidden rounded border shadow transition-transform duration-300 hover:scale-105">
+                  <img
+                    src={news.imageUrl}
+                    alt={news.title}
+                    className="w-full h-auto object-contain"
+                  />
+                </div>
+              </div>
+            )}
             {/* Back Button */}
             <div className="flex justify-between items-center mt-8">
               <button
