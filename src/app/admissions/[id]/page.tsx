@@ -79,7 +79,7 @@ export default function AdmissionDetails() {
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
-     
+
 
       <div className="bg-white rounded-lg shadow-lg p-6">
         <h1 className="text-2xl font-bold text-gray-900 mb-4">{admission.title}</h1>

@@ -1,0 +1,14 @@
+[
+  {
+    "id": "job-123",
+    "title": "Bihar Police Recruitment 2025",
+    "text": "Bihar Police Recruitment 2025: Vacancy 1200, apply before 2025-10-30. Eligibility: 10+2. Link: https://yoursite/jobs/123",
+    "metadata": { "type": "job", "url": "/jobs/123" }
+  },
+  {
+    "id": "result-23",
+    "title": "Bihar Board Results 2025",
+    "text": "Bihar Board 10th results released. Check roll number and download pdf at /results/23",
+    "metadata": { "type": "result", "url": "/results/23" }
+  }
+]

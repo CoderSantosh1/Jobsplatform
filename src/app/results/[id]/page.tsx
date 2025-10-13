@@ -25,7 +25,7 @@ interface Result {
   organization: string;
   category: string;
   status: string;
-  downloadLink?: string;
+  downloadLink: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -135,18 +135,7 @@ export default function ResultDetails() {
   return (
     <>
       <Navbar />
-      <div className="max-w-7xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
-        <Box sx={{ mb: 2 }}>
-          <IconButton
-            onClick={() => router.back()}
-            sx={{
-              color: "text.secondary",
-              "&:hover": { color: "primary.main" },
-            }}
-          >
-            <ArrowBackIcon />
-          </IconButton>
-        </Box>
+      <div className="max-w-full mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
         <Paper sx={{ p: 4 }}>
           <Typography variant="h4" gutterBottom sx={{ color: "primary.main" }}>
             {result.title}
@@ -203,23 +192,55 @@ export default function ResultDetails() {
           </Typography>
 
           {result.downloadLink && (
-            <Box sx={{ mt: 3 }}>
-              <a
-                href={result.downloadLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ textDecoration: "none" }}
-              >
-                <Chip
-                  label="Download Result"
-                  color="primary"
-                  clickable
-                  sx={{ "&:hover": { backgroundColor: "primary.dark" } }}
-                />
-              </a>
-            </Box>
+            <div className=" mt-4 border border-blue-700 bg-white rounded-lg shadow w-max">
+              <table className="border-collapse">
+                <tbody>
+                  {/* First row: Telegram Channel */}
+                  <tr className="border-b border-blue-700 ">
+                    <td className="py-3 px-4 text-sm font-medium text-gray-800 whitespace-nowrap">
+                      Click Now to Apply:
+                    </td>
+                    <td className="py-3 px-4 border-l border-blue-700">
+                      <a
+                        onClick={() => router.push(result.downloadLink)}
+                        className="text-red-500 hover:underline cursor-pointer transition-colors duration-200 hover:text-blue-700 font-semibold"
+                      >
+                        Apply Now
+                      </a>
+                    </td>
+                  </tr>
+
+                  {/* Second row: Apply Job */}
+
+                  <tr>
+                    <td className="py-3 px-4 text-sm font-medium text-gray-800 whitespace-nowrap">
+                      Join Telegram Channel:
+                    </td>
+                    <td className="py-3 px-4 border-l border-blue-700">
+                      <a
+                        href="https://t.me/sarkariresultsnow"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-red-500 hover:underline cursor-pointer transition-colors duration-200 hover:text-blue-700 font-semibold"
+                      >
+                        Join Now
+                      </a>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           )}
         </Paper>
+        {/* Back Button */}
+        <div className="flex justify-between items-center mt-8">
+          <button
+            onClick={() => router.back()}
+            className="text-blue-600 hover:text-blue-800"
+          >
+            ← Back to Home
+          </button>
+        </div>
       </div>
       <Footer />
     </>

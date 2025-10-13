@@ -35,7 +35,7 @@ export default function AuthModal({ onSuccess }: AuthModalProps) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const vantaRef = useRef<HTMLDivElement>(null);
-  const vantaEffect = useRef<any>(null);
+
   useEffect(() => {
     let effect: any;
     (async () => {
@@ -143,9 +143,6 @@ export default function AuthModal({ onSuccess }: AuthModalProps) {
     setMobile("");
   };
 
-  // ---------------------------
-  // UI
-  // ---------------------------
   return (
     <>
       <Header />
@@ -164,7 +161,7 @@ export default function AuthModal({ onSuccess }: AuthModalProps) {
               style={{
                 left: `${Math.random() * 100}%`,
                 top: `${Math.random() * 100}%`,
-                // randomize via CSS vars (keeps class-based animation)
+
                 ["--float-dur" as any]: `${4 + Math.random() * 4}s`,
                 ["--float-delay" as any]: `${Math.random() * 2}s`,
                 ["--twinkle-dur" as any]: `${2 + Math.random() * 3}s`,

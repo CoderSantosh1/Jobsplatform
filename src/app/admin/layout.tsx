@@ -1,6 +1,10 @@
-'use client';
+"use client";
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <div className="min-h-screen  ">
       <nav className="bg-white  shadow-lg">
@@ -8,7 +12,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="flex justify-between h-16">
             <div className="flex">
               <div className="flex-shrink-0 flex items-center">
-                <span className="text-xl font-bold text-gray-900 ">Admin Panel</span>
+                <span className="text-xl font-bold text-gray-900 ">
+                  Admin Panel
+                </span>
               </div>
               <div className="hidden sm:ml-6 sm:flex sm:space-x-8 mt-4">
                 <a
@@ -35,8 +41,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 >
                   News
                 </a>
-                <a href="/admin"
-                className="text-gray-900  hover:text-blue-500 px-3 py-2 rounded-md text-sm font-medium"
+                <a
+                  href="/admin/quizzes"
+                  className="text-gray-900  hover:text-blue-500 px-3 py-2 rounded-md text-sm font-medium"
                 >
                   Quiz
                 </a>
@@ -50,4 +57,4 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   );
 }
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";

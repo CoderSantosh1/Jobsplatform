@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 
 interface Subcategory {
@@ -65,7 +65,14 @@ const FreeTestSeriesMegaMenu: React.FC = () => {
   const [openMobileCategory, setOpenMobileCategory] = useState<string | null>(
     null
   ); // category _id or name
+  const scrollRef = useRef<HTMLDivElement>(null);
 
+  // reset scroll to top when menu opens
+  useEffect(() => {
+    if (mobileSidebarOpen && scrollRef.current) {
+      scrollRef.current.scrollTop = 0;
+    }
+  }, [mobileSidebarOpen]);
   useEffect(() => {
     if (open || mobileSidebarOpen) {
       setLoading(true);
@@ -99,19 +106,16 @@ const FreeTestSeriesMegaMenu: React.FC = () => {
       {/* Desktop trigger */}
       <Link
         href="/quizzes"
-
-        className="text-[#000000] hover:text-blue-800 font-[600] px-4  hidden md:inline"
-
+        className="text-[#000000] hover:text-blue-800 font-medium px-4  hidden md:inline"
       >
-        Free Test Series
+        Test Series
       </Link>
       {/* Mobile trigger */}
       <button
-        className="md:hidden text-[#000000] hover:text-blue-800 font-medium px-4 py-2 flex items-center gap-2"
+        className="md:hidden text-[#000000] hover:text-blue-800 font-[700] text-[16px] px-4 py-2 flex items-center gap-2"
         aria-label="Open Free Test Series menu"
-        onClick={() => setMobileSidebarOpen((v) => !v)}
       >
-        Free Test Series
+        Test Series
         <svg width="20" height="20" fill="none" viewBox="0 0 20 20">
           <path
             d="M5 8l5 5 5-5"
@@ -122,37 +126,36 @@ const FreeTestSeriesMegaMenu: React.FC = () => {
           />
         </svg>
       </button>
+
       {/* Desktop Mega Menu */}
       {open && (
         <div
-          className="absolute left-0 z-50 w-[900px] bg-white border rounded-lg shadow-xl p-0 flex-row animate-fade-in overflow-x-auto min-h-[300px] hidden md:flex"
+          className="absolute hidden md:flex z-50 w-[930px] bg-white border rounded-lg shadow-xl p-0 flex-row animate-fade-in min-h-[300px]"
           role="menu"
           aria-label="Free Test Series Mega Menu"
         >
           {/* Sidebar */}
-          <div className="w-48 bg-gray-50 border-r rounded-l-lg flex flex-col py-4 gap-2 shadow-sm px-2">
+          <div className="w-[250px] bg-gray-50 border-r rounded-l-lg flex flex-col py-4 gap-2 shadow-sm px-2 overflow-y-auto max-h-[500px]">
             {loading ? (
               <div className="text-center text-gray-400 py-8">Loading...</div>
             ) : categories.length === 0 ? (
-              <div className="text-center text-gray-400 py-8">
+              <div className="text-center text-black-400 py-4">
                 No categories found.
               </div>
             ) : (
               categories.map((cat) => (
                 <button
                   key={cat._id || cat.name}
-                  className={`flex items-center gap-4 px-5 py-4 w-full text-left rounded-xl shadow transition focus:outline-none group
-                    ${
-                      selectedCategory?._id === cat._id ||
-                      selectedCategory?.name === cat.name
-                        ? "bg-blue-50 shadow-lg font-semibold text-blue-800 ring-2 ring-blue-200"
-                        : "bg-white text-gray-800 hover:bg-blue-50 hover:shadow-md"
-                    }
-                  `}
+                  className={`flex items-center gap-4 px-5 py-3 w-full text-left rounded-lg transition focus:outline-none group
+              ${
+                selectedCategory?._id === cat._id ||
+                selectedCategory?.name === cat.name
+                  ? "bg-blue-50 shadow-md font-semibold text-blue-800 ring-2 ring-blue-200"
+                  : "bg-white text-gray-800 hover:bg-blue-50 hover:shadow"
+              }`}
                   onMouseEnter={() => setSelectedCategory(cat)}
                   onFocus={() => setSelectedCategory(cat)}
                   tabIndex={0}
-                  type="button"
                   aria-selected={
                     selectedCategory?._id === cat._id ||
                     selectedCategory?.name === cat.name
@@ -161,79 +164,58 @@ const FreeTestSeriesMegaMenu: React.FC = () => {
                   <img
                     src={getIconUrl(cat.icon)}
                     alt={typeof cat.name === "string" ? cat.name : ""}
-                    className={`w-10 h-10 object-contain rounded bg-white transition
-                      ${
-                        selectedCategory?._id === cat._id ||
-                        selectedCategory?.name === cat.name
-                          ? "ring-2 ring-blue-300"
-                          : ""
-                      }
-                    `}
+                    className={`w-5 h-5 object-contain rounded bg-white ${
+                      selectedCategory?._id === cat._id ||
+                      selectedCategory?.name === cat.name
+                        ? "ring-2 ring-blue-300"
+                        : ""
+                    }`}
                   />
-                  <span className="truncate text-base">
-                    {typeof cat.name === "string" ? cat.name : "[Invalid name]"}
-                  </span>
+                  <span className="text-[14px] font-[600]">{cat.name}</span>
                 </button>
               ))
             )}
           </div>
+
           {/* Grid Panel */}
-          <div className="flex-1 p-8 overflow-y-auto">
+          <div className="flex-1 p-6 overflow-y-auto max-h-[500px]">
             {selectedCategory ? (
               <>
-                <div className="mb-6 flex items-center gap-4">
+                <div className="mb-4 flex items-center gap-3">
                   <img
                     src={getIconUrl(selectedCategory.icon)}
-                    alt={
-                      typeof selectedCategory.name === "string"
-                        ? selectedCategory.name
-                        : ""
-                    }
-                    className="w-10 h-10 object-contain rounded shadow bg-white"
+                    alt={selectedCategory.name}
+                    className="w-6 h-6 object-contain rounded shadow bg-white"
                   />
-
-                  <span className="text-[24px] font-bold text-gray-800">
-  
-
-                    {typeof selectedCategory.name === "string"
-                      ? selectedCategory.name
-                      : "[Invalid name]"}
+                  <span className="text-lg font-bold text-gray-800">
+                    {selectedCategory.name}
                   </span>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
                   {flattenSubcategories(selectedCategory.subcategories).map(
                     (sub) => (
                       <Link
                         key={sub._id || sub.name}
                         href={`/quizzes?category=${encodeURIComponent(
-                          typeof selectedCategory.name === "string"
-                            ? selectedCategory.name
-                            : ""
+                          selectedCategory.name
                         )}&subcategory=${encodeURIComponent(sub.name)}`}
-
-                        className="flex items-center gap-4 bg-white hover:bg-blue-50 border border-red-500 rounded-lg p-1 transition shadow group min-h-[70px] focus:outline-none focus:ring-2 focus:ring-red-300"
-
-  
-
-                        tabIndex={0}
+                        className="flex items-center gap-3 bg-white text-[4px] hover:bg-blue-50 border rounded-lg p-2 shadow transition min-h-[60px] focus:outline-none focus:ring-2 focus:ring-blue-300"
                       >
                         <img
                           src={getIconUrl(sub.icon)}
                           alt={sub.name}
-                          className="w-9 h-9 object-contain rounded bg-white"
+                          className="w-5 h-5 object-contain rounded bg-white"
                         />
-
-                        <span className="flex-1 text-[12px] font-[700] text-gray-700 truncate">
-
+                        <span className="flex-1 text-[10px] font-[500] text-black-700 ">
                           {sub.name}
                         </span>
-                        <span className="ml-2">{RIGHT_ARROW}</span>
+                        {RIGHT_ARROW}
                       </Link>
                     )
                   )}
                   {flattenSubcategories(selectedCategory.subcategories)
                     .length === 0 && (
-                    <div className="text-gray-400 italic col-span-full text-center py-8">
+                    <div className="text-black-500 italic col-span-full text-center py-6">
                       No exams found in this category.
                     </div>
                   )}
@@ -247,6 +229,7 @@ const FreeTestSeriesMegaMenu: React.FC = () => {
           </div>
         </div>
       )}
+
       {/* Mobile Drawer/Menu */}
       {mobileSidebarOpen && (
         <div className="fixed inset-0 z-50 flex md:hidden">
@@ -255,10 +238,11 @@ const FreeTestSeriesMegaMenu: React.FC = () => {
             className="fixed inset-0 bg-black bg-opacity-30"
             onClick={() => setMobileSidebarOpen(false)}
             aria-label="Close menu"
-            tabIndex={0}
           ></div>
+
           {/* Drawer */}
-          <div className="relative w-4/5 max-w-xs bg-white border-r shadow-xl flex flex-col h-full animate-slide-in-left">
+          <div className="relative  bg-white border-r shadow-xl flex flex-col h-full animate-slide-in-left">
+            {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b">
               <span className="font-bold text-lg">Categories</span>
               <button
@@ -266,16 +250,10 @@ const FreeTestSeriesMegaMenu: React.FC = () => {
                 aria-label="Close menu"
                 className="p-2 rounded hover:bg-gray-100"
               >
-                <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
-                  <path
-                    d="M6 6l12 12M6 18L18 6"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                  />
-                </svg>
+                ✕
               </button>
             </div>
+            {/* Scrollable Categories */}
             <div className="flex-1 overflow-y-auto py-2">
               {loading ? (
                 <div className="text-center text-gray-400 py-8">Loading...</div>
@@ -287,41 +265,26 @@ const FreeTestSeriesMegaMenu: React.FC = () => {
                 categories.map((cat) => (
                   <button
                     key={cat._id || cat.name}
-                    className={`flex items-center gap-4 px-5 py-4 w-full text-left rounded-xl shadow transition focus:outline-none group
-                      ${
-                        selectedCategory?._id === cat._id ||
-                        selectedCategory?.name === cat.name
-                          ? "bg-blue-50 shadow-lg font-semibold text-blue-800 ring-2 ring-blue-200"
-                          : "bg-white text-gray-800 hover:bg-blue-50 hover:shadow-md"
-                      }
-                    `}
+                    className={`flex items-center gap-4 px-5 py-3  w-full text-left rounded-lg transition focus:outline-none
+                ${
+                  selectedCategory?._id === cat._id ||
+                  selectedCategory?.name === cat.name
+                    ? "bg-blue-50 shadow-md font-semibold text-blue-800 ring-2 ring-blue-200"
+                    : "bg-white text-gray-800 hover:bg-blue-50 hover:shadow"
+                }`}
                     onClick={() => {
                       setSelectedCategory(cat);
                       setMobileSidebarOpen(false);
                     }}
                     tabIndex={0}
-                    type="button"
-                    aria-selected={
-                      selectedCategory?._id === cat._id ||
-                      selectedCategory?.name === cat.name
-                    }
                   >
                     <img
                       src={getIconUrl(cat.icon)}
                       alt={typeof cat.name === "string" ? cat.name : ""}
-                      className={`w-10 h-10 object-contain rounded bg-white transition
-                        ${
-                          selectedCategory?._id === cat._id ||
-                          selectedCategory?.name === cat.name
-                            ? "ring-2 ring-blue-300"
-                            : ""
-                        }
-                      `}
+                      className="w-4 h-4 object-contain rounded bg-white"
                     />
-                    <span className="truncate text-base">
-                      {typeof cat.name === "string"
-                        ? cat.name
-                        : "[Invalid name]"}
+                    <span className="truncate text-[7px] font-[600]">
+                      {cat.name}
                     </span>
                   </button>
                 ))
@@ -330,8 +293,9 @@ const FreeTestSeriesMegaMenu: React.FC = () => {
           </div>
         </div>
       )}
+
       {/* Mobile Subcategory Grid (accordion style, one open at a time) */}
-      <div className="md:hidden w-full px-2 pt-2">
+      <div className="md:hidden w-full px-2 pt-2 ref={scrollRef}">
         {categories.map((cat) => {
           const isOpen = openMobileCategory === (cat._id || cat.name);
           return (
@@ -354,7 +318,7 @@ const FreeTestSeriesMegaMenu: React.FC = () => {
                   alt={typeof cat.name === "string" ? cat.name : ""}
                   className="w-8 h-8 object-contain rounded bg-white"
                 />
-                <span className="text-base font-semibold flex-1">
+                <span className="text-[10px] font-[600] flex-1">
                   {typeof cat.name === "string" ? cat.name : "[Invalid name]"}
                 </span>
                 <svg
@@ -385,10 +349,7 @@ const FreeTestSeriesMegaMenu: React.FC = () => {
                         href={`/quizzes?category=${encodeURIComponent(
                           typeof cat.name === "string" ? cat.name : ""
                         )}&subcategory=${encodeURIComponent(sub.name)}`}
-
                         className="flex items-center bg-white hover:bg-blue-50 border border-gray-200 rounded-xl shadow p-1 gap-3 min-h-[48px] focus:outline-none focus:ring-2 focus:ring-blue-300 transition"
-=======
-                      
                         tabIndex={0}
                       >
                         <img
@@ -396,11 +357,7 @@ const FreeTestSeriesMegaMenu: React.FC = () => {
                           alt={sub.name}
                           className="w-7 h-7 object-contain rounded bg-white"
                         />
-
-                        <span className="flex-1 text-[10px] font-[700] text-gray-700 truncate">
-
-                     
-
+                        <span className="text-[5px] font-[500] text-black-700">
                           {sub.name}
                         </span>
                         <span className="ml-2">{RIGHT_ARROW}</span>
