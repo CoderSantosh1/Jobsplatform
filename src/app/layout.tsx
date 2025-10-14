@@ -24,10 +24,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <meta
-          name="google-site-verification"
-          content="KpO7IT-JrAfXS5vKDai0XcwaVUS-JzRDwsl1kBtfoyI"
-        />
+        {/* meta tags */}
         <meta name="google-adsense-account" content="ca-pub-7649078598124252" />
         <link rel="icon" type="image/png" href="/logo-color-new.jpg" />
         <meta
@@ -47,12 +44,30 @@ export default function RootLayout({
           name="description"
           content="SarkariResultsNow provides all Sarkari Result, Admit Card, Government Jobs and Latest Notifications."
         />
-        <script
-          async
+        {/* Load the Google AdSense script (external) */}
+        <Script
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6447497690677792"
           crossOrigin="anonymous"
-        ></script>
+          strategy="afterInteractive"
+        />
+        {/* If you need an inline script like atOptions, use Script with dangerouslySetInnerHTML */}
+        <Script id="atOptions" strategy="afterInteractive">
+          {`
+            var atOptions = {
+              'key' : 'c1d632aae5a0b2db240c187ea66230df',
+              'format' : 'iframe',
+              'height' : 50,
+              'width' : 320,
+              'params' : {}
+            };
+            // If the ad provider requires injecting a script file after setting atOptions,
+            // add the code to load it here (e.g. create a script element and set src).
+            // Example (uncomment and replace URL if required):
+            // var s = document.createElement('script'); s.src = 'https://example.com/path/to/ads.js'; s.async = true; document.head.appendChild(s);
+          `}
+        </Script>
       </head>
+
       <body
         className={`${inter.className} antialiased`}
         suppressHydrationWarning
