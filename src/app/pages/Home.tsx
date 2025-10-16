@@ -7,7 +7,7 @@ import AnnouncementBar from "@/components/ui/AnnouncementBar";
 import Iconsocialmedia from "@/components/ui/iconsocialmedia";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import AdInjector from "@/components/AdInjector";
+import AdBanner from "@/components/AdBanner";
 // ---------- Types ----------
 interface Subcategory {
   _id?: string;
@@ -301,19 +301,7 @@ export default function Home() {
     <>
       <Header />
       <Iconsocialmedia />
-      <a
-        href="https://your-adsterra-referral-link.com"
-        rel="nofollow noopener noreferrer"
-        target="_blank"
-        className="block w-full text-center my-4"
-      >
-        <img
-          alt="banner"
-          src="https://landings-cdn.adsterratech.com/referralBanners/png/728%20x%2090%20px.png"
-          className="mx-auto w-[728px] max-w-full h-auto"
-          loading="lazy"
-        />
-      </a>
+      <AdBanner />
       <div className="bg-[#fff] min-h-screen">
         <main className="flex flex-col items-center justify-center w-full max-w-7xl mx-auto px-2 sm:px-4">
           <div className="w-full space-y-6 py-4">
@@ -502,7 +490,7 @@ export default function Home() {
                       </table>
                     </div>
                   </div>
-
+                  <AdBanner />
                   {/* Section 2: Admit Card / Answer Key / Admission */}
                   <div className="w-full">
                     <div className="w-full overflow-x-auto hide-scrollbar">
@@ -621,6 +609,7 @@ export default function Home() {
               </main>
             </div>
           </div>
+          <AdBanner />
           <section className="relative px-4 w-full max-w-screen overflow-x-hidden ">
             <h2 className="text-2xl font-bold mb-2 text-[#1a124d]">
               Popular Exams
