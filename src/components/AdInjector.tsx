@@ -1,5 +1,6 @@
 "use client";
 
+import { AlignJustify } from "lucide-react";
 import { useEffect } from "react";
 
 export default function AdInjector() {
@@ -10,6 +11,7 @@ export default function AdInjector() {
         format: "iframe",
         height: 50,
         width: 320,
+        AlignJustify,
         params: {},
       };
 
