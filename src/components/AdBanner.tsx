@@ -4,7 +4,7 @@ export default function AdBanner() {
   return (
     <div className="flex justify-center my-4">
       <a
-        href="https://your-adsterra-referral-link.com"
+        href="https://www.effectivegatecpm.com/bgbqa8gx4?key=35d5773405121cb7a47669d59a988662"
         rel="nofollow noopener noreferrer"
         target="_blank"
       >

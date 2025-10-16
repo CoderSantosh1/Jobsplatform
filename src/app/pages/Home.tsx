@@ -8,6 +8,7 @@ import Iconsocialmedia from "@/components/ui/iconsocialmedia";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import AdBanner from "@/components/AdBanner";
+import AdInjector from "@/components/AdInjector";
 // ---------- Types ----------
 interface Subcategory {
   _id?: string;
