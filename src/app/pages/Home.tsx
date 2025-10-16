@@ -7,7 +7,7 @@ import AnnouncementBar from "@/components/ui/AnnouncementBar";
 import Iconsocialmedia from "@/components/ui/iconsocialmedia";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-
+import AdInjector from "@/components/AdInjector";
 // ---------- Types ----------
 interface Subcategory {
   _id?: string;
@@ -301,6 +301,19 @@ export default function Home() {
     <>
       <Header />
       <Iconsocialmedia />
+      <a
+        href="https://your-adsterra-referral-link.com"
+        rel="nofollow noopener noreferrer"
+        target="_blank"
+        className="block w-full text-center my-4"
+      >
+        <img
+          alt="banner"
+          src="https://landings-cdn.adsterratech.com/referralBanners/png/728%20x%2090%20px.png"
+          className="mx-auto w-[728px] max-w-full h-auto"
+          loading="lazy"
+        />
+      </a>
       <div className="bg-[#fff] min-h-screen">
         <main className="flex flex-col items-center justify-center w-full max-w-7xl mx-auto px-2 sm:px-4">
           <div className="w-full space-y-6 py-4">

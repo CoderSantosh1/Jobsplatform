@@ -83,7 +83,9 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           {/* ClientLayout ensures AdInjector runs client-side */}
-          <ClientLayout >{children}</ClientLayout>
+          <ClientLayout >{children}
+
+          </ClientLayout>
 
           {/* Vercel monitoring & analytics (client-safe) */}
           <SpeedInsights />
