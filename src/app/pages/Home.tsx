@@ -7,8 +7,9 @@ import AnnouncementBar from "@/components/ui/AnnouncementBar";
 import Iconsocialmedia from "@/components/ui/iconsocialmedia";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import AdBanner from "@/components/AdBanner";
-import AdInjector from "@/components/AdInjector";
+import AdInjector from "@/components/AdInjectorheader";
+
+
 // ---------- Types ----------
 interface Subcategory {
   _id?: string;
@@ -302,7 +303,7 @@ export default function Home() {
     <>
       <Header />
       <Iconsocialmedia />
-      <AdBanner />
+
       <div className="bg-[#fff] min-h-screen">
         <main className="flex flex-col items-center justify-center w-full max-w-7xl mx-auto px-2 sm:px-4">
           <div className="w-full space-y-6 py-4">
@@ -384,6 +385,21 @@ export default function Home() {
                         return acc;
                       }, [])}
                     </div>
+                  </div>
+                  {/* DYNAMIC AD SLOT (only dynamic ad) */}
+                  <div className="w-full flex justify-center my-4">
+                    {/* Visual container where the script will be appended */}
+                    <div
+                      id="ad-slot"
+                      className="inline-block  "
+                    >
+                      {/* leaving empty; ad script will inject here */}
+                    </div>
+                    {/* Inject the dynamic ad script (no static image) */}
+                    <AdInjector
+                      slotId="ad-slot"
+                      keyId="c1d632aae5a0b2db240c187ea66230df"
+                    />
                   </div>
 
                   <div className="w-full">
@@ -491,7 +507,7 @@ export default function Home() {
                       </table>
                     </div>
                   </div>
-                  <AdBanner />
+
                   {/* Section 2: Admit Card / Answer Key / Admission */}
                   <div className="w-full">
                     <div className="w-full overflow-x-auto hide-scrollbar">
@@ -610,7 +626,6 @@ export default function Home() {
               </main>
             </div>
           </div>
-          <AdBanner />
           <section className="relative px-4 w-full max-w-screen overflow-x-hidden ">
             <h2 className="text-2xl font-bold mb-2 text-[#1a124d]">
               Popular Exams
