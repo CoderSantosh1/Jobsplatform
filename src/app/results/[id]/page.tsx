@@ -16,6 +16,7 @@ import {
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import Navbar from "../../../components/Header";
 import Footer from "../../../components/Footer";
+import AdInjector from "@/components/AdInjectorheader";
 
 interface Result {
   _id: string;
@@ -135,6 +136,22 @@ export default function ResultDetails() {
   return (
     <>
       <Navbar />
+        {/* DYNAMIC AD SLOT (only dynamic ad) */}
+              <div className="w-full flex justify-center my-4">
+              {/* Visual container where the script will be appended */}
+                <div
+                id="ad-slot"
+                className="inline-block  "
+                >
+                {/* leaving empty; ad script will inject here */}
+                </div>
+                {/* Inject the dynamic ad script (no static image) */}
+                <AdInjector
+                slotId="ad-slot"
+                keyId="c1d632aae5a0b2db240c187ea66230df"
+                />
+
+              </div>
       <div className="max-w-full mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
         <Paper sx={{ p: 4 }}>
           <Typography variant="h4" gutterBottom sx={{ color: "primary.main" }}>

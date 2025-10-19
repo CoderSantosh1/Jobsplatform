@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Navbar from "../../../components/Header"
 import Footer from '@/components/Footer';
-
+import AdInjector from "@/components/AdInjectorheader";
 import Image from 'next/image';
 import GoogleAdsense from '@/components/GoogleAdsense';
 
@@ -146,19 +146,28 @@ export default function JobDetail() {
   return (
     <React.Fragment>
       <Navbar />
+      {/* DYNAMIC AD SLOT (only dynamic ad) */}
+        <div className="w-full flex justify-center my-4">
+        {/* Visual container where the script will be appended */}
+          <div
+          id="ad-slot"
+          className="inline-block  "
+          >
+          {/* leaving empty; ad script will inject here */}
+          </div>
+          {/* Inject the dynamic ad script (no static image) */}
+          <AdInjector
+          slotId="ad-slot"
+          keyId="c1d632aae5a0b2db240c187ea66230df"
+          />
+
+        </div>
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-7xl mx-auto bg-white shadow-lg overflow-hidden">
           <div className="p-2">
             <h1 className="text-3xl font-bold text-red-800 ">{job.title}</h1>
 
-            {/* Ad placement at the top of the content */}
-            <div className="my-4">
-              <GoogleAdsense
-                adSlot="YOUR_AD_SLOT_ID_HERE"
-                style={{ display: "block" }}
-                className="w-full"
-              />
-            </div>
+
 
             <div className="col-mb-12">
               <p className="text-black-700 whitespace-pre-line">
@@ -403,6 +412,7 @@ export default function JobDetail() {
                   </div>
                 </div>
               </div>
+
               {job.applyJob && (
                 <div className=" mt-4 border border-blue-700 bg-white rounded-lg shadow w-max">
                   <table className="border-collapse">
