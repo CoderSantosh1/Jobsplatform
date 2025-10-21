@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Navbar from '../../../components/Header';
 import Footer from '@/components/Footer';
+import AdInjector from "@/components/AdInjectorheader";
 
 interface News {
   _id: string;
@@ -125,6 +126,22 @@ export default function NewsDetail() {
   return (
     <>
       <Navbar />
+      {/* DYNAMIC AD SLOT (only dynamic ad) */}
+                    <div className="w-full flex justify-center my-4">
+                    {/* Visual container where the script will be appended */}
+                      <div
+                      id="ad-slot"
+                      className="inline-block  "
+                      >
+                      {/* leaving empty; ad script will inject here */}
+                      </div>
+                      {/* Inject the dynamic ad script (no static image) */}
+                      <AdInjector
+                      slotId="ad-slot"
+                      keyId="c1d632aae5a0b2db240c187ea66230df"
+                      />
+
+                    </div>
       <div className="container max-w-7xl mx-auto px-4 py-8">
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
           <div className="p-4 sm:p-8">

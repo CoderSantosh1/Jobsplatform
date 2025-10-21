@@ -7,6 +7,8 @@ import AnnouncementBar from "@/components/ui/AnnouncementBar";
 import Iconsocialmedia from "@/components/ui/iconsocialmedia";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import AdInjector from "@/components/AdInjectorheader";
+import AdInjectionsqure from "@/components/AdInjectionsqure";
 
 // ---------- Types ----------
 interface Subcategory {
@@ -301,6 +303,7 @@ export default function Home() {
     <>
       <Header />
       <Iconsocialmedia />
+
       <div className="bg-[#fff] min-h-screen">
         <main className="flex flex-col items-center justify-center w-full max-w-7xl mx-auto px-2 sm:px-4">
           <div className="w-full space-y-6 py-4">
@@ -382,6 +385,22 @@ export default function Home() {
                         return acc;
                       }, [])}
                     </div>
+                  </div>
+                  {/* DYNAMIC AD SLOT (only dynamic ad) */}
+                  <div className="w-full flex justify-center my-4">
+                    {/* Visual container where the script will be appended */}
+                    <div
+                      id="ad-slot"
+                      className="inline-block  "
+                    >
+                      {/* leaving empty; ad script will inject here */}
+                    </div>
+                    {/* Inject the dynamic ad script (no static image) */}
+                    <AdInjector
+                      slotId="ad-slot"
+                      keyId="c1d632aae5a0b2db240c187ea66230df"
+                    />
+
                   </div>
 
                   <div className="w-full">
@@ -745,16 +764,16 @@ export default function Home() {
             Forth.
           </AnnouncementBar>
           <AnnouncementBar title="Sarkari Result Hindi">
-            Uttar Pradesh (Sarkariresult.Com.Cm UP Board) Is A State Where Lakhs
+            Bihar (Sarkariresultsnow.Com Bihar Board) Is A State Where Lakhs
             Of Young People Give Sarkari Test Consistently To Land Government
-            Positions, So Here UP Board Plays A Significant Part, So Here You
-            Will Get Sarkari Result Up Board 2024, Up Barricade Result , Board
-            2025,Up Board Test Result, Sarkari Result Up Board Class Tenth, Up
+            Positions, So Here Bihar Board Plays A Significant Part, So Here You
+            Will Get Sarkari Result Now Board 2025, Bihar Barricade Result , Board
+            2025,Biahr Board Test Result, Sarkari Result Bihar Board Class Tenth, Bihar
             Board Result Date, Sarkari Result Up Board 2024 In Hindi And So On.
             Will Continue To Get Refreshes.
           </AnnouncementBar>
           <AnnouncementBar title="Sarkariresult">
-            Sarkariresult: Data Presents To You All The Most Recent News Like
+            SarkariresultNow: Data Presents To You All The Most Recent News Like
             Outcome, Online Structure, Naukri, Test Result 2025, Work Result,
             Information Hindi Test, Government Work Data, And Updates, Notice
             And Output Gives.
