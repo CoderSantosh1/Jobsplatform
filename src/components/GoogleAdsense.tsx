@@ -36,9 +36,9 @@ const GoogleAdsense: React.FC<GoogleAdsenseProps> = ({
 
   return (
     <ins
-      className={`adsbygoogle ${className || ''}`}
+      className={`adsbygoogle ${className || ""}`}
       style={style}
-      data-ad-client="ca-pub-7649078598124252"
+      data-ad-client="ca-pub-6447497690677792"
       data-ad-slot={adSlot}
       data-ad-format={adFormat}
       data-full-width-responsive="true"
@@ -46,4 +46,4 @@ const GoogleAdsense: React.FC<GoogleAdsenseProps> = ({
   );
 };
 
-export default GoogleAdsense; 
+export default GoogleAdsense;
