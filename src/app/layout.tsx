@@ -24,7 +24,10 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <meta name="google-site-verification" content="KpO7IT-JrAfXS5vKDai0XcwaVUS-JzRDwsl1kBtfoyI" />
+        <meta
+          name="google-site-verification"
+          content="KpO7IT-JrAfXS5vKDai0XcwaVUS-JzRDwsl1kBtfoyI"
+        />
         <meta name="google-adsense-account" content="ca-pub-6447497690677792" />
         <link rel="icon" type="image/png" href="/logo-color-new.jpg" />
         <meta
@@ -40,8 +43,10 @@ export default function RootLayout({
           content="https://www.sarkariresultsnow.com/og-image.png"
         />
         <meta property="og:url" content="https://www.sarkariresultsnow.com/" />
-        <meta name="description" content="SarkariResultsNow provides all Sarkari Result, Admit Card, Government Jobs and Free Test Series , Latest Notifications." />
-       
+        <meta
+          name="description"
+          content="SarkariResultsNow provides all Sarkari Result, Admit Card, Government Jobs and Free Test Series , Latest Notifications."
+        />
       </head>
       <body
         className={`${inter.className} antialiased`}
