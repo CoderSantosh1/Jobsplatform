@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Montserrat } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
-import Script from "next/script";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { Analytics } from "@vercel/analytics/react";
 
@@ -12,8 +11,8 @@ const inter = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "Sarkariresultsnow.com",
-  description: "SarkariResultsNow provides all Sarkari Result, Admit Card, Government Jobs, Free Test Series Also Available",
+  title: "Sarkari Results Now",
+  description: "Latest Sarkari Result, Job Updates, Admit Card, Answer Keys",
 };
 
 export default function RootLayout({
@@ -29,6 +28,7 @@ export default function RootLayout({
           content="KpO7IT-JrAfXS5vKDai0XcwaVUS-JzRDwsl1kBtfoyI"
         />
         <meta name="google-adsense-account" content="ca-pub-6447497690677792" />
+
         <link rel="icon" type="image/png" href="/logo-color-new.jpg" />
         <meta
           property="og:title"
@@ -47,7 +47,15 @@ export default function RootLayout({
           name="description"
           content="SarkariResultsNow provides all Sarkari Result, Admit Card, Government Jobs and Free Test Series , Latest Notifications."
         />
+
+        {/* ✅ Plain script tag (not Next.js <Script/>) */}
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6447497690677792"
+          crossOrigin="anonymous"
+        ></script>
       </head>
+
       <body
         className={`${inter.className} antialiased`}
         suppressHydrationWarning
