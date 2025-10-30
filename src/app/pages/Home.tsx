@@ -7,15 +7,8 @@ import Footer from "@/components/Footer";
 import AnnouncementBar from "@/components/ui/AnnouncementBar";
 import Iconsocialmedia from "@/components/ui/iconsocialmedia";
 import { toast } from "sonner";
+import Script from "next/script";
 
-/*
-  NOTES (AdSense-friendly):
-  - This page is fully client-side: all data fetches happen inside useEffect.
-  - Make sure Header/Footer and other imported components are also client components
-    or compatible with client rendering. If they are server components, convert them.
-  - AdSense approval also needs real readable content, privacy policy, contact page,
-    and site navigation. Ensure those exist and are reachable.
-*/
 
 interface Subcategory {
   _id?: string;
@@ -265,6 +258,16 @@ export default function HomeClient() {
 
   return (
     <>
+      <div className="my-6 flex justify-center">
+        <ins
+          className="adsbygoogle"
+          style={{ display: "block", maxWidth: "100%" }}
+          data-ad-client="ca-pub-6447497690677792"
+          data-ad-slot="3013342039" // 👈 your actual slot ID
+          data-ad-format="auto"
+          data-full-width-responsive="true"
+        />
+      </div>
       <Header />
       <Iconsocialmedia />
       <div className="bg-white min-h-screen">
