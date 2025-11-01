@@ -263,6 +263,7 @@ useEffect(() => {
 
   return (
     <>
+      {/* ✅ First AdSense block */}
       <div className="my-6 flex justify-center">
         <ins
           className="adsbygoogle"
@@ -271,16 +272,16 @@ useEffect(() => {
           data-ad-slot="3013342039"
           data-ad-format="auto"
           data-full-width-responsive="true"
-          data-adtest="on" // remove in production
+          data-adtest="on" // <-- keep ON for local testing
         ></ins>
-
-        {/* ✅ Safe script inside JSX */}
         <script
           dangerouslySetInnerHTML={{
             __html: "(adsbygoogle = window.adsbygoogle || []).push({});",
           }}
         />
       </div>
+
+      {/* ✅ Normal page continues */}
 
       <Header />
       <Iconsocialmedia />
