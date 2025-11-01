@@ -104,6 +104,11 @@ export default function HomeClient() {
     setCanScrollLeft(el.scrollLeft > 5);
     setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 5);
   };
+useEffect(() => {
+  if (window.location.hash === "#google_vignette") {
+    history.replaceState(null, "", window.location.pathname);
+  }
+}, []);
 
   useEffect(() => {
     // attach listener
