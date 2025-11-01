@@ -301,6 +301,17 @@ export default function Home() {
     <>
       <Header />
       <Iconsocialmedia />
+      <div className="my-6 flex justify-center">
+        <ins
+          className="adsbygoogle"
+          style={{ display: "block", maxWidth: "100%" }}
+          data-ad-client="ca-pub-6447497690677792"
+          data-ad-slot="YOUR_SLOT_ID"
+          data-ad-format="auto"
+          data-full-width-responsive="true"
+          data-adtest="on"
+        ></ins>
+      </div>
       <div className="bg-[#fff] min-h-screen">
         <main className="flex flex-col items-center justify-center w-full max-w-7xl mx-auto px-2 sm:px-4">
           <div className="w-full space-y-6 py-4">
