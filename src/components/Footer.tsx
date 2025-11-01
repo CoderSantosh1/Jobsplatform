@@ -17,7 +17,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="/latest-jobs"
+                  href="/jobs"
                   className="text-blue-600 hover:text-blue-800"
                 >
                   Latest Jobs
@@ -33,7 +33,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="/admit-card"
+                  href="/admit-cards"
                   className="text-blue-600 hover:text-blue-800"
                 >
                   Admit Card
@@ -46,7 +46,7 @@ export default function Footer() {
             <ul className="space-y-2">
               <li>
                 <Link
-                  href="/answer-key"
+                  href="/answer-keys"
                   className="text-blue-600 hover:text-blue-800"
                 >
                   Answer Key
@@ -54,23 +54,20 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="/syllabus"
+                  href="/news"
                   className="text-blue-600 hover:text-blue-800"
                 >
-                  Syllabus
+                  News
                 </Link>
               </li>
               <li>
-                <Link
-                  href="/search"
-                  className="text-blue-600 hover:text-blue-800"
-                >
+                <Link href="/" className="text-blue-600 hover:text-blue-800">
                   Search
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/contact-us"
+                  href="/contact"
                   className="text-blue-600 hover:text-blue-800"
                 >
                   Contact Us
