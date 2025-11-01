@@ -11,7 +11,7 @@ const inter = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "Sarkari Results Now",
+  title: "SarkariResultsNow",
   description: "Latest Sarkari Result, Job Updates, Admit Card, Answer Keys",
 };
 
