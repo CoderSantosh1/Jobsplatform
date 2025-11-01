@@ -268,11 +268,20 @@ useEffect(() => {
           className="adsbygoogle"
           style={{ display: "block", maxWidth: "100%" }}
           data-ad-client="ca-pub-6447497690677792"
-          data-ad-slot="3013342039" // 👈 your actual slot ID
+          data-ad-slot="3013342039"
           data-ad-format="auto"
           data-full-width-responsive="true"
+          data-adtest="on" // remove in production
+        ></ins>
+
+        {/* ✅ Safe script inside JSX */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: "(adsbygoogle = window.adsbygoogle || []).push({});",
+          }}
         />
       </div>
+
       <Header />
       <Iconsocialmedia />
       <div className="bg-white min-h-screen">
