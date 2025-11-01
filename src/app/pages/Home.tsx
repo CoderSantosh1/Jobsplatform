@@ -299,7 +299,6 @@ export default function Home() {
 
   return (
     <>
-      {/* ✅ First AdSense block */}
       <div className="my-6 flex justify-center">
         <ins
           className="adsbygoogle"
@@ -308,7 +307,7 @@ export default function Home() {
           data-ad-slot="3013342039"
           data-ad-format="auto"
           data-full-width-responsive="true"
-          data-adtest="on" // <-- keep ON for local testing
+          data-adtest="on"
         ></ins>
         <script
           dangerouslySetInnerHTML={{

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Montserrat } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
+import CleanURL from "@/components/CleanURL"; // ✅ Fixes #google_vignette
 import "./globals.css";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { Analytics } from "@vercel/analytics/react";
@@ -23,13 +24,17 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        {/* 🔹 Google Verification & AdSense Config */}
         <meta
           name="google-site-verification"
           content="KpO7IT-JrAfXS5vKDai0XcwaVUS-JzRDwsl1kBtfoyI"
         />
         <meta name="google-adsense-account" content="ca-pub-6447497690677792" />
 
+        {/* 🔹 Favicon */}
         <link rel="icon" type="image/png" href="/logo-color-new.jpg" />
+
+        {/* 🔹 Open Graph (OG) Meta for social sharing */}
         <meta
           property="og:title"
           content="Sarkariresultsnow - Latest Govt Job Results, Admit Cards & News"
@@ -45,10 +50,10 @@ export default function RootLayout({
         <meta property="og:url" content="https://www.sarkariresultsnow.com/" />
         <meta
           name="description"
-          content="SarkariResultsNow provides all Sarkari Result, Admit Card, Government Jobs and Free Test Series , Latest Notifications."
+          content="SarkariResultsNow provides all Sarkari Result, Admit Card, Government Jobs, Free Test Series, and Latest Notifications."
         />
 
-        {/* ✅ Plain script tag (not Next.js <Script/>) */}
+        {/* ✅ Load AdSense Library (official async script) */}
         <script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6447497690677792"
@@ -66,7 +71,13 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          {/* ✅ Removes unwanted AdSense #google_vignette hash */}
+          <CleanURL />
+
+          {/* ✅ Page Content */}
           {children}
+
+          {/* ✅ Vercel Analytics & Speed Tracking */}
           <SpeedInsights />
           <Analytics />
         </ThemeProvider>
