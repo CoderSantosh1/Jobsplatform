@@ -299,6 +299,25 @@ export default function Home() {
 
   return (
     <>
+      {/* ✅ First AdSense block */}
+      <div className="my-6 flex justify-center">
+        <ins
+          className="adsbygoogle"
+          style={{ display: "block", maxWidth: "100%" }}
+          data-ad-client="ca-pub-6447497690677792"
+          data-ad-slot="3013342039"
+          data-ad-format="auto"
+          data-full-width-responsive="true"
+          data-adtest="on" // <-- keep ON for local testing
+        ></ins>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: "(adsbygoogle = window.adsbygoogle || []).push({});",
+          }}
+        />
+      </div>
+
+      {/* ✅ Normal page continues */}
       <Header />
       <Iconsocialmedia />
       <div className="bg-[#fff] min-h-screen">
