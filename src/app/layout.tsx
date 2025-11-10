@@ -12,9 +12,11 @@ const inter = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "SarkariResultsNow",
-  description: "Latest Sarkari Result, Job Updates, Admit Card, Answer Keys",
+  title: "Sarkari Results Now – Sarkari Exam, Job Alerts & Admit Cards 2025",
+  description:
+    "Sarkari Results Now provides all Sarkari Results, Admit Cards, Latest Government Job Updates, Free Test Series, and Daily Notifications for 2025 exams.",
 };
+
 
 export default function RootLayout({
   children,
