@@ -735,7 +735,7 @@ export default function Home() {
       {/* Announcement Bars */}
       <div className="bg-[#FFF] mb-4">
         <div className="flex flex-col items-center  justify-center bg-[#f5f7f2]  w-5/14 max-w-7xl mx-auto px-4 ">
-          <AnnouncementBar title="Sarkari Results Now Latest Job">
+          <AnnouncementBar title="SarkariResultsNow Latest Job">
             Most Recent Sarkari Work, Sarkari Test Result, Most Recent On The
             Web And Disconnected Structure, Concede Card, Prospectus,
             Affirmation, Ansawer Key, Grant, Notice Etc.If You Need To Get
