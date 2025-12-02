@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { useRouter } from "next/navigation";
 
 interface Admission {
   _id: string;
@@ -23,7 +24,7 @@ export default function AdmissionDetails() {
   const [admission, setAdmission] = useState<Admission | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
+  const router = useRouter();
   useEffect(() => {
     const fetchAdmission = async () => {
       if (!params.id) {
@@ -79,14 +80,16 @@ export default function AdmissionDetails() {
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
-     
-
       <div className="bg-white rounded-lg shadow-lg p-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-4">{admission.title}</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-4">
+          {admission.title}
+        </h1>
 
         <div className="grid gap-4 mb-6">
           <div>
-            <h2 className="text-lg font-semibold text-black-700">Organization</h2>
+            <h2 className="text-lg font-semibold text-black-700">
+              Organization
+            </h2>
             <p className="text-gray-600">{admission.organization}</p>
           </div>
 
@@ -103,14 +106,18 @@ export default function AdmissionDetails() {
           </div>
 
           <div>
-            <h2 className="text-lg font-semibold text-black-700">Description</h2>
+            <h2 className="text-lg font-semibold text-black-700">
+              Description
+            </h2>
             <p className="text-gray-600">{admission.description}</p>
           </div>
 
           <div>
             <h2 className="text-lg font-semibold text-black-700">Content</h2>
             <div className="bg-gray-50 p-4 rounded-md">
-              <pre className="whitespace-pre-wrap text-black-600">{admission.content}</pre>
+              <pre className="whitespace-pre-wrap text-black-600">
+                {admission.content}
+              </pre>
             </div>
           </div>
 
@@ -127,19 +134,58 @@ export default function AdmissionDetails() {
               </a>
             </div>
           )}
+          {/* joined telegram whatsapp and insta section */}
+          <div className="mt-4 p-4 border border-blue-700 bg-white rounded">
+            <p className="text-sm font-medium text-gray-800 mb-3">
+              Join our community for more updates:
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={() => router.push("https://t.me/sarkariresultsnow")}
+                className="w-full sm:w-auto text-blue-600 border border-blue-600 px-4 py-2 rounded font-semibold hover:bg-blue-600 hover:text-white transition"
+              >
+                Telegram
+              </button>
+
+              <button
+                onClick={() =>
+                  router.push(
+                    "https://chat.whatsapp.com/BA5S3uiul7iHKwi4jIeuuf"
+                  )
+                }
+                className="w-full sm:w-auto text-green-600 border border-green-600 px-4 py-2 rounded font-semibold hover:bg-green-600 hover:text-white transition"
+              >
+                WhatsApp
+              </button>
+
+              <button
+                onClick={() =>
+                  router.push("https://www.instagram.com/sarkariresultsnow/")
+                }
+                className="w-full sm:w-auto text-pink-600 border border-pink-600 px-4 py-2 rounded font-semibold hover:bg-pink-600 hover:text-white transition"
+              >
+                Instagram
+              </button>
+            </div>
+          </div>
 
           <div className="flex items-center justify-between">
-        <Link href="/">
-          <Button variant="outline" size="sm">
-            ← Back to Admissions
-          </Button>
-        </Link>
-        <span
-          className={`px-3 py-1 rounded-full text-sm ${admission.status === 'published' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}
-        >
-          {admission.status}
-        </span>
-      </div>
+            <Link href="/">
+              <Button variant="outline" size="sm">
+                ← Back to Admissions
+              </Button>
+            </Link>
+            <span
+              className={`px-3 py-1 rounded-full text-sm ${
+                admission.status === "published"
+                  ? "bg-green-100 text-green-800"
+                  : "bg-gray-100 text-gray-800"
+              }`}
+            >
+              {admission.status}
+            </span>
+          </div>
         </div>
       </div>
     </div>

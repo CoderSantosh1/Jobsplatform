@@ -134,12 +134,13 @@ export default function NewsDetail() {
               Posted Date: {new Date(news.postedDate).toLocaleDateString()}
             </div>
 
-            
+
 
             {/* News Content */}
             <div className="prose max-w-none text-gray-700 whitespace-pre-line">
               {news.content}
             </div>
+
           {/* Image Display - Fully Responsive and Scales on Hover for Desktop */}
           {news.imageUrl && (
             <div className="mb-6 flex justify-center">
@@ -152,6 +153,36 @@ export default function NewsDetail() {
               </div>
             </div>
           )}
+            {/* joined teligram whatspp and insta section */}
+              <div className="mt-4 p-4 border border-blue-700  bg-white">
+                <span className="text-sm font-medium text-gray-800 mr-2">
+                  Join our community for more updates:
+                </span>
+                <a
+                  onClick={() => router.push("https://t.me/sarkariresultsnow")}
+                  className="text-blue-500 hover:underline cursor-pointer transition-colors duration-200 hover:text-blue-700 font-semibold mr-4"
+                >
+                  Telegram
+                </a>
+                <a
+                  onClick={() =>
+                    router.push(
+                      "https://chat.whatsapp.com/BA5S3uiul7iHKwi4jIeuuf"
+                    )
+                  }
+                  className="text-green-500 hover:underline cursor-pointer transition-colors duration-200 hover:text-green-700 font-semibold mr-4"
+                >
+                  WhatsApp
+                </a>
+                <a
+                  onClick={() =>
+                    router.push("https://www.instagram.com/sarkariresultsnow/")
+                  }
+                  className="text-pink-500 hover:underline cursor-pointer transition-colors duration-200 hover:text-pink-700 font-semibold"
+                >
+                  Instagram
+                </a>
+              </div>
             {/* Back Button */}
             <div className="flex justify-between items-center mt-8">
               <button

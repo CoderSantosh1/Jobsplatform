@@ -110,66 +110,108 @@ export default function AdmitCardDetails() {
 
   return (
     <>
-    <Navbar />
-    <div className="container mx-auto px-4 py-8">
-          <div className="max-w-7xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
-            <div className="p-8">
-              <h1 className="text-3xl font-bold text-[#00000] mb-4">{admitCard.title}</h1>  
-              <div className="flex items-center text-[#00000] mb-6">
-               
-                <span>{admitCard.location}</span>
-              </div>
-    
-              <div className="mb-8">
-                <h2 className="text-xl font-semibold text-gray-900 mb-3">Job Description</h2>
-                <p className="text-gray-700 whitespace-pre-line">{admitCard.description}</p>
-              </div>
-    
-              <div className="mb-8">
-                <h2 className="text-xl font-semibold text-gray-900 mb-3">Requirements</h2>
-                <ul className="list-disc list-inside text-gray-700">
-                  {admitCard.requirements.map((requirement, index) => (
-                    <li key={index} className="mb-2">{requirement}</li>
-                  ))}
-                </ul>
-              </div>
-    
-            
-    
-              <div className="flex justify-between items-center">
-                <button
-                  onClick={() => router.back()}
-                  className="text-gray-600 hover:text-gray-900"
-                >
-                  ← 
-                </button>
-                {admitCard.downloadAdmitcardLink && (
-                  <button
-                    onClick={() => window.open(admitCard.downloadAdmitcardLink, '_blank')}
-                    className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    Download Admit Card
-                  </button>
-                )}
-                
-              </div>
+      <Navbar />
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-7xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
+          <div className="p-8">
+            <h1 className="text-3xl font-bold text-[#00000] mb-4">
+              {admitCard.title}
+            </h1>
+            <div className="flex items-center text-[#00000] mb-6">
+              <span>{admitCard.location}</span>
             </div>
+
+            <div className="mb-8">
+              <h2 className="text-xl font-semibold text-gray-900 mb-3">
+                Job Description
+              </h2>
+              <p className="text-gray-700 whitespace-pre-line">
+                {admitCard.description}
+              </p>
+            </div>
+
+            <div className="mb-8">
+              <h2 className="text-xl font-semibold text-gray-900 mb-3">
+                Requirements
+              </h2>
+              <ul className="list-disc list-inside text-gray-700">
+                {admitCard.requirements.map((requirement, index) => (
+                  <li key={index} className="mb-2">
+                    {requirement}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="flex justify-between items-center">
+              {admitCard.downloadAdmitcardLink && (
+                <button
+                  onClick={() =>
+                    window.open(admitCard.downloadAdmitcardLink, "_blank")
+                  }
+                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Download Admit Card
+                </button>
+              )}
+
+            </div>
+              {/* joined telegram whatsapp and insta section */}
+              <div className="mt-4 p-4 border border-blue-700 bg-white rounded">
+                <p className="text-sm font-medium text-gray-800 mb-3">
+                  Join our community for more updates:
+                </p>
+
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button
+                    onClick={() =>
+                      router.push("https://t.me/sarkariresultsnow")
+                    }
+                    className="w-full sm:w-auto text-blue-600 border border-blue-600 px-4 py-2 rounded font-semibold hover:bg-blue-600 hover:text-white transition"
+                  >
+                    Telegram
+                  </button>
+
+                  <button
+                    onClick={() =>
+                      router.push(
+                        "https://chat.whatsapp.com/BA5S3uiul7iHKwi4jIeuuf"
+                      )
+                    }
+                    className="w-full sm:w-auto text-green-600 border border-green-600 px-4 py-2 rounded font-semibold hover:bg-green-600 hover:text-white transition"
+                  >
+                    WhatsApp
+                  </button>
+
+                  <button
+                    onClick={() =>
+                      router.push(
+                        "https://www.instagram.com/sarkariresultsnow/"
+                      )
+                    }
+                    className="w-full sm:w-auto text-pink-600 border border-pink-600 px-4 py-2 rounded font-semibold hover:bg-pink-600 hover:text-white transition"
+                  >
+                    Instagram
+                  </button>
+                </div>
+              </div>
           </div>
         </div>
-    {/* <Container maxWidth="md" sx={{ mt: 4 }}>
+      </div>
+      {/* <Container maxWidth="md" sx={{ mt: 4 }}>
       <Box sx={{ mb: 2 }}>   <IconButton
           onClick={() => router.back()}
           sx={{ color: 'text.secondary', '&:hover': { color: 'primary.main' } }}
         >
           <ArrowBackIcon />
         </IconButton>
-      
+
      </Box> <Paper sx={{ p: 4 }}>
         <Typography variant="h4" gutterBottom sx={{ color: 'primary.main' }}>
           {admitCard.title}
         </Typography>
         <Divider sx={{ my: 2 }} />
-        
+
         <Grid container spacing={3} sx={{ mb: 3 }}>
           <Grid item xs={12} sm={6}>
             <Typography variant="subtitle2" color="text.secondary">Organization</Typography>
@@ -220,7 +262,7 @@ export default function AdmitCardDetails() {
         )}
       </Paper>
     </Container> */}
-    <Footer />
+      <Footer />
     </>
   );
 }

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Montserrat } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
-import CleanURL from "@/components/CleanURL"; // ✅ Fixes #google_vignette
+import CleanURL from "@/components/CleanURL";
 import "./globals.css";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { Analytics } from "@vercel/analytics/react";
@@ -34,7 +34,7 @@ export default function RootLayout({
         <meta name="google-adsense-account" content="ca-pub-6447497690677792" />
 
         {/* 🔹 Favicon */}
-        <link rel="icon" type="image/png" href="/logo-color-new.jpg" />
+        <link rel="icon" type="image/png" href="/logo.png" />
 
         {/* 🔹 Open Graph (OG) Meta for social sharing */}
         <meta
