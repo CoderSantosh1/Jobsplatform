@@ -299,6 +299,24 @@ export default function Home() {
 
   return (
     <>
+      <div className="my-6 flex justify-center">
+        <ins
+          className="adsbygoogle"
+          style={{ display: "block", maxWidth: "100%" }}
+          data-ad-client="ca-pub-6447497690677792"
+          data-ad-slot="3013342039"
+          data-ad-format="auto"
+          data-full-width-responsive="true"
+          data-adtest="on"
+        ></ins>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: "(adsbygoogle = window.adsbygoogle || []).push({});",
+          }}
+        />
+      </div>
+
+      {/* ✅ Normal page continues */}
       <Header />
       <Iconsocialmedia />
       <div className="bg-[#fff] min-h-screen">
@@ -717,7 +735,7 @@ export default function Home() {
       {/* Announcement Bars */}
       <div className="bg-[#FFF] mb-4">
         <div className="flex flex-col items-center  justify-center bg-[#f5f7f2]  w-5/14 max-w-7xl mx-auto px-4 ">
-          <AnnouncementBar title="Sarkari Results Now Latest Job">
+          <AnnouncementBar title="SarkariResultsNow Latest Job">
             Most Recent Sarkari Work, Sarkari Test Result, Most Recent On The
             Web And Disconnected Structure, Concede Card, Prospectus,
             Affirmation, Ansawer Key, Grant, Notice Etc.If You Need To Get

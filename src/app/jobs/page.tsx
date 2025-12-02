@@ -9,14 +9,14 @@ import Footer from "../../components/Footer";
 interface Job {
   _id: string;
   title: string;
-  organization: string; 
+  organization: string;
   location: string;
-  salary?: string; 
-  totalVacancy: string; 
+  salary?: string;
+  totalVacancy: string;
   minimumAge?: string;
   maximumAge?: string;
-  gender?: string; 
-  qualification?: string; 
+  gender?: string;
+  qualification?: string;
   applicationDeadline: string;
   status: string;
   category?: string;
@@ -89,7 +89,7 @@ export default function JobsPage() {
     <>
     <Header />
     <div className="max-w-7xl mx-auto px-2 sm:px-4 py-8 w-full">
-      <h1 className="text-3xl font-bold mb-8 text-gray-900 text-3xl">Latest Jobs</h1>
+      <h1 className="text-3xl font-bold mb-8 text-gray-900 ">Latest Jobs</h1>
       <div className="w-full overflow-x-auto hide-scrollbar">
         <table className="w-full table-fixed border-collapse border border-orange-500 text-xs sm:text-sm md:text-base">
           <thead>
@@ -105,7 +105,7 @@ export default function JobsPage() {
                     {job.title}
                   </a>
                 </td>
-                
+
               </tr>
             ))}
           </tbody>

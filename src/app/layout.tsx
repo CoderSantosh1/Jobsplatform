@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Montserrat } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
+import CleanURL from "@/components/CleanURL";
 import "./globals.css";
-import Script from "next/script";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { Analytics } from "@vercel/analytics/react";
 
@@ -12,9 +12,11 @@ const inter = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "Sarkariresultsnow.com",
-  description: "SarkariResultsNow provides all Sarkari Result, Admit Card, Government Jobs, Free Test Series Also Available",
+  title: "Sarkari Results Now – Sarkari Exam, Job Alerts & Admit Cards 2025",
+  description:
+    "Sarkari Results Now provides all Sarkari Results, Admit Cards, Latest Government Job Updates, Free Test Series, and Daily Notifications for 2025 exams.",
 };
+
 
 export default function RootLayout({
   children,
@@ -24,9 +26,17 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <meta name="google-site-verification" content="KpO7IT-JrAfXS5vKDai0XcwaVUS-JzRDwsl1kBtfoyI" />
+        {/* 🔹 Google Verification & AdSense Config */}
+        <meta
+          name="google-site-verification"
+          content="KpO7IT-JrAfXS5vKDai0XcwaVUS-JzRDwsl1kBtfoyI"
+        />
         <meta name="google-adsense-account" content="ca-pub-6447497690677792" />
-        <link rel="icon" type="image/png" href="/logo-color-new.jpg" />
+
+        {/* 🔹 Favicon */}
+        <link rel="icon" type="image/png" href="/logo.png" />
+
+        {/* 🔹 Open Graph (OG) Meta for social sharing */}
         <meta
           property="og:title"
           content="Sarkariresultsnow - Latest Govt Job Results, Admit Cards & News"
@@ -40,9 +50,19 @@ export default function RootLayout({
           content="https://www.sarkariresultsnow.com/og-image.png"
         />
         <meta property="og:url" content="https://www.sarkariresultsnow.com/" />
-        <meta name="description" content="SarkariResultsNow provides all Sarkari Result, Admit Card, Government Jobs and Free Test Series , Latest Notifications." />
-       
+        <meta
+          name="description"
+          content="SarkariResultsNow provides all Sarkari Result, Admit Card, Government Jobs, Free Test Series, and Latest Notifications."
+        />
+
+        {/* ✅ Load AdSense Library (official async script) */}
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6447497690677792"
+          crossOrigin="anonymous"
+        ></script>
       </head>
+
       <body
         className={`${inter.className} antialiased`}
         suppressHydrationWarning
@@ -53,7 +73,13 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          {/* ✅ Removes unwanted AdSense #google_vignette hash */}
+          <CleanURL />
+
+          {/* ✅ Page Content */}
           {children}
+
+          {/* ✅ Vercel Analytics & Speed Tracking */}
           <SpeedInsights />
           <Analytics />
         </ThemeProvider>
