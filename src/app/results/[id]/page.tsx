@@ -157,7 +157,7 @@ export default function ResultDetails() {
           </IconButton>
         </Box> */}
         <Paper className="p-6">
-          <Typography className="text-red-500 font-[600] text-[30px]">
+          <Typography className="text-red-500 font-[600] text-[32px] !important">
             {result.title}
           </Typography>
           <Divider sx={{ my: 2 }} />
