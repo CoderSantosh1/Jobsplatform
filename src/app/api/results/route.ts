@@ -16,18 +16,18 @@ interface ValidationError {
 export async function POST(request: Request) {
   try {
     await connectDB();
-    
+
     const body = await request.json();
-    
+
     // Validate required fields
     const requiredFields = ['title', 'organization', 'resultDate', 'category', 'downloadLink', 'description'];
     const missingFields = requiredFields.filter(field => !body[field]);
-    
+
     if (missingFields.length > 0) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Missing required fields', 
+        {
+          success: false,
+          error: 'Missing required fields',
           details: missingFields.map(field => `${field} is required`)
         },
         { status: 400 }
@@ -42,7 +42,7 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-   
+
 
     // Validate organization
     const organization = body.organization.trim();
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-   
+
 
     // Validate category
     const validCategories = ['government', 'private', 'education', 'other'];
@@ -70,7 +70,7 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-    
+
     // Validate date
     const resultDate = new Date(body.resultDate);
     if (isNaN(resultDate.getTime())) {
@@ -96,8 +96,8 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-   
-    
+
+
     const result = await Result.create({
       title: body.title,
       description: body.description,
@@ -106,9 +106,10 @@ export async function POST(request: Request) {
       category: body.category,
       downloadLink: body.downloadLink,
       status: body.status || 'draft',
-      createdAt: new Date()
+      createdAt: new Date(),
+      officalwebsites: body.officalwebsites || []
     });
-   
+
     // Ensure all fields, including description, are present in the response
     return NextResponse.json({ success: true, data: {
       _id: result._id,
@@ -121,11 +122,12 @@ export async function POST(request: Request) {
       status: result.status,
       createdAt: result.createdAt,
       updatedAt: result.updatedAt,
+      officalwebsites: result.officalwebsites,
       __v: result.__v
     } }, { status: 201 });
   } catch (error) {
     console.error('Error in POST /api/results:', error);
-    
+
     // Handle validation errors
     if ((error as ValidationError).name === 'ValidationError') {
       const validationError = error as ValidationError;
@@ -146,7 +148,7 @@ export async function POST(request: Request) {
 export async function GET(request: Request) {
   try {
     await connectDB();
-    
+
     const url = new URL(request.url);
     const statusFilter = url.searchParams.get('status');
 
@@ -171,6 +173,7 @@ export async function GET(request: Request) {
       status: result.status,
       createdAt: result.createdAt,
       updatedAt: result.updatedAt,
+      officalwebsites: result.officalwebsites,
       __v: result.__v
     }));
 

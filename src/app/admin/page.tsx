@@ -17,6 +17,7 @@ import JobForm from "./components/JobForm";
 import QuizForm from "./components/QuizForm";
 import QuizList from "./components/QuizList";
 import CategoryManager from "./components/CategoryManager";
+import { off } from "process";
 
 interface NewsFormData {
   title: string;
@@ -74,6 +75,7 @@ interface ResultFormData {
   downloadLink: string;
   description: string;
   status: string;
+  officalwebsites?: string;
 }
 
 type TabType =
@@ -169,6 +171,7 @@ export default function AdminDashboard() {
     downloadLink: "",
     description: "",
     status: "published",
+    officalwebsites: "",
   });
 
   const [answerKeyFormData, setAnswerKeyFormData] = useState({
@@ -346,6 +349,7 @@ export default function AdminDashboard() {
           downloadLink: "",
           description: "",
           status: "draft",
+          officalwebsites: "",
         });
       } else {
         alert("Failed to post results");
@@ -601,6 +605,22 @@ export default function AdminDashboard() {
                     pattern="https?:\/\/(www\.)?[\w\-\.]+\.[a-zA-Z]{2,}(\/\S*)?$"
                   />
                 </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Official Websites (comma separated)
+                  </label>
+                  <input
+                    type="text"
+                    value={resultsFormData.officalwebsites}
+                    onChange={(e) =>
+                      setResultsFormData({
+                        ...resultsFormData,
+                        officalwebsites: e.target.value,
+                      })
+                    }
+                    className="w-full p-2 border rounded-md"
+                  />
+                  </div>
 
                 <Button type="submit" className="w-full">
                   Post Result
