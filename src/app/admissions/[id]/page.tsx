@@ -134,39 +134,38 @@ export default function AdmissionDetails() {
               </a>
             </div>
           )}
-          {/* joined telegram whatsapp and insta section */}
+            {/* joined telegram whatsapp and insta section */}
           <div className="mt-4 p-4 border border-blue-700 bg-white rounded">
             <p className="text-sm font-medium text-gray-800 mb-3">
               Join our community for more updates:
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3">
-              <button
-                onClick={() => router.push("https://t.me/sarkariresultsnow")}
-                className="w-full sm:w-auto text-blue-600 border border-blue-600 px-4 py-2 rounded font-semibold hover:bg-blue-600 hover:text-white transition"
+              <a
+                href="https://t.me/sarkariresultsnow"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block w-full sm:w-auto text-blue-600 border border-blue-600 px-4 py-2 rounded font-semibold hover:bg-blue-600 hover:text-white transition text-center"
               >
                 Telegram
-              </button>
+              </a>
 
-              <button
-                onClick={() =>
-                  router.push(
-                    "https://chat.whatsapp.com/BA5S3uiul7iHKwi4jIeuuf"
-                  )
-                }
+              <a
+                href="https://chat.whatsapp.com/BA5S3uiul7iHKwi4jIeuuf"
                 className="w-full sm:w-auto text-green-600 border border-green-600 px-4 py-2 rounded font-semibold hover:bg-green-600 hover:text-white transition"
+                target="_blank"
+                rel="noopener noreferrer"
               >
                 WhatsApp
-              </button>
-
-              <button
-                onClick={() =>
-                  router.push("https://www.instagram.com/sarkariresultsnow/")
-                }
+              </a>
+              <a
+                href="https://www.instagram.com/sarkariresultsnow/"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-full sm:w-auto text-pink-600 border border-pink-600 px-4 py-2 rounded font-semibold hover:bg-pink-600 hover:text-white transition"
               >
                 Instagram
-              </button>
+              </a>
             </div>
           </div>
 

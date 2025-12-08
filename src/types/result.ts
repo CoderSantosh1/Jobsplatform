@@ -10,4 +10,5 @@ export interface Result {
   updatedAt: string;
   description?: string;
   attachments?: string[];
+  officalwebsites: string[];
 }

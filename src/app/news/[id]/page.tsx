@@ -128,61 +128,65 @@ export default function NewsDetail() {
       <div className="container max-w-7xl mx-auto px-4 py-8">
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
           <div className="p-4 sm:p-8">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">{news.title}</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
+              {news.title}
+            </h1>
             <div className="text-gray-600 mb-2">{news.organization}</div>
             <div className="text-sm text-red-500 mb-6">
               Posted Date: {new Date(news.postedDate).toLocaleDateString()}
             </div>
-
-
 
             {/* News Content */}
             <div className="prose max-w-none text-gray-700 whitespace-pre-line">
               {news.content}
             </div>
 
-          {/* Image Display - Fully Responsive and Scales on Hover for Desktop */}
-          {news.imageUrl && (
-            <div className="mb-6 flex justify-center">
-              <div className="w-full sm:w-auto max-w-full overflow-hidden rounded border shadow transition-transform duration-300 hover:scale-105">
-                <img
-                  src={news.imageUrl}
-                  alt={news.title}
-                  className="w-full h-auto object-contain"
-                />
+            {/* Image Display - Fully Responsive and Scales on Hover for Desktop */}
+            {news.imageUrl && (
+              <div className="mb-6 flex justify-center">
+                <div className="w-full sm:w-auto max-w-full overflow-hidden rounded border shadow transition-transform duration-300 hover:scale-105">
+                  <img
+                    src={news.imageUrl}
+                    alt={news.title}
+                    className="w-full h-auto object-contain"
+                  />
+                </div>
               </div>
-            </div>
-          )}
-            {/* joined teligram whatspp and insta section */}
-              <div className="mt-4 p-4 border border-blue-700  bg-white">
-                <span className="text-sm font-medium text-gray-800 mr-2">
-                  Join our community for more updates:
-                </span>
+            )}
+            {/* joined telegram whatsapp and insta section */}
+            <div className="mt-4 p-4 border border-blue-700 bg-white rounded">
+              <p className="text-sm font-medium text-gray-800 mb-3">
+                Join our community for more updates:
+              </p>
+
+              <div className="flex flex-col sm:flex-row gap-3">
                 <a
-                  onClick={() => router.push("https://t.me/sarkariresultsnow")}
-                  className="text-blue-500 hover:underline cursor-pointer transition-colors duration-200 hover:text-blue-700 font-semibold mr-4"
+                  href="https://t.me/sarkariresultsnow"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block w-full sm:w-auto text-blue-600 border border-blue-600 px-4 py-2 rounded font-semibold hover:bg-blue-600 hover:text-white transition text-center"
                 >
                   Telegram
                 </a>
+
                 <a
-                  onClick={() =>
-                    router.push(
-                      "https://chat.whatsapp.com/BA5S3uiul7iHKwi4jIeuuf"
-                    )
-                  }
-                  className="text-green-500 hover:underline cursor-pointer transition-colors duration-200 hover:text-green-700 font-semibold mr-4"
+                  href="https://chat.whatsapp.com/BA5S3uiul7iHKwi4jIeuuf"
+                  className="inline-block w-full sm:w-auto text-green-600 border border-green-600 px-4 py-2 rounded font-semibold hover:bg-green-600 hover:text-white transition text-center"
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
                   WhatsApp
                 </a>
                 <a
-                  onClick={() =>
-                    router.push("https://www.instagram.com/sarkariresultsnow/")
-                  }
-                  className="text-pink-500 hover:underline cursor-pointer transition-colors duration-200 hover:text-pink-700 font-semibold"
+                  href="https://www.instagram.com/sarkariresultsnow/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block w-full sm:w-auto text-pink-600 border border-pink-600 px-4 py-2 rounded font-semibold hover:bg-pink-600 hover:text-white transition text-center"
                 >
                   Instagram
                 </a>
               </div>
+            </div>
             {/* Back Button */}
             <div className="flex justify-between items-center mt-8">
               <button

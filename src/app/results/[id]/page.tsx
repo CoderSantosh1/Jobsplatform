@@ -12,11 +12,17 @@ import {
   Grid,
   Chip,
   IconButton,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  TableContainer,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import Navbar from "../../../components/Header";
 import Footer from "../../../components/Footer";
-
+import { off } from 'process';
 interface Result {
   _id: string;
   title: string;
@@ -28,6 +34,8 @@ interface Result {
   downloadLink?: string;
   createdAt: string;
   updatedAt: string;
+  officalwebsites: string;
+  youtubeLink: string;
 }
 
 export default function ResultDetails() {
@@ -136,7 +144,8 @@ export default function ResultDetails() {
     <>
       <Navbar />
       <div className="max-w-7xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
-        <Box sx={{ mb: 2 }}>
+        {/* Back btn section */}
+        {/* <Box sx={{ mb: 2 }}>
           <IconButton
             onClick={() => router.back()}
             sx={{
@@ -146,27 +155,28 @@ export default function ResultDetails() {
           >
             <ArrowBackIcon />
           </IconButton>
-        </Box>
-        <Paper sx={{ p: 4 }}>
-          <Typography variant="h4" gutterBottom sx={{ color: "primary.main" }}>
+        </Box> */}
+        <Paper className="p-6">
+          <Typography className="text-red-500 font-[600] text-[30px]">
             {result.title}
           </Typography>
           <Divider sx={{ my: 2 }} />
 
           <Grid container>
             <Grid item xs={12} sm={6}>
-              <Typography variant="subtitle2" color="text.secondary">
+              <Typography className="text-red-500 font-[600] text-[16px]">
                 Organization
               </Typography>
               <Typography variant="body1">{result.organization}</Typography>
             </Grid>
             <Grid item xs={12} sm={6}>
-              <Typography variant="subtitle2" color="text.secondary">
+              <Typography className="text-red-500 font-[600] text-[16px]">
                 Category
               </Typography>
               <Typography variant="body1">{result.category}</Typography>
             </Grid>
-            <Grid item xs={12} sm={6}>
+            {/* Status section */}
+            {/* <Grid item xs={12} sm={6}>
               <Typography variant="subtitle2" color="text.secondary">
                 Status
               </Typography>
@@ -180,9 +190,9 @@ export default function ResultDetails() {
                 size="small"
                 sx={{ mt: 0.5 }}
               />
-            </Grid>
+            </Grid> */}
             <Grid item xs={12} sm={6}>
-              <Typography variant="subtitle2" color="text.secondary">
+              <Typography className="text-red-500 font-[600] text-[14px]">
                 Posted Date
               </Typography>
               <Typography variant="body1">
@@ -191,7 +201,7 @@ export default function ResultDetails() {
             </Grid>
           </Grid>
 
-          <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
+          <Typography className="text-red-500 font-[600] text-[16px] mt-2">
             Description
           </Typography>
           <Typography
@@ -201,24 +211,114 @@ export default function ResultDetails() {
           >
             {result.description || "No description available"}
           </Typography>
+          {/* download link section */}
+          <TableContainer component={Paper} sx={{ mt: 2 }}>
+            <Table
+              sx={{
+                "& .MuiTableCell-root": {
+                  border: "1px solid #ddd",
+                  padding: "16px",
+                },
+              }}
+            >
+              <TableBody>
+                {/* Green heading row */}
+                <TableRow>
+                  <TableCell
+                    colSpan={2}
+                    align="center"
+                    sx={{
+                      fontWeight: "bold",
+                      fontSize: "22px",
+                      color: "green",
+                    }}
+                  >
+                    Useful Important Links:
+                  </TableCell>
+                </TableRow>
 
-          {result.downloadLink && (
-            <Box sx={{ mt: 3 }}>
-              <a
-                href={result.downloadLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ textDecoration: "none" }}
-              >
-                <Chip
-                  label="Download Result"
-                  color="primary"
-                  clickable
-                  sx={{ "&:hover": { backgroundColor: "primary.dark" } }}
-                />
-              </a>
-            </Box>
-          )}
+                {/* Download Result row */}
+                <TableRow>
+                  <TableCell
+                    align="center"
+                    sx={{
+                      fontWeight: "bold",
+                      fontSize: "20px",
+                      color: "magenta",
+                    }}
+                  >
+                    Download Result
+                  </TableCell>
+
+                  <TableCell
+                    align="center"
+                    sx={{ fontWeight: "bold", fontSize: "20px" }}
+                  >
+                    <a
+                      href={result.downloadLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ textDecoration: "none", color: "blue" }}
+                    >
+                      Click Here
+                    </a>
+                  </TableCell>
+                </TableRow>
+
+                {/*You tube link*/}
+                <TableRow>
+                  <TableCell
+                    align="center"
+                    sx={{
+                      fontWeight: "bold",
+                      fontSize: "20px",
+                      color: "magenta",
+                    }}
+                  >
+                    How to Download Results
+                  </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{ fontWeight: "bold", fontSize: "20px" }}
+                  >
+                    <a
+                      href={result.youtubeLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ textDecoration: "none", color: "blue" }}
+                    >
+                      Click Here
+                    </a>
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell
+                    align="center"
+                    sx={{
+                      fontWeight: "bold",
+                      fontSize: "20px",
+                      color: "magenta",
+                    }}
+                  >
+                    Official Website
+                  </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{ fontWeight: "bold", fontSize: "20px" }}
+                  >
+                    <a
+                      href={result.officalwebsites}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ textDecoration: "none", color: "blue" }}
+                    >
+                      Click Here
+                    </a>
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </TableContainer>
           {/* joined telegram whatsapp and insta section */}
           <div className="mt-4 p-4 border border-blue-700 bg-white rounded">
             <p className="text-sm font-medium text-gray-800 mb-3">
@@ -226,32 +326,31 @@ export default function ResultDetails() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3">
-              <button
-                onClick={() => router.push("https://t.me/sarkariresultsnow")}
-                className="w-full sm:w-auto text-blue-600 border border-blue-600 px-4 py-2 rounded font-semibold hover:bg-blue-600 hover:text-white transition"
+              <a
+                href="https://t.me/sarkariresultsnow"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block w-full sm:w-auto text-blue-600 border border-blue-600 px-4 py-2 rounded font-semibold hover:bg-blue-600 hover:text-white transition text-center"
               >
                 Telegram
-              </button>
+              </a>
 
-              <button
-                onClick={() =>
-                  router.push(
-                    "https://chat.whatsapp.com/BA5S3uiul7iHKwi4jIeuuf"
-                  )
-                }
-                className="w-full sm:w-auto text-green-600 border border-green-600 px-4 py-2 rounded font-semibold hover:bg-green-600 hover:text-white transition"
+              <a
+                href="https://chat.whatsapp.com/BA5S3uiul7iHKwi4jIeuuf"
+                className="inline-block w-full sm:w-auto text-green-600 border border-green-600 px-4 py-2 rounded font-semibold hover:bg-green-600 hover:text-white transition text-center"
+                target="_blank"
+                rel="noopener noreferrer"
               >
                 WhatsApp
-              </button>
-
-              <button
-                onClick={() =>
-                  router.push("https://www.instagram.com/sarkariresultsnow/")
-                }
-                className="w-full sm:w-auto text-pink-600 border border-pink-600 px-4 py-2 rounded font-semibold hover:bg-pink-600 hover:text-white transition"
+              </a>
+              <a
+                href="https://www.instagram.com/sarkariresultsnow/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block w-full sm:w-auto text-pink-600 border border-pink-600 px-4 py-2 rounded font-semibold hover:bg-pink-600 hover:text-white transition text-center"
               >
                 Instagram
-              </button>
+              </a>
             </div>
           </div>
         </Paper>
