@@ -6,9 +6,9 @@ export default function Footer() {
     <footer className="bg-gray-100 border-t border-gray-200 ">
       <div className="container mx-auto px-4 py-6">
         {/* Footer Navigation */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-6">
-          <div>
-            <h3 className="text-lg font-bold text-red-600 mb-3">Quick Links</h3>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-8 mb-6">
+          <div >
+            <h3 className="text-lg font-bold text-red-600 mb-3 ">Quick Links</h3>
             <ul className="space-y-2">
               <li>
                 <Link href="/" className="text-blue-600 hover:text-blue-800">
@@ -78,12 +78,11 @@ export default function Footer() {
               </li>
             </ul>
           </div>
-          <div>
-            <h3 className="text-lg font-bold text-red-600 mb-3">
+          <div className="">
+            <h3 className="md:text-[20px] text-[12px] font-bold text-red-600 mb-3 ">
               Contact Information
             </h3>
-            <p className="text-gray-700 mb-2">
-              email:{" "}
+            <p className="text-gray-700 mb-2 hover:text-blue-900  ">
               <a href="mailto:sarkariresultsnow.com">
                 support@sarkariresultsnow.com
               </a>

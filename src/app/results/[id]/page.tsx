@@ -22,6 +22,7 @@ import {
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import Navbar from "../../../components/Header";
 import Footer from "../../../components/Footer";
+import { off } from 'process';
 interface Result {
   _id: string;
   title: string;
@@ -33,6 +34,8 @@ interface Result {
   downloadLink?: string;
   createdAt: string;
   updatedAt: string;
+  officalwebsites: string;
+  youtubeLink: string;
 }
 
 export default function ResultDetails() {
@@ -153,7 +156,7 @@ export default function ResultDetails() {
             <ArrowBackIcon />
           </IconButton>
         </Box> */}
-        <Paper className="p-6" >
+        <Paper className="p-6">
           <Typography className="text-red-500 font-[600]">
             {result.title}
           </Typography>
@@ -251,18 +254,14 @@ export default function ResultDetails() {
                     align="center"
                     sx={{ fontWeight: "bold", fontSize: "20px" }}
                   >
-                    {result.downloadLink ? (
-                      <a
-                        href={result.downloadLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ textDecoration: "none", color: "blue" }}
-                      >
-                        Click Here
-                      </a>
-                    ) : (
-                      <span style={{ color: "blue" }}>Link Activate Soon</span>
-                    )}
+                    <a
+                      href={result.downloadLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ textDecoration: "none", color: "blue" }}
+                    >
+                      Click Here
+                    </a>
                   </TableCell>
                 </TableRow>
 
@@ -282,17 +281,24 @@ export default function ResultDetails() {
                     align="center"
                     sx={{ fontWeight: "bold", fontSize: "20px" }}
                   >
-                    <span style={{ color: "blue" }}>
-                      {/* First Shift | Second Shift */}
-                      Youtube Video
-                    </span>
+                    <a
+                      href={result.youtubeLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ textDecoration: "none", color: "blue" }}
+                    >
+                      Click Here
+                    </a>
                   </TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell
                     align="center"
                     sx={{
-                      fontWeight: "bold", fontSize: "20px", color: "magenta" }}
+                      fontWeight: "bold",
+                      fontSize: "20px",
+                      color: "magenta",
+                    }}
                   >
                     Official Website
                   </TableCell>
@@ -301,12 +307,12 @@ export default function ResultDetails() {
                     sx={{ fontWeight: "bold", fontSize: "20px" }}
                   >
                     <a
-                      href="https://sarkariresultsnow.com/"
+                      href={result.officalwebsites}
                       target="_blank"
                       rel="noopener noreferrer"
                       style={{ textDecoration: "none", color: "blue" }}
                     >
-                      Sarkari Results Now
+                      Click Here
                     </a>
                   </TableCell>
                 </TableRow>

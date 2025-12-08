@@ -7,6 +7,7 @@ import AnnouncementBar from "@/components/ui/AnnouncementBar";
 import Iconsocialmedia from "@/components/ui/iconsocialmedia";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { off } from 'process';
 
 // ---------- Types ----------
 interface Subcategory {
@@ -73,6 +74,7 @@ interface Result {
   title: string;
   organization: string;
   resultDate: string;
+  officalwebsites: string[];
 }
 interface AdmitCard {
   _id: string;

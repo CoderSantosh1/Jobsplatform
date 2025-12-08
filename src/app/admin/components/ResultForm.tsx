@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { off } from 'process';
 
 interface ResultFormData {
   title: string;
@@ -9,8 +10,10 @@ interface ResultFormData {
   resultDate: string;
   category: string;
   downloadLink: string;
+  youtubeLink: string;
   description: string;
   status: string;
+  officalwebsites: string;
 }
 
 interface ResultFormProps {
@@ -26,8 +29,10 @@ export default function ResultForm({ initialData, onSubmit, onCancel }: ResultFo
     resultDate: '',
     category: 'other',
     downloadLink: '',
+    youtubeLink: '',
     description: initialData?.description || '',
     status: 'draft',
+    officalwebsites: '',
   });
 
   useEffect(() => {
@@ -45,10 +50,12 @@ export default function ResultForm({ initialData, onSubmit, onCancel }: ResultFo
         title: '',
         organization: '',
         resultDate: '',
-        category: '',
+        category: 'other',
         downloadLink: '',
+        youtubeLink: '',
         description: '',
         status: 'draft',
+        officalwebsites: '',
       });
     }
   };
@@ -77,7 +84,7 @@ export default function ResultForm({ initialData, onSubmit, onCancel }: ResultFo
               className="w-full p-2 border rounded-md"
             />
           </div>
-               
+
           <div>
             <label className="block text-sm font-medium mb-2">Category</label>
             <select
@@ -114,11 +121,33 @@ export default function ResultForm({ initialData, onSubmit, onCancel }: ResultFo
           </div>
 
           <div>
+            <label className="block text-sm font-medium mb-2">YouTube Video Link (Optional)</label>
+            <input
+              type="url"
+              value={formData.youtubeLink}
+              onChange={(e) => setFormData({ ...formData, youtubeLink: e.target.value })}
+              className="w-full p-2 border rounded-md"
+              placeholder="https://www.youtube.com/watch?v=VIDEO_ID or https://youtu.be/VIDEO_ID"
+            />
+          </div>
+
+          <div>
             <label className="block text-sm font-medium mb-2">Description (Optional)</label>
             <textarea
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               className="w-full p-2 border rounded-md h-32"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">Official Websites (comma separated)</label>
+            <input
+              type="text"
+              value={formData.officalwebsites}
+              onChange={(e) => setFormData({ ...formData, officalwebsites: e.target.value })}
+              className="w-full p-2 border rounded-md"
+              placeholder="https://example1.com, https://example2.com"
             />
           </div>
 

@@ -73,9 +73,10 @@ interface ResultFormData {
   resultDate: string;
   category: string;
   downloadLink: string;
+  youtubeLink: string;
   description: string;
   status: string;
-  officalwebsites?: string;
+  officalwebsites: string;
 }
 
 type TabType =
@@ -169,6 +170,7 @@ export default function AdminDashboard() {
     resultDate: "",
     category: "",
     downloadLink: "",
+    youtubeLink: "",
     description: "",
     status: "published",
     officalwebsites: "",
@@ -347,10 +349,12 @@ export default function AdminDashboard() {
           resultDate: "",
           category: "",
           downloadLink: "",
+          youtubeLink: "",
           description: "",
           status: "draft",
           officalwebsites: "",
         });
+        console.log("Result form data after reset:", resultsFormData);
       } else {
         alert("Failed to post results");
       }
@@ -603,6 +607,23 @@ export default function AdminDashboard() {
                     className="w-full p-2 border rounded-md"
                     required
                     pattern="https?:\/\/(www\.)?[\w\-\.]+\.[a-zA-Z]{2,}(\/\S*)?$"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    YouTube Video Link (Optional)
+                  </label>
+                  <input
+                    type="url"
+                    value={resultsFormData.youtubeLink}
+                    onChange={(e) =>
+                      setResultsFormData({
+                        ...resultsFormData,
+                        youtubeLink: e.target.value,
+                      })
+                    }
+                    className="w-full p-2 border rounded-md"
+                    placeholder="https://www.youtube.com/watch?v=VIDEO_ID or https://youtu.be/VIDEO_ID"
                   />
                 </div>
                 <div>

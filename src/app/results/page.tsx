@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
+import { off } from 'process';
 
 
 interface Result {
@@ -15,6 +16,7 @@ interface Result {
   createdAt: string;
   updatedAt: string;
   description?: string;
+  officalwebsites: string;
 }
 
 export default function ResultsPage() {
@@ -70,7 +72,7 @@ export default function ResultsPage() {
                     {result.title}
                   </a>
                 </td>
-               
+
               </tr>
             ))}
           </tbody>

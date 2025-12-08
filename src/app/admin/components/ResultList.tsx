@@ -13,16 +13,30 @@ interface Result {
   resultDate: string;
   category: string;
   downloadLink: string;
+  youtubeLink?: string;
   status: string;
   createdAt: string;
   description: string;
+  officalwebsites?: string[];
+}
+
+interface ResultFormData {
+  title: string;
+  organization: string;
+  resultDate: string;
+  category: string;
+  downloadLink: string;
+  youtubeLink: string;
+  status: string;
+  description: string;
+  officalwebsites: string;
 }
 
 export default function ResultList() {
   const [results, setResults] = useState<Result[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [editingResult, setEditingResult] = useState<Result | null>(null);
+  const [editingResult, setEditingResult] = useState<{ id: string; data: ResultFormData } | null>(null);
 
   useEffect(() => {
     fetchResults();
@@ -51,15 +65,27 @@ export default function ResultList() {
   };
 
   const handleEdit = async (result: Result) => {
-    setEditingResult(result);
+    // Convert officalwebsites array to comma-separated string for the form
+    const resultForForm: ResultFormData = {
+      title: result.title,
+      organization: result.organization,
+      resultDate: result.resultDate,
+      category: result.category,
+      downloadLink: result.downloadLink,
+      youtubeLink: result.youtubeLink || '',
+      status: result.status,
+      description: result.description,
+      officalwebsites: result.officalwebsites ? result.officalwebsites.join(', ') : ''
+    };
+    setEditingResult({ id: result._id, data: resultForForm });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleUpdate = async (data: Omit<Result, '_id' | 'createdAt'>) => {
+  const handleUpdate = async (data: ResultFormData) => {
     if (!editingResult) return;
 
     try {
-      const response = await fetch(`/api/results/${editingResult._id}`, {
+      const response = await fetch(`/api/results/${editingResult.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -69,8 +95,8 @@ export default function ResultList() {
 
       if (response.ok) {
         const updatedResult = await response.json();
-        setResults(results.map(result => 
-          result._id === editingResult._id ? { ...result, ...updatedResult.data } : result
+        setResults(results.map(result =>
+          result._id === editingResult.id ? { ...result, ...updatedResult.data } : result
         ));
         setEditingResult(null);
         alert('Result updated successfully');
@@ -171,7 +197,7 @@ export default function ResultList() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg w-full max-w-2xl">
             <ResultForm
-              initialData={editingResult}
+              initialData={editingResult.data}
               onSubmit={handleUpdate}
               onCancel={() => setEditingResult(null)}
             />
