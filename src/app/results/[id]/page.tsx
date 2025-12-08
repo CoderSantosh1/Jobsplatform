@@ -157,20 +157,20 @@ export default function ResultDetails() {
           </IconButton>
         </Box> */}
         <Paper className="p-6">
-          <Typography className="text-red-500 font-[600]">
+          <Typography className="text-red-500 font-[600] text-[30px]">
             {result.title}
           </Typography>
           <Divider sx={{ my: 2 }} />
 
           <Grid container>
             <Grid item xs={12} sm={6}>
-              <Typography variant="subtitle2" color="text.secondary">
+              <Typography className="text-red-500 font-[600] text-[16px]">
                 Organization
               </Typography>
               <Typography variant="body1">{result.organization}</Typography>
             </Grid>
             <Grid item xs={12} sm={6}>
-              <Typography variant="subtitle2" color="text.secondary">
+              <Typography className="text-red-500 font-[600] text-[16px]">
                 Category
               </Typography>
               <Typography variant="body1">{result.category}</Typography>
@@ -192,7 +192,7 @@ export default function ResultDetails() {
               />
             </Grid> */}
             <Grid item xs={12} sm={6}>
-              <Typography variant="subtitle2" color="text.secondary">
+              <Typography className="text-red-500 font-[600] text-[14px]">
                 Posted Date
               </Typography>
               <Typography variant="body1">
@@ -201,7 +201,7 @@ export default function ResultDetails() {
             </Grid>
           </Grid>
 
-          <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
+          <Typography className="text-red-500 font-[600] text-[16px] mt-2">
             Description
           </Typography>
           <Typography
@@ -216,7 +216,7 @@ export default function ResultDetails() {
             <Table
               sx={{
                 "& .MuiTableCell-root": {
-                  border: "1px solid #ddd", // borders like the screenshot
+                  border: "1px solid #ddd",
                   padding: "16px",
                 },
               }}
