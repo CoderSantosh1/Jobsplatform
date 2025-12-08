@@ -1,17 +1,16 @@
-import { NextResponse } from 'next/server';
-import connectDB from '@/lib/mongodb';
-import Quiz from '@/lib/models/Quiz';
-import Question from '@/lib/models/Question';
-import QuizAttempt from '@/lib/models/QuizAttempt';
+import { NextResponse } from "next/server";
+import connectDB from "@/lib/mongodb";
+import Quiz from "@/lib/models/Quiz";
+import Question from "@/lib/models/Question";
+import QuizAttempt from "@/lib/models/QuizAttempt";
 
-export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function GET(req: any, ctx: any) {
   try {
+    const { id } = await ctx.params;
+
     await connectDB();
-    const quiz = await Quiz.findById(params.id).populate("questions");
-    
+    const quiz = await Quiz.findById(id).populate("questions");
+
     if (!quiz) {
       return NextResponse.json(
         { error: "Quiz not found" },
@@ -29,19 +28,17 @@ export async function GET(
   }
 }
 
-export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(req: any, ctx: any) {
   try {
+    const { id } = await ctx.params;
+
     await connectDB();
-    const quizData = await request.json();
-    console.log("PUT request received for quiz ID:", params.id);
+    const quizData = await req.json();
+    console.log("PUT request received for quiz ID:", id);
     console.log("Payload received:", quizData);
-    
-    // Update the quiz
+
     const quiz = await Quiz.findByIdAndUpdate(
-      params.id,
+      id,
       {
         title: quizData.title,
         description: quizData.description,
@@ -62,17 +59,14 @@ export async function PUT(
       );
     }
 
-    // Update or create questions
-    for (const questionData of quizData.questions) {
+    for (const questionData of quizData.questions || []) {
       if (questionData._id) {
-        // Update existing question
         await Question.findByIdAndUpdate(questionData._id, {
           text: questionData.text,
           options: questionData.options,
           correctAnswer: questionData.correctAnswer,
         });
       } else {
-        // Create new question
         const newQuestion = new Question({
           quizId: quiz._id,
           text: questionData.text,
@@ -80,13 +74,13 @@ export async function PUT(
           correctAnswer: questionData.correctAnswer,
         });
         await newQuestion.save();
+        // @ts-ignore
         quiz.questions.push(newQuestion._id);
       }
     }
 
     await quiz.save();
 
-    // Fetch the updated quiz with populated questions before sending the response
     const updatedQuiz = await Quiz.findById(quiz._id).populate("questions");
     console.log("Quiz before sending response:", updatedQuiz);
 
@@ -100,14 +94,13 @@ export async function PUT(
   }
 }
 
-export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(req: any, ctx: any) {
   try {
+    const { id } = await ctx.params;
+
     await connectDB();
-    const quiz = await Quiz.findById(params.id);
-    
+    const quiz = await Quiz.findById(id);
+
     if (!quiz) {
       return NextResponse.json(
         { error: "Quiz not found" },
@@ -115,13 +108,8 @@ export async function DELETE(
       );
     }
 
-    // Delete all questions associated with the quiz
-    await Question.deleteMany({ quizId: params.id });
-    
-    // Delete all attempts associated with the quiz
-    await QuizAttempt.deleteMany({ quizId: params.id });
-    
-    // Delete the quiz
+    await Question.deleteMany({ quizId: id });
+    await QuizAttempt.deleteMany({ quizId: id });
     await quiz.deleteOne();
 
     return NextResponse.json({ message: "Quiz deleted successfully" });
@@ -132,4 +120,4 @@ export async function DELETE(
       { status: 500 }
     );
   }
-} 
+}
