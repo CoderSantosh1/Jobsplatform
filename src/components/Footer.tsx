@@ -150,7 +150,7 @@ export default function Footer() {
           </h2>
           <p className="text-sm text-gray-600">WWW.sarkariresultsnow.COM</p>
           <p className="text-sm text-gray-600 mt-2">
-            &copy; {new Date().getFullYear()} Sarkariresultsnow. All Rights
+            &copy; 2023 Sarkariresultsnow. All Rights
             Reserved.
           </p>
         </div>

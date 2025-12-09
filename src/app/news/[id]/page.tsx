@@ -156,7 +156,7 @@ export default function NewsDetail() {
             {/* joined telegram whatsapp and insta section */}
             <div className="mt-4 p-4 border border-blue-700 bg-white rounded">
               <p className="text-sm font-medium text-gray-800 mb-3">
-                Join our community for more updates:
+                Join our Social Media for more updates:
               </p>
 
               <div className="flex flex-col sm:flex-row gap-3">

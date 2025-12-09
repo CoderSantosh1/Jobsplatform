@@ -7,7 +7,14 @@ import Footer from '@/components/Footer';
 import BackImages from "@/assists/back.png"
 import Image from 'next/image';
 import GoogleAdsense from '@/components/GoogleAdsense';
-
+import {
+  TableBody,
+  TableCell,
+  TableRow,
+  Table,
+  TableContainer,
+  Paper
+} from "@mui/material";
 interface Job {
   _id: string;
   title: string;
@@ -403,24 +410,123 @@ export default function JobDetail() {
                   </div>
                 </div>
               </div>
+              {/* download link section */}
+              <TableContainer component={Paper} sx={{ mt: 2 }}>
+                <Table
+                  sx={{
+                    "& .MuiTableCell-root": {
+                      border: "1px solid #ddd",
+                      padding: "16px",
+                    },
+                  }}
+                >
+                  <TableBody>
+                    {/* Green heading row */}
+                    <TableRow>
+                      <TableCell
+                        colSpan={2}
+                        align="center"
+                        sx={{
+                          fontWeight: "bold",
+                          fontSize: "22px",
+                          color: "green",
+                        }}
+                      >
+                        Useful Important Links:
+                      </TableCell>
+                    </TableRow>
 
-              {job.applyJob && (
-                <div className="mt-4 p-4 border border-blue-700  bg-white">
-                  <span className="text-sm font-medium text-gray-800 mr-2">
-                    Click Now to Apply:
-                  </span>
-                  <a
-                    onClick={() => router.push(job.applyJob)}
-                    className="text-red-500 hover:underline cursor-pointer transition-colors duration-200 hover:text-blue-700 font-semibold"
-                  >
-                    Apply Now
-                  </a>
-                </div>
-              )}
+                    {/* Download Result row */}
+                    <TableRow>
+                      <TableCell
+                        align="center"
+                        sx={{
+                          fontWeight: "bold",
+                          fontSize: "14px",
+                          color: "magenta",
+                        }}
+                      >
+                        Applay Jobs
+                      </TableCell>
+
+                      <TableCell
+                        align="center"
+                        sx={{ fontWeight: "bold", fontSize: "14px" }}
+                      >
+                        <a
+                          href={job.applyJob}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ textDecoration: "none", color: "blue" }}
+                        >
+                          Click Here
+                        </a>
+                      </TableCell>
+                    </TableRow>
+
+                    {/* YouTube Link */}
+                    <TableRow>
+                      <TableCell
+                        align="center"
+                        sx={{
+                          fontWeight: "bold",
+                          fontSize: "14px",
+                          color: "magenta",
+                        }}
+                      >
+                        How to Applay This Jobs
+                      </TableCell>
+
+                      <TableCell
+                        align="center"
+                        sx={{ fontWeight: "bold", fontSize: "14px" }}
+                      >
+                        <a
+                          href={job.applyJob}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ textDecoration: "none", color: "blue" }}
+                        >
+                          Click Here
+                        </a>
+                      </TableCell>
+                    </TableRow>
+
+                    {/* Official Website */}
+                    <TableRow>
+                      <TableCell
+                        align="center"
+                        sx={{
+                          fontWeight: "bold",
+                          fontSize: "14px",
+                          color: "magenta",
+                        }}
+                      >
+                        Official Website
+                      </TableCell>
+
+                      <TableCell
+                        align="center"
+                        sx={{ fontWeight: "bold", fontSize: "14px" }}
+                      >
+                        <a
+                          href={job.applyJob}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ textDecoration: "none", color: "blue" }}
+                        >
+                          Click Here
+                        </a>
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </TableContainer>
+
               {/* joined telegram whatsapp and insta section */}
               <div className="mt-4 p-4 border border-blue-700 bg-white rounded">
                 <p className="text-sm font-medium text-gray-800 mb-3">
-                  Join our community for more updates:
+                  Join our Social Media for more updates:
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-3">
