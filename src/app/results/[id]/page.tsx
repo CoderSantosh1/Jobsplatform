@@ -157,20 +157,20 @@ export default function ResultDetails() {
           </IconButton>
         </Box> */}
         <Paper className="p-6">
-          <div className="text-red-500 font-[600] text-[32px] lg:text-[24px] ">
+          <div className="text-red-500 font-[600] text-[20px] lg:text-[24px] ">
             {result.title}
           </div>
           <Divider sx={{ my: 2 }} />
 
           <Grid container>
             <Grid item xs={12} sm={6}>
-              <div className="text-red-500 font-[600] text-[16px]">
+              <div className="text-red-500 font-[600] text-[14px]">
                 Organization
               </div>
               <Typography variant="body1">{result.organization}</Typography>
             </Grid>
             <Grid item xs={12} sm={6}>
-              <div className="text-red-500 font-[600] text-[16px]">
+              <div className="text-red-500 font-[600] text-[14px]">
                 Category
               </div>
               <Typography variant="body1">{result.category}</Typography>
@@ -201,7 +201,7 @@ export default function ResultDetails() {
             </Grid>
           </Grid>
 
-          <div className="text-red-500 font-[600] text-[16px] mt-2">
+          <div className="text-red-500 font-[600] text-[14px] mt-2">
             Description
           </div>
           <Typography
