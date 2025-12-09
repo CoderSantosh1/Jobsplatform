@@ -157,22 +157,22 @@ export default function ResultDetails() {
           </IconButton>
         </Box> */}
         <Paper className="p-6">
-          <Typography className="text-red-500 font-[600] text-[32px] !important">
+          <div className="text-red-500 font-[600] text-[32px] lg:text-[24px] ">
             {result.title}
-          </Typography>
+          </div>
           <Divider sx={{ my: 2 }} />
 
           <Grid container>
             <Grid item xs={12} sm={6}>
-              <Typography className="text-red-500 font-[600] text-[16px]">
+              <div className="text-red-500 font-[600] text-[16px]">
                 Organization
-              </Typography>
+              </div>
               <Typography variant="body1">{result.organization}</Typography>
             </Grid>
             <Grid item xs={12} sm={6}>
-              <Typography className="text-red-500 font-[600] text-[16px]">
+              <div className="text-red-500 font-[600] text-[16px]">
                 Category
-              </Typography>
+              </div>
               <Typography variant="body1">{result.category}</Typography>
             </Grid>
             {/* Status section */}
@@ -192,18 +192,18 @@ export default function ResultDetails() {
               />
             </Grid> */}
             <Grid item xs={12} sm={6}>
-              <Typography className="text-red-500 font-[600] text-[14px]">
+              <div className="text-red-500 font-[600] text-[14px]">
                 Posted Date
-              </Typography>
+              </div>
               <Typography variant="body1">
                 {new Date(result.createdAt).toLocaleDateString()}
               </Typography>
             </Grid>
           </Grid>
 
-          <Typography className="text-red-500 font-[600] text-[16px] mt-2">
+          <div className="text-red-500 font-[600] text-[16px] mt-2">
             Description
-          </Typography>
+          </div>
           <Typography
             variant="body1"
             paragraph
