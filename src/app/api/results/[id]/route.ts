@@ -24,7 +24,7 @@ export async function GET(
       );
     }
 
-    const result = await Result.findById(resultId);
+    const result = await Result.findById(resultId).lean();
 
     if (!result) {
       return NextResponse.json(
@@ -33,7 +33,25 @@ export async function GET(
       );
     }
 
-    return NextResponse.json({ success: true, data: result }, { status: 200 });
+    // Ensure all fields are included in the response, even if empty
+    const processedResult = {
+      _id: (result as any)._id,
+      title: (result as any).title,
+      description: (result as any).description,
+      organization: (result as any).organization,
+      resultDate: (result as any).resultDate,
+      category: (result as any).category,
+      downloadLink: (result as any).downloadLink,
+      youtubeLink: (result as any).youtubeLink || "",
+      officalwebsites: (result as any).officalwebsites || [],
+      downloadnotificationresultlis: (result as any).downloadnotificationresultlis || [],
+      status: (result as any).status,
+      createdAt: (result as any).createdAt,
+      updatedAt: (result as any).updatedAt,
+      __v: (result as any).__v,
+    };
+
+    return NextResponse.json({ success: true, data: processedResult }, { status: 200 });
   } catch (error) {
     console.error("Error in GET /api/results/[id]:", error);
     return NextResponse.json(
@@ -131,6 +149,20 @@ export async function PUT(
       }
     }
 
+    // Normalize download notification (string OR array → array)
+    if (body.downloadnotificationresultlis !== undefined) {
+      if (Array.isArray(body.downloadnotificationresultlis)) {
+        body.downloadnotificationresultlis = body.downloadnotificationresultlis
+          .map((s: any) => String(s).trim())
+          .filter(Boolean);
+      } else {
+        body.downloadnotificationresultlis = String(body.downloadnotificationresultlis)
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean);
+      }
+    }
+
     // Update timestamp
     body.updatedAt = new Date();
 
@@ -145,8 +177,26 @@ export async function PUT(
       );
     }
 
+    // Ensure all fields are included in the response
+    const processedResult = {
+      _id: (updatedResult as any)._id,
+      title: (updatedResult as any).title,
+      description: (updatedResult as any).description,
+      organization: (updatedResult as any).organization,
+      resultDate: (updatedResult as any).resultDate,
+      category: (updatedResult as any).category,
+      downloadLink: (updatedResult as any).downloadLink,
+      youtubeLink: (updatedResult as any).youtubeLink || "",
+      officalwebsites: (updatedResult as any).officalwebsites || [],
+      downloadnotificationresultlis: (updatedResult as any).downloadnotificationresultlis || [],
+      status: (updatedResult as any).status,
+      createdAt: (updatedResult as any).createdAt,
+      updatedAt: (updatedResult as any).updatedAt,
+      __v: (updatedResult as any).__v,
+    };
+
     return NextResponse.json(
-      { success: true, data: updatedResult },
+      { success: true, data: processedResult },
       { status: 200 }
     );
   } catch (error) {

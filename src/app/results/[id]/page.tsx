@@ -36,6 +36,7 @@ interface Result {
   updatedAt: string;
   officalwebsites: string;
   youtubeLink: string;
+  downloadnotificationresultlis: string;
 }
 
 export default function ResultDetails() {
@@ -236,14 +237,13 @@ export default function ResultDetails() {
                     Useful Important Links:
                   </TableCell>
                 </TableRow>
-
                 {/* Download Result row */}
                 <TableRow>
                   <TableCell
                     align="center"
                     sx={{
                       fontWeight: "bold",
-                      fontSize: "20px",
+                      fontSize: "14px",
                       color: "magenta",
                     }}
                   >
@@ -252,7 +252,11 @@ export default function ResultDetails() {
 
                   <TableCell
                     align="center"
-                    sx={{ fontWeight: "bold", fontSize: "20px" }}
+                    sx={{
+                      fontWeight: "bold",
+                      fontSize: "14px",
+                      color: "magenta",
+                    }}
                   >
                     <a
                       href={result.downloadLink}
@@ -264,14 +268,43 @@ export default function ResultDetails() {
                     </a>
                   </TableCell>
                 </TableRow>
-
+                {/* Notification download link */}
+                <TableRow>
+                  <TableCell
+                    align="center"
+                    sx={{
+                      fontWeight: "bold",
+                      fontSize: "14px",
+                      color: "magenta",
+                    }}
+                  >
+                    Download Notification
+                  </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{
+                      fontWeight: "bold",
+                      fontSize: "14px",
+                      color: "magenta",
+                    }}
+                  >
+                    <a
+                      href={result.downloadnotificationresultlis}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ textDecoration: "none", color: "blue" }}
+                    >
+                      Click Here
+                    </a>
+                  </TableCell>
+                </TableRow>
                 {/*You tube link*/}
                 <TableRow>
                   <TableCell
                     align="center"
                     sx={{
                       fontWeight: "bold",
-                      fontSize: "20px",
+                      fontSize: "14px",
                       color: "magenta",
                     }}
                   >
@@ -279,7 +312,11 @@ export default function ResultDetails() {
                   </TableCell>
                   <TableCell
                     align="center"
-                    sx={{ fontWeight: "bold", fontSize: "20px" }}
+                    sx={{
+                      fontWeight: "bold",
+                      fontSize: "14px",
+                      color: "magenta",
+                    }}
                   >
                     <a
                       href={result.youtubeLink}
@@ -296,7 +333,7 @@ export default function ResultDetails() {
                     align="center"
                     sx={{
                       fontWeight: "bold",
-                      fontSize: "20px",
+                      fontSize: "14px",
                       color: "magenta",
                     }}
                   >
@@ -304,7 +341,11 @@ export default function ResultDetails() {
                   </TableCell>
                   <TableCell
                     align="center"
-                    sx={{ fontWeight: "bold", fontSize: "20px" }}
+                    sx={{
+                      fontWeight: "bold",
+                      fontSize: "14px",
+                      color: "magenta",
+                    }}
                   >
                     <a
                       href={result.officalwebsites}

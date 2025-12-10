@@ -18,6 +18,7 @@ interface Result {
   createdAt: string;
   description: string;
   officalwebsites?: string[];
+  downloadnotificationresultlis?: string[];
 }
 
 interface ResultFormData {
@@ -30,6 +31,7 @@ interface ResultFormData {
   status: string;
   description: string;
   officalwebsites: string;
+  downloadnotificationresultlis: string;
 }
 
 export default function ResultList() {
@@ -75,7 +77,8 @@ export default function ResultList() {
       youtubeLink: result.youtubeLink || '',
       status: result.status,
       description: result.description,
-      officalwebsites: result.officalwebsites ? result.officalwebsites.join(', ') : ''
+      officalwebsites: result.officalwebsites ? result.officalwebsites.join(', ') : '',
+      downloadnotificationresultlis: result.downloadnotificationresultlis ? result.downloadnotificationresultlis.join(', ') : ''
     };
     setEditingResult({ id: result._id, data: resultForForm });
     window.scrollTo({ top: 0, behavior: 'smooth' });

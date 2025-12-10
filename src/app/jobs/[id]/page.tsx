@@ -463,7 +463,36 @@ export default function JobDetail() {
                         </a>
                       </TableCell>
                     </TableRow>
-
+                    {/* Notification download link */}
+                    <TableRow>
+                      <TableCell
+                        align="center"
+                        sx={{
+                          fontWeight: "bold",
+                          fontSize: "14px",
+                          color: "magenta",
+                        }}
+                      >
+                        Download Notification
+                      </TableCell>
+                      <TableCell
+                        align="center"
+                        sx={{
+                          fontWeight: "bold",
+                          fontSize: "14px",
+                          color: "magenta",
+                        }}
+                      >
+                        <a
+                          href={job.applyJob}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ textDecoration: "none", color: "blue" }}
+                        >
+                          Click Here
+                        </a>
+                      </TableCell>
+                    </TableRow>
                     {/* YouTube Link */}
                     <TableRow>
                       <TableCell

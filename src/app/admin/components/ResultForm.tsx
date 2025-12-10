@@ -14,6 +14,7 @@ interface ResultFormData {
   description: string;
   status: string;
   officalwebsites: string;
+  downloadnotificationresultlis: string;
 }
 
 interface ResultFormProps {
@@ -33,6 +34,7 @@ export default function ResultForm({ initialData, onSubmit, onCancel }: ResultFo
     description: initialData?.description || '',
     status: 'draft',
     officalwebsites: '',
+    downloadnotificationresultlis: '',
   });
 
   useEffect(() => {
@@ -56,6 +58,7 @@ export default function ResultForm({ initialData, onSubmit, onCancel }: ResultFo
         description: '',
         status: 'draft',
         officalwebsites: '',
+        downloadnotificationresultlis: '',
       });
     }
   };
@@ -128,6 +131,15 @@ export default function ResultForm({ initialData, onSubmit, onCancel }: ResultFo
               onChange={(e) => setFormData({ ...formData, youtubeLink: e.target.value })}
               className="w-full p-2 border rounded-md"
               placeholder="https://www.youtube.com/watch?v=VIDEO_ID or https://youtu.be/VIDEO_ID"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Download Notification (Optional)</label>
+            <input
+              type="text"
+              value={formData.downloadnotificationresultlis}
+              onChange={(e) => setFormData({ ...formData, downloadnotificationresultlis: e.target.value })}
+              className="w-full p-2 border rounded-md"
             />
           </div>
 
