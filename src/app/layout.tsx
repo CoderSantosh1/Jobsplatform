@@ -32,7 +32,10 @@ export default function RootLayout({
           content="KpO7IT-JrAfXS5vKDai0XcwaVUS-JzRDwsl1kBtfoyI"
         />
         <meta name="google-adsense-account" content="ca-pub-6447497690677792" />
-
+        <meta
+          name="google-site-verification"
+          content="YRllvaBEISVbmMxHK3hy4i3K6fVmcIqebYsdEh0iT7E"
+        />
         {/* 🔹 Favicon */}
         <link rel="icon" type="image/png" href="/logo.png" />
 
