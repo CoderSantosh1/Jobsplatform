@@ -53,10 +53,7 @@ export default function RootLayout({
           content="https://www.sarkariresultsnow.com/og-image.png"
         />
         <meta property="og:url" content="https://www.sarkariresultsnow.com/" />
-        <meta
-          name="description"
-          content="SarkariResultsNow provides all Sarkari Result, Admit Card, Government Jobs, Free Test Series, and Latest Notifications."
-        />
+
 
         {/* ✅ Load AdSense Library (official async script) */}
         <script
