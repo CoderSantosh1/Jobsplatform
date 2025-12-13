@@ -148,7 +148,6 @@ export default function Footer() {
           <h2 className="text-xl font-bold text-red-600 mb-1">
             Sarkariresultsnow
           </h2>
-          <p className="text-sm text-gray-600">WWW.sarkariresultsnow.COM</p>
           <p className="text-sm text-gray-600 mt-2">
             &copy; 2023 Sarkariresultsnow. All Rights
             Reserved.
