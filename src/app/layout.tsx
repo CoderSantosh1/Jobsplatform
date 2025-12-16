@@ -54,13 +54,28 @@ export default function RootLayout({
         />
         <meta property="og:url" content="https://www.sarkariresultsnow.com/" />
 
-
         {/* ✅ Load AdSense Library (official async script) */}
+
         <script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6447497690677792"
           crossOrigin="anonymous"
         ></script>
+
+        <script
+          async
+          src="https://www.googletagmanager.com/gtag/js?id=G-7RC4TD5K7C"
+        />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-7RC4TD5K7C');
+    `,
+          }}
+        />
       </head>
 
       <body
