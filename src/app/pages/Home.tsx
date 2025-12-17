@@ -320,6 +320,10 @@ export default function Home() {
 
       {/* ✅ Normal page continues */}
       <Header />
+      <h1 className="text-[12px] lg:text-[24px] font-bold text-black mb-4 text-center hover:text-blue-500 mt-2">
+        Sarkari Results Now – Latest Govt Jobs, Admit Cards & Exam Results , Free Test Series
+      </h1>
+
       <Iconsocialmedia />
       <div className="bg-[#fff] min-h-screen">
         <main className="flex flex-col items-center justify-center w-full max-w-7xl mx-auto px-2 sm:px-4">
@@ -629,9 +633,9 @@ export default function Home() {
             </div>
           </div>
           <section className="relative px-4 w-full max-w-screen overflow-x-hidden ">
-            <h1 className="text-2xl font-bold mb-2 text-[#1a124d]">
+            <h2 className="text-2xl font-bold mb-2 text-[#1a124d]">
               Popular Exams
-            </h1>
+            </h2>
             <p className="text-[#1a124d] text-sm sm:text-base mb-4">
               Get exam-ready with concepts, questions and study notes as per the
               latest pattern
@@ -737,10 +741,7 @@ export default function Home() {
       {/* Announcement Bars */}
       <div className="bg-[#FFF] mb-4 mt-4">
         <div className="flex flex-col items-center  justify-center bg-[#f5f7f2]  w-5/14 max-w-7xl mx-auto px-4 ">
-          <h1 className="text-red-500 text-[28px] font-[700] mt-4 bg-[#f5f7f2]">
-            SarkariResultsNow Latest Job
-          </h1>
-          <p className="flex flex-col items-center  justify-center bg-[#f5f7f2] text-[14px]  w-5/14 max-w-7xl mx-auto px-4">
+          <AnnouncementBar title="SarkariResultsNow Latest Job">
             Most Recent Sarkari Work, Sarkari Test Result, Most Recent On The
             Web And Disconnected Structure, Concede Card, Prospectus,
             Affirmation, Ansawer Key, Grant, Notice Etc.If You Need To Get
@@ -749,7 +750,7 @@ export default function Home() {
             Most Recent Bord Result, Bihar Result Tenth And So On You Could
             Sarkari Result Most Recent Occupation At Any Point Website Page
             Consistently.
-          </p>
+          </AnnouncementBar>
 
           <AnnouncementBar title="Sarkari Results">
             <b>Sarkari Results:</b> Sarkari Results Is A Famous Site In India
