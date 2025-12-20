@@ -36,6 +36,7 @@ interface Result {
   updatedAt: string;
   officalwebsites: string;
   youtubeLink: string;
+  downloadnotificationresultlis: string;
 }
 
 export default function ResultDetails() {
@@ -157,20 +158,20 @@ export default function ResultDetails() {
           </IconButton>
         </Box> */}
         <Paper className="p-6">
-          <div className="text-red-500 font-[600] text-[32px] lg:text-[24px] ">
+          <div className="text-red-500 font-[600] text-[20px] lg:text-[24px] ">
             {result.title}
           </div>
           <Divider sx={{ my: 2 }} />
 
           <Grid container>
             <Grid item xs={12} sm={6}>
-              <div className="text-red-500 font-[600] text-[16px]">
+              <div className="text-red-500 font-[600] text-[14px]">
                 Organization
               </div>
               <Typography variant="body1">{result.organization}</Typography>
             </Grid>
             <Grid item xs={12} sm={6}>
-              <div className="text-red-500 font-[600] text-[16px]">
+              <div className="text-red-500 font-[600] text-[14px]">
                 Category
               </div>
               <Typography variant="body1">{result.category}</Typography>
@@ -201,7 +202,7 @@ export default function ResultDetails() {
             </Grid>
           </Grid>
 
-          <div className="text-red-500 font-[600] text-[16px] mt-2">
+          <div className="text-red-500 font-[600] text-[14px] mt-2">
             Description
           </div>
           <Typography
@@ -236,14 +237,13 @@ export default function ResultDetails() {
                     Useful Important Links:
                   </TableCell>
                 </TableRow>
-
                 {/* Download Result row */}
                 <TableRow>
                   <TableCell
                     align="center"
                     sx={{
                       fontWeight: "bold",
-                      fontSize: "20px",
+                      fontSize: "14px",
                       color: "magenta",
                     }}
                   >
@@ -252,7 +252,11 @@ export default function ResultDetails() {
 
                   <TableCell
                     align="center"
-                    sx={{ fontWeight: "bold", fontSize: "20px" }}
+                    sx={{
+                      fontWeight: "bold",
+                      fontSize: "14px",
+                      color: "magenta",
+                    }}
                   >
                     <a
                       href={result.downloadLink}
@@ -264,14 +268,43 @@ export default function ResultDetails() {
                     </a>
                   </TableCell>
                 </TableRow>
-
+                {/* Notification download link */}
+                <TableRow>
+                  <TableCell
+                    align="center"
+                    sx={{
+                      fontWeight: "bold",
+                      fontSize: "14px",
+                      color: "magenta",
+                    }}
+                  >
+                    Download Notification
+                  </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{
+                      fontWeight: "bold",
+                      fontSize: "14px",
+                      color: "magenta",
+                    }}
+                  >
+                    <a
+                      href={result.downloadnotificationresultlis}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ textDecoration: "none", color: "blue" }}
+                    >
+                      Click Here
+                    </a>
+                  </TableCell>
+                </TableRow>
                 {/*You tube link*/}
                 <TableRow>
                   <TableCell
                     align="center"
                     sx={{
                       fontWeight: "bold",
-                      fontSize: "20px",
+                      fontSize: "14px",
                       color: "magenta",
                     }}
                   >
@@ -279,7 +312,11 @@ export default function ResultDetails() {
                   </TableCell>
                   <TableCell
                     align="center"
-                    sx={{ fontWeight: "bold", fontSize: "20px" }}
+                    sx={{
+                      fontWeight: "bold",
+                      fontSize: "14px",
+                      color: "magenta",
+                    }}
                   >
                     <a
                       href={result.youtubeLink}
@@ -296,7 +333,7 @@ export default function ResultDetails() {
                     align="center"
                     sx={{
                       fontWeight: "bold",
-                      fontSize: "20px",
+                      fontSize: "14px",
                       color: "magenta",
                     }}
                   >
@@ -304,7 +341,11 @@ export default function ResultDetails() {
                   </TableCell>
                   <TableCell
                     align="center"
-                    sx={{ fontWeight: "bold", fontSize: "20px" }}
+                    sx={{
+                      fontWeight: "bold",
+                      fontSize: "14px",
+                      color: "magenta",
+                    }}
                   >
                     <a
                       href={result.officalwebsites}
@@ -322,7 +363,7 @@ export default function ResultDetails() {
           {/* joined telegram whatsapp and insta section */}
           <div className="mt-4 p-4 border border-blue-700 bg-white rounded">
             <p className="text-sm font-medium text-gray-800 mb-3">
-              Join our community for more updates:
+              Join our Social Media for more updates:
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3">

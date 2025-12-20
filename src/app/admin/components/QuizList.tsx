@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
+import jsPDF from "jspdf";
 
 interface Quiz {
   _id: string;
@@ -54,6 +55,53 @@ export default function QuizList() {
       setLoading(false);
     }
   };
+const handleDownloadCSV = (quiz: Quiz) => {
+  if (!quiz || !quiz.questions || quiz.questions.length === 0) {
+    alert("No questions available");
+    return;
+  }
+
+  // CSV header
+  const headers = [
+    "question",
+    "option1",
+    "option2",
+    "option3",
+    "option4",
+    "correctAnswer",
+  ];
+
+  // Convert questions to rows
+  const rows = quiz.questions.map((q) => {
+    return [
+      `"${q.text.replace(/"/g, '""')}"`,
+      `"${q.options[0] ?? ""}"`,
+      `"${q.options[1] ?? ""}"`,
+      `"${q.options[2] ?? ""}"`,
+      `"${q.options[3] ?? ""}"`,
+      q.correctAnswer,
+    ].join(",");
+  });
+
+  // Combine header + rows
+  const csvContent = [headers.join(","), ...rows].join("\n");
+
+  // Create CSV blob
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+
+  // Trigger download
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `${quiz.title.replace(/\s+/g, "_")}.csv`;
+  document.body.appendChild(link);
+  link.click();
+
+  // Cleanup
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};
+
 
   const handleEdit = (id: string) => {
     router.push(`/admin/quizzes/${id}/edit`);
@@ -118,11 +166,22 @@ export default function QuizList() {
                 <p>Questions: {quiz.questions.length}</p>
                 <p>Total Marks: {quiz.totalMarks || 0}</p>
                 {quiz.createdAt && (
-                  <p>Created: {new Date(quiz.createdAt).toLocaleDateString()}</p>
+                  <p>
+                    Created: {new Date(quiz.createdAt).toLocaleDateString()}
+                  </p>
                 )}
               </div>
             </div>
             <div className="flex space-x-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => handleDownloadCSV(quiz)}
+              >
+                Download CSV
+              </Button>
+
               <Button
                 variant="outline"
                 size="sm"

@@ -320,6 +320,10 @@ export default function Home() {
 
       {/* ✅ Normal page continues */}
       <Header />
+      {/* <h1 className="text-[12px] lg:text-[24px] font-bold text-black mb-4 text-center hover:text-blue-500 mt-2">
+        Sarkari Results Now – Latest Govt Jobs, Admit Cards & Exam Results , Free Test Series
+      </h1> */}
+
       <Iconsocialmedia />
       <div className="bg-[#fff] min-h-screen">
         <main className="flex flex-col items-center justify-center w-full max-w-7xl mx-auto px-2 sm:px-4">
@@ -735,7 +739,7 @@ export default function Home() {
       </div>
 
       {/* Announcement Bars */}
-      <div className="bg-[#FFF] mb-4">
+      <div className="bg-[#FFF] mb-4 mt-4">
         <div className="flex flex-col items-center  justify-center bg-[#f5f7f2]  w-5/14 max-w-7xl mx-auto px-4 ">
           <AnnouncementBar title="SarkariResultsNow Latest Job">
             Most Recent Sarkari Work, Sarkari Test Result, Most Recent On The
@@ -747,6 +751,7 @@ export default function Home() {
             Sarkari Result Most Recent Occupation At Any Point Website Page
             Consistently.
           </AnnouncementBar>
+
           <AnnouncementBar title="Sarkari Results">
             <b>Sarkari Results:</b> Sarkari Results Is A Famous Site In India
             That Gives Data About Sarkari Work Tests, Sarkari Result 2025, And

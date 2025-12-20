@@ -77,6 +77,7 @@ interface ResultFormData {
   description: string;
   status: string;
   officalwebsites: string;
+  downloadnotificationresultlis: string;
 }
 
 type TabType =
@@ -174,6 +175,7 @@ export default function AdminDashboard() {
     description: "",
     status: "published",
     officalwebsites: "",
+    downloadnotificationresultlis: "",
   });
 
   const [answerKeyFormData, setAnswerKeyFormData] = useState({
@@ -353,6 +355,7 @@ export default function AdminDashboard() {
           description: "",
           status: "draft",
           officalwebsites: "",
+          downloadnotificationresultlis: "",
         });
         console.log("Result form data after reset:", resultsFormData);
       } else {
@@ -628,7 +631,7 @@ export default function AdminDashboard() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-2">
-                    Official Websites (comma separated)
+                    Official Websites (Optional)
                   </label>
                   <input
                     type="text"
@@ -643,6 +646,22 @@ export default function AdminDashboard() {
                   />
                   </div>
 
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Download Notification (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={resultsFormData.downloadnotificationresultlis}
+                    onChange={(e) =>  
+                      setResultsFormData({
+                        ...resultsFormData,
+                        downloadnotificationresultlis: e.target.value,
+                      })
+                    }
+                    className="w-full p-2 border rounded-md"
+                  />
+                </div>
                 <Button type="submit" className="w-full">
                   Post Result
                 </Button>

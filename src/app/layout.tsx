@@ -12,9 +12,9 @@ const inter = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "Sarkari Results Now – Sarkari Exam, Job Alerts & Admit Cards 2025",
+  title: "Sarkari Results Now – Sarkari Exam, Job Alerts & Admit Cards & Free Test Serires Available",
   description:
-    "Sarkari Results Now provides all Sarkari Results, Admit Cards, Latest Government Job Updates, Free Test Series, and Daily Notifications for 2025 exams.",
+    "Sarkari Results Now provides all Sarkari Results, Admit Cards, Latest Government Job Updates, Free Test Series",
 };
 
 
@@ -32,7 +32,10 @@ export default function RootLayout({
           content="KpO7IT-JrAfXS5vKDai0XcwaVUS-JzRDwsl1kBtfoyI"
         />
         <meta name="google-adsense-account" content="ca-pub-6447497690677792" />
-
+        <meta
+          name="google-site-verification"
+          content="YRllvaBEISVbmMxHK3hy4i3K6fVmcIqebYsdEh0iT7E"
+        />
         {/* 🔹 Favicon */}
         <link rel="icon" type="image/png" href="/logo.png" />
 
@@ -50,17 +53,29 @@ export default function RootLayout({
           content="https://www.sarkariresultsnow.com/og-image.png"
         />
         <meta property="og:url" content="https://www.sarkariresultsnow.com/" />
-        <meta
-          name="description"
-          content="SarkariResultsNow provides all Sarkari Result, Admit Card, Government Jobs, Free Test Series, and Latest Notifications."
-        />
 
         {/* ✅ Load AdSense Library (official async script) */}
+
         <script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6447497690677792"
           crossOrigin="anonymous"
         ></script>
+
+        <script
+          async
+          src="https://www.googletagmanager.com/gtag/js?id=G-8GZPT68Z06"
+        />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-8GZPT68Z06');
+    `,
+          }}
+        />
       </head>
 
       <body

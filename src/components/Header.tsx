@@ -28,11 +28,11 @@ export default function Header() {
                 />
               </svg>
             </button>
-            <h1 className="text-xs md:text-sm text-gray-200 text-center tracking-wider font-[700] ">
+            <h2 className="text-xs md:text-sm text-gray-200 text-center tracking-wider font-[700] ">
               <a href="https://www.sarkariresultsnow.com/">
                 WWW.SARKARIRESULTSNOW.COM
               </a>
-            </h1>
+            </h2>
             {/* Logo */}
             {/* <h1 className="text-[1.5rem] md:text-3xl font-bold text-[#000000]">
               SARKARIRESULTSNOW

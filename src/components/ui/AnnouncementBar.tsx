@@ -16,4 +16,4 @@ const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ title, children }) =>
   </div>
 );
 
-export default AnnouncementBar; 
+export default AnnouncementBar;

@@ -69,6 +69,10 @@ const ResultSchema = new mongoose.Schema({
       message: "Each official website must be a valid URL (http/https).",
     },
   },
+  downloadnotificationresultlis: {
+    type: [String],
+    default: [],
+  },
   status: {
     type: String,
     enum: ["draft", "published", "closed"],
