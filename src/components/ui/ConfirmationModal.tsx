@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { AlertTriangle, X, CheckCircle2, XCircle } from "lucide-react"
+import { AlertTriangle, X, CheckCircle2, XCircle, BookOpen, GraduationCap } from "lucide-react"
 
 interface ConfirmationModalProps {
   isOpen: boolean
@@ -33,35 +33,43 @@ export default function ConfirmationModal({
     switch (type) {
       case "danger":
         return {
-          gradient: "from-red-500/20 to-pink-500/20",
-          border: "border-red-400/30",
-          iconColor: "text-red-400",
-          titleColor: "from-red-400 to-pink-400",
-          confirmButton: "from-red-400 to-pink-500 hover:from-red-500 hover:to-pink-600",
+          gradient: "from-red-50 to-red-100",
+          border: "border-red-200",
+          iconColor: "text-red-600",
+          titleColor: "text-red-800",
+          confirmButton: "bg-red-600 hover:bg-red-700 text-white",
+          cardBg: "bg-white",
+          headerBg: "from-red-50 to-red-100",
         }
       case "success":
         return {
-          gradient: "from-lime-500/20 to-emerald-500/20",
-          border: "border-lime-400/30",
-          iconColor: "text-lime-400",
-          titleColor: "from-lime-400 to-emerald-400",
-          confirmButton: "from-lime-400 to-emerald-500 hover:from-lime-500 hover:to-emerald-600",
+          gradient: "from-green-50 to-green-100",
+          border: "border-green-200",
+          iconColor: "text-green-600",
+          titleColor: "text-green-800",
+          confirmButton: "bg-green-600 hover:bg-green-700 text-white",
+          cardBg: "bg-white",
+          headerBg: "from-green-50 to-green-100",
         }
       case "info":
         return {
-          gradient: "from-cyan-500/20 to-blue-500/20",
-          border: "border-cyan-400/30",
-          iconColor: "text-cyan-400",
-          titleColor: "from-cyan-400 to-blue-400",
-          confirmButton: "from-cyan-400 to-blue-500 hover:from-cyan-500 hover:to-blue-600",
+          gradient: "from-blue-50 to-blue-100",
+          border: "border-blue-200",
+          iconColor: "text-blue-600",
+          titleColor: "text-blue-800",
+          confirmButton: "bg-blue-600 hover:bg-blue-700 text-white",
+          cardBg: "bg-white",
+          headerBg: "from-blue-50 to-blue-100",
         }
       default: // warning
         return {
-          gradient: "from-yellow-500/20 to-orange-500/20",
-          border: "border-yellow-400/30",
-          iconColor: "text-yellow-400",
-          titleColor: "from-yellow-400 to-orange-400",
-          confirmButton: "from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600",
+          gradient: "from-amber-50 to-orange-50",
+          border: "border-amber-200",
+          iconColor: "text-amber-600",
+          titleColor: "text-amber-800",
+          confirmButton: "bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white",
+          cardBg: "bg-white",
+          headerBg: "from-amber-50 to-orange-50",
         }
     }
   }
@@ -71,90 +79,59 @@ export default function ConfirmationModal({
   const getIcon = () => {
     switch (type) {
       case "danger":
-        return <XCircle className={`w-8 h-8 sm:w-12 sm:h-12 ${styles.iconColor} animate-pulse`} />
+        return <XCircle className={`w-8 h-8 sm:w-12 sm:h-12 ${styles.iconColor}`} />
       case "success":
-        return <CheckCircle2 className={`w-8 h-8 sm:w-12 sm:h-12 ${styles.iconColor} animate-pulse`} />
+        return <CheckCircle2 className={`w-8 h-8 sm:w-12 sm:h-12 ${styles.iconColor}`} />
       default:
-        return <AlertTriangle className={`w-8 h-8 sm:w-12 sm:h-12 ${styles.iconColor} animate-pulse`} />
+        return <AlertTriangle className={`w-8 h-8 sm:w-12 sm:h-12 ${styles.iconColor}`} />
     }
   }
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      {/* Floating particles background */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        {[...Array(15)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute w-1 h-1 bg-cyan-400 rounded-full opacity-30"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animation: `float ${4 + Math.random() * 3}s ease-in-out infinite ${Math.random() * 2}s`,
-              boxShadow: "0 0 4px currentColor",
-            }}
-          />
-        ))}
-      </div>
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <Card className={`w-full max-w-md ${styles.cardBg} border-2 ${styles.border} shadow-2xl rounded-xl overflow-hidden animate-in fade-in-0 zoom-in-95 duration-300`}>
 
-      <Card
-        className={`w-full max-w-md border-0 bg-gradient-to-br ${styles.gradient} backdrop-blur-sm shadow-2xl relative z-10 animate-in fade-in-0 zoom-in-95 duration-300`}
-        style={{
-          clipPath: "polygon(0% 0%, 95% 0%, 100% 5%, 100% 100%, 5% 100%, 0% 95%)",
-          background: `linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(26,10,46,0.9) 25%, rgba(22,33,62,0.9) 50%, rgba(15,52,96,0.9) 75%, rgba(0,0,0,0.9) 100%)`,
-        }}
-      >
-        {/* Animated border */}
-        <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-cyan-400 via-magenta-400 to-lime-400 opacity-50 animate-pulse" />
-        <div className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-lime-400 via-cyan-400 to-magenta-400 opacity-50 animate-pulse" />
+        {/* Textbook-style header with binding */}
+        <div className="h-2 bg-gradient-to-r from-amber-600 via-orange-600 to-amber-800"></div>
 
         {/* Close button */}
         <Button
           onClick={onClose}
           variant="ghost"
           size="sm"
-          className="absolute top-3 right-3 text-gray-400 hover:text-white hover:bg-white/10 rounded-full w-8 h-8 p-0"
+          className="absolute top-3 right-3 text-amber-600 hover:text-amber-800 hover:bg-amber-50 rounded-full w-8 h-8 p-0"
         >
           <X className="w-4 h-4" />
         </Button>
 
-        <CardHeader
-          className={`text-center pb-4 sm:pb-6 border-b ${styles.border} bg-gradient-to-r from-black/50 to-purple-900/30 backdrop-blur-sm`}
-        >
+        <CardHeader className={`text-center pb-4 sm:pb-6 bg-gradient-to-br ${styles.headerBg}`}>
           {/* Icon */}
-          <div className="mx-auto w-16 h-16 sm:w-20 sm:h-20 mb-4 sm:mb-6 relative">
-            <div
-              className={`w-full h-full bg-gradient-to-br ${styles.gradient} rounded-lg flex items-center justify-center shadow-2xl`}
-            >
+          <div className="mx-auto w-16 h-16 sm:w-20 sm:h-20 mb-4 sm:mb-6">
+            <div className="w-full h-full bg-gradient-to-br from-amber-100 to-orange-100 rounded-lg flex items-center justify-center shadow-lg border-2 border-amber-200">
               {getIcon()}
             </div>
-            <div
-              className={`absolute inset-0 bg-gradient-to-br ${styles.gradient} blur-xl animate-pulse rounded-lg opacity-50`}
-            />
           </div>
 
-          <CardTitle className="text-xl sm:text-2xl md:text-3xl font-black mb-2">
-            <span className={`bg-gradient-to-r ${styles.titleColor} bg-clip-text text-transparent animate-pulse`}>
-              {title}
-            </span>
+          <CardTitle className={`text-xl sm:text-2xl md:text-3xl font-bold mb-2 ${styles.titleColor}`}>
+            {title}
           </CardTitle>
         </CardHeader>
 
         <CardContent className="p-6 sm:p-8 space-y-6">
           {/* Message */}
           <div className="text-center">
-            <p className="text-gray-200 text-sm sm:text-base leading-relaxed mb-4">{message}</p>
+            <p className="text-amber-800 text-sm sm:text-base leading-relaxed mb-4 font-medium">{message}</p>
 
             {/* Unanswered questions warning */}
             {unansweredCount && unansweredCount > 0 && (
-              <div className={`p-4 bg-gradient-to-r ${styles.gradient} border ${styles.border} rounded-lg mb-6`}>
+              <div className={`p-4 bg-gradient-to-br ${styles.gradient} border-2 ${styles.border} rounded-lg mb-6 shadow-md`}>
                 <div className="flex items-center justify-center gap-3 mb-2">
-                  <AlertTriangle className={`w-5 h-5 ${styles.iconColor} animate-pulse`} />
+                  <AlertTriangle className={`w-5 h-5 ${styles.iconColor}`} />
                   <span className={`font-bold ${styles.iconColor} text-sm sm:text-base`}>
                     Warning: Incomplete Questions
                   </span>
                 </div>
-                <p className="text-gray-300 text-xs sm:text-sm">
+                <p className="text-amber-700 text-xs sm:text-sm">
                   You have <span className={`font-bold ${styles.iconColor}`}>{unansweredCount}</span> unanswered
                   questions. These will be marked as incorrect if you proceed.
                 </p>
@@ -166,7 +143,8 @@ export default function ConfirmationModal({
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
             <Button
               onClick={onClose}
-              className="flex-1 border-2 border-gray-400 text-gray-400 bg-transparent hover:bg-gray-400/10 font-bold py-3 sm:py-4 text-sm sm:text-base transition-all duration-300 hover:shadow-lg hover:shadow-gray-400/20"
+              variant="outline"
+              className="flex-1 border-2 border-amber-300 text-amber-700 bg-white hover:bg-amber-50 font-semibold py-3 sm:py-4 text-sm sm:text-base transition-all duration-300 hover:shadow-lg hover:shadow-amber-300/20 rounded-lg"
             >
               {cancelText}
             </Button>
@@ -176,25 +154,15 @@ export default function ConfirmationModal({
                 onConfirm()
                 onClose()
               }}
-              className={`flex-1 relative bg-gradient-to-r ${styles.confirmButton} text-white font-black py-3 sm:py-4 text-sm sm:text-base transition-all duration-300 hover:shadow-lg hover:shadow-current/30 overflow-hidden group`}
-              style={{
-                clipPath: "polygon(0% 0%, 90% 0%, 100% 30%, 100% 100%, 10% 100%, 0% 70%)",
-              }}
+              className={`flex-1 ${styles.confirmButton} font-bold py-3 sm:py-4 text-sm sm:text-base transition-all duration-300 hover:shadow-lg hover:shadow-amber-400/30 rounded-lg`}
             >
-              {/* Button background animation */}
-              <div className="absolute inset-0 bg-gradient-to-r from-white/10 via-white/20 to-white/10 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-
-              <span className="relative flex items-center justify-center gap-2 z-10">
+              <span className="flex items-center justify-center gap-2">
                 {getIcon()}
                 {confirmText}
               </span>
             </Button>
           </div>
         </CardContent>
-
-        {/* Corner decorations */}
-        <div className={`absolute -top-2 -left-2 w-6 h-6 border-l-2 border-t-2 ${styles.border} opacity-60`} />
-        <div className={`absolute -bottom-2 -right-2 w-6 h-6 border-r-2 border-b-2 ${styles.border} opacity-60`} />
       </Card>
     </div>
   )

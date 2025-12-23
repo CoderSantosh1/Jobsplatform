@@ -27,6 +27,7 @@ export async function POST(request: Request) {
     });
 
     // Create quiz attempt
+    console.log("Creating quiz attempt with:", { quizId, userId, answers: answers.length, score });
     const attempt = await QuizAttempt.create({
       quizId,
       userId,
@@ -34,6 +35,7 @@ export async function POST(request: Request) {
       score,
     });
 
+    console.log("Created attempt:", attempt._id);
     return NextResponse.json(attempt);
   } catch (error) {
     console.error("Error submitting quiz attempt:", error);

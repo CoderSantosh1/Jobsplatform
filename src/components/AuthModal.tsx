@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,16 +13,14 @@ import Footer from "./Footer";
 import {
   Phone,
   ArrowRight,
-  Zap,
-  Brain,
   AlertCircle,
   CheckCircle2,
   Shield,
   User,
   Mail,
+  BookOpen,
+  GraduationCap,
 } from "lucide-react";
-// Import Three.js
-import * as THREE from "three";
 
 interface AuthModalProps {
   onSuccess: (user: any) => void;
@@ -34,27 +32,6 @@ export default function AuthModal({ onSuccess }: AuthModalProps) {
   const [mobile, setMobile] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const vantaRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    let effect: any;
-    (async () => {
-      // dynamic import (no ".js")
-      const { default: CLOUDS } = await import("vanta/dist/vanta.clouds.min");
-      effect = CLOUDS({
-        el: vantaRef.current!,
-        THREE, // from your import * as THREE
-        mouseControls: true,
-        touchControls: true,
-        gyroControls: false,
-        minHeight: 200.0,
-        minWidth: 200.0,
-        skyColor: 0x0d0d0d,
-        cloudColor: 0x00ffff,
-      });
-    })();
-    return () => effect?.destroy?.();
-  }, []);
   // ---------------------------
   // validators & handlers (unchanged)
   // ---------------------------
@@ -147,189 +124,160 @@ export default function AuthModal({ onSuccess }: AuthModalProps) {
     <>
       <Header />
 
-      {/* Page shell: header → centered main → footer */}
-      <div ref={vantaRef} className="min-h-screen relative flex flex-col">
-        {/* optional extra sparkles (your existing dots) */}
-        <div
-          className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
-          aria-hidden="true"
-        >
-          {[...Array(30)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute w-1.5 h-1.5 rounded-full bg-cyan-400 animate-sparkle"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
+      {/* Textbook-style background */}
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 p-4">
+        <div className="container mx-auto max-w-6xl">
+          <div className="min-h-screen flex items-center justify-center">
+            <div className="w-full max-w-md mx-auto">
+              <Card className="bg-white/95 backdrop-blur-sm border-2 border-amber-200 shadow-2xl rounded-xl overflow-hidden">
 
-                ["--float-dur" as any]: `${4 + Math.random() * 4}s`,
-                ["--float-delay" as any]: `${Math.random() * 2}s`,
-                ["--twinkle-dur" as any]: `${2 + Math.random() * 3}s`,
-                boxShadow: "0 0 8px rgba(0,255,255,.6)",
-              }}
-            />
-          ))}
-        </div>
+                {/* Textbook-style header with binding */}
+                <div className="h-2 bg-gradient-to-r from-amber-600 via-orange-600 to-amber-800"></div>
 
-        {/* Centered main area; scrolls on small screens */}
-        <main className="relative flex-1 flex items-center justify-center px-4 py-10">
-          <Card
-            className="w-full max-w-md border-0 bg-black/80 backdrop-blur-sm relative z-10"
-            style={{
-              clipPath:
-                "polygon(0% 0%, 95% 0%, 100% 5%, 100% 100%, 5% 100%, 0% 95%)",
-              background:
-                "linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(26,10,46,0.9) 25%, rgba(22,33,62,0.9) 50%, rgba(15,52,96,0.9) 75%, rgba(0,0,0,0.9) 100%)",
-            }}
-          >
-            <CardHeader className="text-center  border-cyan-400/30 bg-gradient-to-r from-black/50 to-purple-900/30 backdrop-blur-sm">
-              <CardTitle className="text-lg font-black mb-2">
-                <span className="bg-gradient-to-r from-cyan-400 via-magenta-400 to-lime-400 bg-clip-text text-transparent animate-pulse">
-                  {isLogin
-                    ? "Sarkariresultsnow Test Series"
-                    : "Sarkariresultsnow Free Test Series Availabe All Gov Exam"}
-                </span>
-              </CardTitle>
-            </CardHeader>
-
-            <CardContent className="p-8 space-y-6">
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {!isLogin && (
-                  <div className="space-y-3">
-                    <Label
-                      htmlFor="name"
-                      className="text-sm font-bold text-cyan-400 uppercase tracking-wider"
-                    >
-                      ENTER YOUR NAME
-                    </Label>
-                    <div className="relative group">
-                      <div className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10">
-                        <User className="w-5 h-5 text-cyan-400 group-focus-within:text-magenta-400 transition-colors duration-300" />
-                      </div>
-                      <Input
-                        id="name"
-                        type="text"
-                        placeholder="ENTER YOUR NAME"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        className="pl-12 pr-4 py-3 bg-black/50 border-2 border-cyan-400/30 text-white placeholder-gray-400 focus:border-magenta-400 focus:ring-2 focus:ring-magenta-400/20 transition-all duration-300 rounded-lg"
-                        required={!isLogin}
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/5 to-magenta-400/5 opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 rounded-lg pointer-events-none" />
-                    </div>
-                  </div>
-                )}
-
-                <div className="space-y-3">
-                  <Label
-                    htmlFor="mobile"
-                    className="text-sm font-bold text-cyan-400 uppercase tracking-wider"
-                  >
-                    ENTER YOUR NUMBER OR EMAIL
-                  </Label>
-                  <div className="relative group">
-                    <div className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10">
-                      {mobile.includes("@") ? (
-                        <Mail className="w-5 h-5 text-cyan-400 group-focus-within:text-magenta-400 transition-colors duration-300" />
+                <CardHeader className="bg-gradient-to-br from-amber-50 to-orange-50 p-6 sm:p-8">
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-gradient-to-br from-amber-600 to-orange-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                      {isLogin ? (
+                        <BookOpen className="w-8 h-8 text-white" />
                       ) : (
-                        <Phone className="w-5 h-5 text-cyan-400 group-focus-within:text-magenta-400 transition-colors duration-300" />
+                        <GraduationCap className="w-8 h-8 text-white" />
                       )}
                     </div>
-                    <Input
-                      id="mobile"
-                      type="text"
-                      placeholder="ENTER YOUR NUMBER OR EMAIL"
-                      value={mobile}
-                      onChange={(e) => setMobile(e.target.value)}
-                      className="pl-12 pr-4 py-3 bg-black/50 border-2 border-cyan-400/30 text-white placeholder-gray-400 focus:border-magenta-400 focus:ring-2 focus:ring-magenta-400/20 transition-all duration-300 rounded-lg"
-                      required
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/5 to-magenta-400/5 opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 rounded-lg pointer-events-none" />
+                    <CardTitle className="text-2xl sm:text-3xl font-bold text-amber-900 mb-2">
+                      {isLogin ? "Welcome Back" : "Join Our Test Series"}
+                    </CardTitle>
+                    <p className="text-amber-700 font-medium text-base">
+                      {isLogin
+                        ? "Continue your learning journey"
+                        : "Start your free government exam preparation"
+                      }
+                    </p>
                   </div>
-                </div>
+                </CardHeader>
 
-                {error && (
-                  <Alert className="border-0 bg-gradient-to-r from-red-500/20 to-pink-500/20 backdrop-blur-sm">
-                    <AlertCircle className="h-5 w-5 text-red-400 animate-pulse" />
-                    <AlertDescription className="text-red-300 font-semibold ml-2">
-                      {error}
-                    </AlertDescription>
-                  </Alert>
-                )}
+                <CardContent className="p-6 sm:p-8 space-y-6">
+                  <form onSubmit={handleSubmit} className="space-y-6">
+                    {!isLogin && (
+                      <div className="space-y-3">
+                        <Label
+                          htmlFor="name"
+                          className="text-sm font-bold text-amber-800 uppercase tracking-wide"
+                        >
+                          Full Name
+                        </Label>
+                        <div className="relative group">
+                          <div className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10">
+                            <User className="w-5 h-5 text-amber-600 group-focus-within:text-orange-600 transition-colors duration-300" />
+                          </div>
+                          <Input
+                            id="name"
+                            type="text"
+                            placeholder="Enter your full name"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            className="pl-12 pr-4 py-3 bg-white border-2 border-amber-200 text-amber-900 placeholder-amber-400 focus:border-orange-400 focus:ring-2 focus:ring-orange-200 transition-all duration-300 rounded-lg"
+                            required={!isLogin}
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-r from-amber-50/50 to-orange-50/50 opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 rounded-lg pointer-events-none" />
+                        </div>
+                      </div>
+                    )}
 
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full relative bg-gradient-to-r from-cyan-400 via-magenta-400 to-lime-400 hover:from-cyan-500 hover:via-magenta-500 hover:to-lime-500 text-black font-black py-4 text-lg transition-all duration-300 hover:shadow-lg hover:shadow-cyan-400/30 overflow-hidden group"
-                  style={{
-                    clipPath:
-                      "polygon(0% 0%, 90% 0%, 100% 30%, 100% 100%, 10% 100%, 0% 70%)",
-                  }}
-                >
-                  {/* Button background animation */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-lime-400/20 via-cyan-400/20 to-magenta-400/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+                    <div className="space-y-3">
+                      <Label
+                        htmlFor="mobile"
+                        className="text-sm font-bold text-amber-800 uppercase tracking-wide"
+                      >
+                        Mobile Number
+                      </Label>
+                      <div className="relative group">
+                        <div className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10">
+                          <Phone className="w-5 h-5 text-amber-600 group-focus-within:text-orange-600 transition-colors duration-300" />
+                        </div>
+                        <Input
+                          id="mobile"
+                          type="tel"
+                          placeholder="Enter your 10-digit mobile number"
+                          value={mobile}
+                          onChange={(e) => setMobile(e.target.value)}
+                          className="pl-12 pr-4 py-3 bg-white border-2 border-amber-200 text-amber-900 placeholder-amber-400 focus:border-orange-400 focus:ring-2 focus:ring-orange-200 transition-all duration-300 rounded-lg"
+                          required
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-r from-amber-50/50 to-orange-50/50 opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 rounded-lg pointer-events-none" />
+                      </div>
+                    </div>
 
-                  {loading ? (
-                    <span className="relative flex items-center justify-center gap-3 z-10">
-                      <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
-                      {isLogin ? "SIGNING IN..." : "CREATING ACCOUNT..."}
+                    {error && (
+                      <Alert className="border-2 border-red-200 bg-red-50/80 backdrop-blur-sm">
+                        <AlertCircle className="h-5 w-5 text-red-600" />
+                        <AlertDescription className="text-red-700 font-semibold ml-2">
+                          {error}
+                        </AlertDescription>
+                      </Alert>
+                    )}
+
+                    <Button
+                      type="submit"
+                      disabled={loading}
+                      className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-bold py-4 text-lg transition-all duration-300 hover:shadow-lg hover:shadow-amber-400/30 rounded-lg"
+                    >
+                      {loading ? (
+                        <span className="flex items-center justify-center gap-3">
+                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          {isLogin ? "Signing In..." : "Creating Account..."}
+                        </span>
+                      ) : (
+                        <span className="flex items-center justify-center gap-3">
+                          <Shield className="w-5 h-5" />
+                          {isLogin ? "Continue Test Series" : "Start Free Learning"}
+                          <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
+                        </span>
+                      )}
+                    </Button>
+                  </form>
+
+                  {/* Divider */}
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t border-amber-200" />
+                    </div>
+                    <div className="relative flex justify-center text-sm uppercase">
+                      <span className="bg-white px-4 text-amber-700 font-medium">
+                        OR
+                      </span>
+                    </div>
+                  </div>
+
+                  <Button
+                    onClick={toggleMode}
+                    variant="outline"
+                    className="w-full border-2 border-amber-300 text-amber-700 bg-white hover:bg-amber-50 font-semibold py-3 transition-all duration-300 hover:shadow-lg hover:shadow-amber-300/20 rounded-lg"
+                  >
+                    <span className="flex items-center justify-center gap-3">
+                      {isLogin ? "Create New Account" : "Already have an account? Login"}
                     </span>
-                  ) : (
-                    <span className="relative flex items-center justify-center gap-3 z-10">
-                      <Zap className="w-5 h-5 animate-pulse" />
-                      {isLogin ? "Started Test" : "CREATE YOUR ACCOUNT"}
-                      <ArrowRight className="w-5 h-5 group-hover:translate-x-2 group-hover:scale-125 transition-all duration-300" />
-                    </span>
+                  </Button>
+
+                  {/* Success indicator when form is valid */}
+                  {((isLogin && mobile.length >= 10) ||
+                    (!isLogin &&
+                      name.trim().length >= 2 &&
+                      mobile.length >= 10)) && (
+                    <div className="flex items-center justify-center gap-2 text-green-600 bg-green-50 px-4 py-2 rounded-lg border border-green-200">
+                      <CheckCircle2 className="w-5 h-5" />
+                      <span className="text-sm font-semibold">
+                        Ready to proceed
+                      </span>
+                    </div>
                   )}
-
-                  {/* Glitch effect on button */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-magenta-400/30 to-cyan-400/30 opacity-0 group-hover:opacity-100 transition-opacity duration-200 animate-pulse" />
-                </Button>
-              </form>
-
-              {/* Divider */}
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-cyan-400/30" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-black px-4 text-cyan-400 font-bold tracking-wider">
-                    OR
-                  </span>
-                </div>
-              </div>
-
-              <Button
-                onClick={toggleMode}
-                className="w-full  border-2 border-cyan-400/50 text-cyan-400 bg-transparent hover:bg-cyan-400/10 font-bold py-3 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-400/20 group"
-              >
-                <span className="flex items-center justify-center gap-3">
-                  {isLogin ? "CREATE NEW ACCOUNT" : "Login?"}
-                </span>
-              </Button>
-
-              {/* Success indicator when form is valid */}
-              {((isLogin && mobile.length >= 3) ||
-                (!isLogin &&
-                  name.trim().length >= 2 &&
-                  mobile.length >= 3)) && (
-                <div className="flex items-center justify-center gap-2 text-lime-400 animate-pulse">
-                  <CheckCircle2 className="w-5 h-5" />
-                  <span className="text-sm font-bold">
-                    Profile information validated
-                  </span>
-                </div>
-              )}
-            </CardContent>
-
-            {/* Corner decorations */}
-            <div className="absolute -top-2 -left-2 w-6 h-6 border-l-2 border-t-2 border-cyan-400 opacity-60" />
-            <div className="absolute -bottom-2 -right-2 w-6 h-6 border-r-2 border-b-2 border-magenta-400 opacity-60" />
-          </Card>
-        </main>
-
-        <Footer />
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
       </div>
+
+      <Footer />
     </>
   );
 }
