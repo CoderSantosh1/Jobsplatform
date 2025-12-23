@@ -320,9 +320,9 @@ export default function Home() {
 
       {/* ✅ Normal page continues */}
       <Header />
-      <h1 className="text-[12px] lg:text-[24px] font-bold text-black mb-4 text-center hover:text-blue-500 mt-2">
+      {/* <h1 className="text-[12px] lg:text-[24px] font-bold text-black mb-4 text-center hover:text-blue-500 mt-2">
         Sarkari Results Now – Latest Govt Jobs, Admit Cards & Exam Results , Free Test Series
-      </h1>
+      </h1> */}
 
       <Iconsocialmedia />
       <div className="bg-[#fff] min-h-screen">
