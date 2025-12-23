@@ -16,22 +16,31 @@ export async function GET(
 ) {
   try {
     const { id } = await getParams(params);
+    console.log("Fetching quiz attempt with ID:", id);
 
     await connectDB();
-    const quiz = await Quiz.findById(id).populate("questions");
+    const attempt = await QuizAttempt.findById(id).populate({
+      path: 'quizId',
+      populate: {
+        path: 'questions'
+      }
+    });
 
-    if (!quiz) {
+    console.log("Found attempt:", attempt ? "YES" : "NO");
+    console.log("Attempt data:", attempt);
+
+    if (!attempt) {
       return NextResponse.json(
-        { error: "Quiz not found" },
+        { error: "Quiz attempt not found" },
         { status: 404 }
       );
     }
 
-    return NextResponse.json(quiz);
+    return NextResponse.json(attempt);
   } catch (error) {
-    console.error("Error fetching quiz:", error);
+    console.error("Error fetching quiz attempt:", error);
     return NextResponse.json(
-      { error: "Failed to fetch quiz" },
+      { error: "Failed to fetch quiz attempt" },
       { status: 500 }
     );
   }
