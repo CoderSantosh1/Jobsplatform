@@ -174,9 +174,9 @@ const ProfilePage: React.FC = () => {
   }
 
   const getScoreColor = (score: number) => {
-    if (score >= 80) return "from-lime-400 to-emerald-500"
-    if (score >= 60) return "from-yellow-400 to-orange-500"
-    return "from-red-400 to-pink-500"
+    if (score >= 80) return "from-green-100 to-green-200 border-green-300"
+    if (score >= 60) return "from-amber-100 to-orange-100 border-amber-300"
+    return "from-red-100 to-red-200 border-red-300"
   }
 
   const getPerformanceGrade = (score: number) => {
@@ -246,37 +246,21 @@ const ProfilePage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-black p-4">
-      {/* Floating particles background */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        {[...Array(20)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute w-1 h-1 bg-cyan-400 rounded-full opacity-30"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animation: `float ${4 + Math.random() * 3}s ease-in-out infinite ${Math.random() * 2}s`,
-              boxShadow: "0 0 4px currentColor",
-            }}
-          />
-        ))}
-      </div>
-
-      <div className="container mx-auto   max-w-7xl md:max-w-full">
-        
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 p-4">
+      <div className="container mx-auto max-w-7xl">
 
         {/* Main Profile Container */}
-        <div
-          className="relative overflow-hidden border-0 bg-black/80 backdrop-blur-sm shadow-2xl mb-8" >
-          
+        <div className="bg-white/95 backdrop-blur-sm border-2 border-amber-200 shadow-2xl mb-8 rounded-xl overflow-hidden">
+
+          {/* Textbook-style header with binding */}
+          <div className="h-2 bg-gradient-to-r from-amber-600 via-orange-600 to-amber-800"></div>
 
           {/* Profile Header */}
-          <CardHeader className="border-b border-cyan-400/30 bg-gradient-to-r from-black/50 to-purple-900/30 backdrop-blur-sm p-6">
+          <CardHeader className="bg-gradient-to-br from-amber-50 to-orange-50 p-6">
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
               <div className="flex items-center gap-6">
                 {/* Avatar */}
-                <div className="relative z-20">
+                <div className="relative">
                   <input
                     ref={fileInputRef}
                     id="profile-image-input"
@@ -286,87 +270,61 @@ const ProfilePage: React.FC = () => {
                     onChange={handleImageChange}
                   />
                   <div
-                    className="w-20 h-20 bg-gradient-to-br from-cyan-400 to-magenta-500 rounded-lg flex items-center justify-center shadow-2xl cursor-pointer overflow-hidden z-20"
+                    className="w-20 h-20 bg-gradient-to-br from-amber-600 to-orange-600 rounded-full flex items-center justify-center shadow-lg cursor-pointer overflow-hidden border-4 border-white"
                     onClick={handleAvatarClick}
                     title="Click to change profile image"
-                    style={{ position: 'relative' }}
                     tabIndex={0}
                     role="button"
                     aria-label="Change profile image"
                     onKeyPress={e => { if (e.key === 'Enter' || e.key === ' ') handleAvatarClick() }}
                   >
                     {uploading ? (
-                      <div className="w-10 h-10 flex items-center justify-center animate-spin">
-                        <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>
+                      <div className="w-8 h-8 flex items-center justify-center animate-spin">
+                        <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>
                       </div>
                     ) : profileImage ? (
-                      <img src={profileImage} alt="Profile" className="w-full h-full object-cover rounded-lg" />
+                      <img src={profileImage} alt="Profile" className="w-full h-full object-cover rounded-full" />
                     ) : (
                       <User className="w-10 h-10 text-white" />
                     )}
                   </div>
-                  
-                  <div className="absolute inset-0 bg-cyan-400/20 blur-xl animate-pulse rounded-lg z-10 pointer-events-none" />
                 </div>
 
                 {/* User Info */}
                 <div>
-                  <CardTitle className="text-3xl font-black mb-2">
-                    <span className="bg-gradient-to-r from-cyan-400 via-magenta-400 to-lime-400 bg-clip-text text-transparent animate-pulse">
-                      {user.name}
-                    </span>
+                  <CardTitle className="text-3xl font-bold mb-2 text-amber-900">
+                    {user.name}
                   </CardTitle>
                   <div className="space-y-1">
                     {user.mobile && (
-                      <p className="text-cyan-300 font-semibold flex items-center gap-2">📱 {user.mobile}</p>
+                      <p className="text-amber-700 font-medium flex items-center gap-2">
+                        <User className="w-4 h-4" />
+                        {user.mobile}
+                      </p>
                     )}
                     {user.email && (
-                      <p className="text-cyan-300 font-semibold flex items-center gap-2">📧 {user.email}</p>
+                      <p className="text-amber-700 font-medium flex items-center gap-2">
+                        <User className="w-4 h-4" />
+                        {user.email}
+                      </p>
                     )}
-                    <p className="text-gray-400 text-sm flex items-center gap-2">
+                    <p className="text-amber-600 text-sm flex items-center gap-2">
                       <Calendar className="w-4 h-4" />
-                      DATE: {new Date(user.joinedAt || "").toLocaleDateString()}
+                      Joined: {new Date(user.joinedAt || "").toLocaleDateString()}
                     </p>
-                  </div>   
-                </div>
-               
-              </div>
-               {/* Timer used */}
-               <div className="flex items-center justify-between gap-3">
-              <div className="relative w-12 h-12 flex items-center justify-center">
-                <div className="absolute inset-0 border-2 border-cyan-400/50 rounded-full animate-pulse">
-                  <div className="absolute inset-1 border border-magenta-400/30 rounded-full">
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="text-center">
-                        <div className="text-xs font-black text-cyan-400 leading-none">
-                          {new Date().toLocaleTimeString("en-US", {
-                            hour12: false,
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </div>
-                        <div className="text-[8px] font-bold text-cyan-300 uppercase tracking-wider">TIME</div>
-                      </div>
-                    </div>
                   </div>
                 </div>
-                <div className="absolute inset-0 animate-spin" style={{ animationDuration: "8s" }}>
-                  <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-1 h-2 bg-cyan-400 rounded-full" />
-                  <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-2 bg-magenta-400 rounded-full" />
-                </div>
-                <div className="absolute inset-0 bg-cyan-400/20 rounded-full blur-md animate-pulse" />
               </div>
-            </div>
 
               {/* Quick Stats */}
               <div className="grid grid-cols-2 gap-4">
-                <div className="text-center p-3 bg-gradient-to-br from-lime-500/20 to-emerald-500/20 rounded-lg border border-lime-400/30">
-                  <div className="text-2xl font-black text-lime-400">{user.totalAttempts || 0}</div>
-                  <div className="text-xs font-bold text-lime-300 uppercase tracking-wider">Tests</div>
+                <div className="text-center p-4 bg-gradient-to-br from-amber-100 to-orange-100 rounded-lg border-2 border-amber-200 shadow-md">
+                  <div className="text-2xl font-bold text-amber-800">{user.totalAttempts || 0}</div>
+                  <div className="text-sm font-semibold text-amber-700 uppercase tracking-wide">Tests Taken</div>
                 </div>
-                <div className="text-center p-3 bg-gradient-to-br from-yellow-500/20 to-orange-500/20 rounded-lg border border-yellow-400/30">
-                  <div className="text-2xl font-black text-yellow-400">#{user.rank || "N/A"}</div>
-                  <div className="text-xs font-bold text-yellow-300 uppercase tracking-wider">Rank</div>
+                <div className="text-center p-4 bg-gradient-to-br from-orange-100 to-amber-100 rounded-lg border-2 border-orange-200 shadow-md">
+                  <div className="text-2xl font-bold text-orange-800">#{user.rank || "N/A"}</div>
+                  <div className="text-sm font-semibold text-orange-700 uppercase tracking-wide">Rank</div>
                 </div>
               </div>
             </div>
@@ -394,67 +352,55 @@ const ProfilePage: React.FC = () => {
                 {/* Performance Overview */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {/* Average Score */}
-                  <div className="relative group">
-                    <div
-                      className="p-6 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 backdrop-blur-sm border border-cyan-400/30 transform group-hover:scale-105 transition-transform duration-300"
-                      style={{ clipPath: "polygon(0% 0%, 90% 0%, 100% 25%, 100% 100%, 10% 100%, 0% 75%)" }}
-                    >
+                  <Card className="bg-white border-2 border-amber-200 shadow-lg rounded-xl hover:shadow-xl transition-shadow duration-300">
+                    <CardContent className="p-6">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-lg flex items-center justify-center">
-                          <BarChart3 className="w-6 h-6 text-white animate-pulse" />
+                        <div className="w-12 h-12 bg-gradient-to-br from-amber-100 to-orange-100 rounded-lg flex items-center justify-center border-2 border-amber-300">
+                          <BarChart3 className="w-6 h-6 text-amber-600" />
                         </div>
                         <div>
-                          <div className="text-2xl font-black text-cyan-400">
+                          <div className="text-2xl font-bold text-amber-800">
                             {user.averageScore?.toFixed(1) || "0.0"}%
                           </div>
-                          <div className="text-xs font-bold text-cyan-300 uppercase tracking-wider">Average Score</div>
+                          <div className="text-sm font-semibold text-amber-700 uppercase tracking-wide">Average Score</div>
                         </div>
                       </div>
-                    </div>
-                    <div className="absolute inset-0 bg-cyan-400/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10" />
-                  </div>
+                    </CardContent>
+                  </Card>
 
                   {/* Best Score */}
-                  <div className="relative group">
-                    <div
-                      className="p-6 bg-gradient-to-br from-lime-500/20 to-emerald-500/20 backdrop-blur-sm border border-lime-400/30 transform group-hover:scale-105 transition-transform duration-300"
-                      style={{ clipPath: "polygon(10% 0%, 100% 0%, 100% 75%, 90% 100%, 0% 100%, 0% 25%)" }}
-                    >
+                  <Card className="bg-white border-2 border-green-200 shadow-lg rounded-xl hover:shadow-xl transition-shadow duration-300">
+                    <CardContent className="p-6">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-gradient-to-br from-lime-400 to-emerald-600 rounded-lg flex items-center justify-center">
-                          <Trophy className="w-6 h-6 text-white animate-pulse" />
+                        <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-emerald-100 rounded-lg flex items-center justify-center border-2 border-green-300">
+                          <Trophy className="w-6 h-6 text-green-600" />
                         </div>
                         <div>
-                          <div className="text-2xl font-black text-lime-400">{user.bestScore || 0}%</div>
-                          <div className="text-xs font-bold text-lime-300 uppercase tracking-wider">Best Score</div>
+                          <div className="text-2xl font-bold text-green-800">{user.bestScore || 0}%</div>
+                          <div className="text-sm font-semibold text-green-700 uppercase tracking-wide">Best Score</div>
                         </div>
                       </div>
-                    </div>
-                    <div className="absolute inset-0 bg-lime-400/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10" />
-                  </div>
+                    </CardContent>
+                  </Card>
 
                   {/* Performance Grade */}
-                  <div className="relative group">
-                    <div
-                      className="p-6 bg-gradient-to-br from-magenta-500/20 to-purple-500/20 backdrop-blur-sm border border-magenta-400/30 transform group-hover:scale-105 transition-transform duration-300"
-                      style={{ clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)" }}
-                    >
+                  <Card className="bg-white border-2 border-blue-200 shadow-lg rounded-xl hover:shadow-xl transition-shadow duration-300">
+                    <CardContent className="p-6">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-gradient-to-br from-magenta-400 to-purple-600 rounded-lg flex items-center justify-center">
-                          <Award className="w-6 h-6 text-white animate-pulse" />
+                        <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-lg flex items-center justify-center border-2 border-blue-300">
+                          <Award className="w-6 h-6 text-blue-600" />
                         </div>
                         <div>
-                          <div className="text-2xl font-black text-magenta-400">
+                          <div className="text-2xl font-bold text-blue-800">
                             {getPerformanceGrade(user.averageScore || 0).grade}
                           </div>
-                          <div className="text-xs font-bold text-magenta-300 uppercase tracking-wider">
+                          <div className="text-sm font-semibold text-blue-700 uppercase tracking-wide">
                             {getPerformanceGrade(user.averageScore || 0).label}
                           </div>
                         </div>
                       </div>
-                    </div>
-                    <div className="absolute inset-0 bg-magenta-400/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10" />
-                  </div>
+                    </CardContent>
+                  </Card>
                 </div>
                 <div className="flex items-center gap-3">
             {/* <Button
@@ -475,16 +421,15 @@ const ProfilePage: React.FC = () => {
               </div>
                 {/* Test Results Section */}
                 <div className="space-y-6">
-                  
-                      <span className="text-red-600 font-semibold">
-                       Your Previous Test Results
-                      </span> 
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-2xl font-bold text-amber-900">Your Test Results</h2>
                     <Button
-                      className="mt-2 bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-500 hover:to-blue-600 text-black font-bold px-6 py-2"
                       onClick={() => setShowHistory((prev) => !prev)}
+                      className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-semibold px-6 py-2 rounded-lg shadow-md hover:shadow-lg transition-all duration-300"
                     >
-                      {showHistory ? "Hide Test History" : "Show Test History"}
+                      {showHistory ? "Hide History" : "Show History"}
                     </Button>
+                  </div>
                   
 
                   {showHistory && (
@@ -587,13 +532,13 @@ const ProfilePage: React.FC = () => {
                   </h2>
 
                   {quizzes.length === 0 ? (
-                    <Card className="border-0 bg-gradient-to-br from-gray-500/20 to-gray-600/20 backdrop-blur-sm shadow-xl">
+                    <Card className="bg-white border-2 border-amber-200 shadow-lg rounded-xl">
                       <CardContent className="p-8 text-center">
-                        <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-gray-400 to-gray-600 rounded-lg flex items-center justify-center">
-                          <BookOpen className="w-8 h-8 text-white" />
+                        <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-amber-100 to-orange-100 rounded-lg flex items-center justify-center border-2 border-amber-300">
+                          <BookOpen className="w-8 h-8 text-amber-600" />
                         </div>
-                        <h3 className="text-xl font-bold text-gray-400 mb-2">No Tests Available</h3>
-                        <p className="text-gray-500">Check back later for new tests</p>
+                        <h3 className="text-xl font-bold text-amber-900 mb-2">No Tests Available</h3>
+                        <p className="text-amber-700">Check back later for new tests</p>
                       </CardContent>
                     </Card>
                   ) : (
@@ -672,7 +617,7 @@ const ProfilePage: React.FC = () => {
                   {quizzes.length > 6 && (
                     <div className="text-center">
                       <Link href="/quizzes">
-                        <Button className="bg-gradient-to-r from-magenta-400 to-purple-500 hover:from-magenta-500 hover:to-purple-600 text-white font-bold px-8 py-3">
+                        <Button className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-semibold px-8 py-3 rounded-lg shadow-md hover:shadow-lg transition-all duration-300">
                           View All Tests
                           <ArrowRight className="w-4 h-4 ml-2" />
                         </Button>
@@ -690,3 +635,4 @@ const ProfilePage: React.FC = () => {
 }
 
 export default ProfilePage
+

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button, type ButtonProps } from '@/components/ui/button';
@@ -8,15 +8,17 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Progress } from '@/components/ui/progress';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer'
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, Clock, CheckCircle2, Flag, ArrowRight, Brain, ArrowLeft, User, FileText } from 'lucide-react';
 import Link from "next/link"
-import AuthModal from '@/components/AuthModal';
-import ConfirmationModal from "../../../components/ui/ConfirmationModal"
 import { title } from 'process';
 import { LANG } from "./lang";
+
+// Dynamic imports for non-critical components to reduce render-blocking
+const Header = React.lazy(() => import('@/components/Header'));
+const Footer = React.lazy(() => import('@/components/Footer'));
+const AuthModal = React.lazy(() => import('@/components/AuthModal'));
+const ConfirmationModal = React.lazy(() => import("../../../components/ui/ConfirmationModal"));
 
 enum QuestionStatus {
   NotViewed = 'not-viewed',
@@ -129,8 +131,9 @@ export default function TakeQuiz({ params }: { params: Promise<{ id: string }> }
         setQuestionStatuses(new Array(data.questions.length).fill(QuestionStatus.NotViewed));
       } catch (error) {
         console.error('Error fetching quiz:', error);
-        toast.error('Failed to load quiz');
-        router.push('/quizzes');
+        toast.error('Failed to load quiz. Please check your internet connection and try again.');
+        // Don't redirect immediately, give user a chance to retry
+        setTimeout(() => router.push('/quizzes'), 3000);
       } finally {
         setLoading(false);
       }
@@ -201,7 +204,17 @@ export default function TakeQuiz({ params }: { params: Promise<{ id: string }> }
       return;
     }
 
-    const user = typeof window !== "undefined" ? JSON.parse(localStorage.getItem("user") || "null") : null;
+    const user = (() => {
+      if (typeof window === "undefined") return null;
+      try {
+        const userData = localStorage.getItem("user");
+        return userData ? JSON.parse(userData) : null;
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+        localStorage.removeItem("user"); // Clear corrupted data
+        return null;
+      }
+    })();
     if (!user || !user.mobile) {
       toast.error("User not found. Please register again.");
       setShowRegister(true);
@@ -266,45 +279,73 @@ export default function TakeQuiz({ params }: { params: Promise<{ id: string }> }
   }, [timeLeft, submitting, handleSubmit, answers, quiz]);
 
   const handleAnswerChange = (value: string) => {
-    // Mark quiz as started on first answer
-    if (typeof window !== "undefined") {
-      const quizStarted = localStorage.getItem(`quiz-started-${resolvedParams.id}`);
-      if (!quizStarted) {
-        localStorage.setItem(`quiz-started-${resolvedParams.id}`, "true");
+    try {
+      // Mark quiz as started on first answer
+      if (typeof window !== "undefined") {
+        const quizStarted = localStorage.getItem(`quiz-started-${resolvedParams.id}`);
+        if (!quizStarted) {
+          localStorage.setItem(`quiz-started-${resolvedParams.id}`, "true");
+        }
       }
-    }
-    const newAnswers = [...answers];
-    newAnswers[currentQuestion] = parseInt(value);
-    setAnswers(newAnswers);
 
-    const newStatuses = [...questionStatuses];
-    newStatuses[currentQuestion] = QuestionStatus.Attempted;
-    setQuestionStatuses(newStatuses);
+      const answerIndex = parseInt(value);
+      if (isNaN(answerIndex) || answerIndex < 0 || answerIndex >= (quiz?.questions[currentQuestion]?.options?.length || 0)) {
+        console.error('Invalid answer value:', value);
+        return;
+      }
+
+      const newAnswers = [...answers];
+      newAnswers[currentQuestion] = answerIndex;
+      setAnswers(newAnswers);
+
+      const newStatuses = [...questionStatuses];
+      newStatuses[currentQuestion] = QuestionStatus.Attempted;
+      setQuestionStatuses(newStatuses);
+    } catch (error) {
+      console.error('Error handling answer change:', error);
+      toast.error('Failed to save your answer. Please try again.');
+    }
   };
 
   const handleNext = () => {
-    if (currentQuestion < (quiz?.questions.length || 0) - 1) {
-      setCurrentQuestion((prev) => {
-        const newStatuses = [...questionStatuses];
-        if (newStatuses[prev] === QuestionStatus.NotViewed) {
-          newStatuses[prev] = QuestionStatus.Viewed;
-        }
-        setQuestionStatuses(newStatuses);
-        return prev + 1;
-      });
+    try {
+      if (currentQuestion < (quiz?.questions.length || 0) - 1) {
+        setCurrentQuestion((prev) => {
+          if (prev < 0 || prev >= questionStatuses.length) {
+            console.error('Invalid current question index:', prev);
+            return prev;
+          }
+          const newStatuses = [...questionStatuses];
+          if (newStatuses[prev] === QuestionStatus.NotViewed) {
+            newStatuses[prev] = QuestionStatus.Viewed;
+          }
+          setQuestionStatuses(newStatuses);
+          return prev + 1;
+        });
+      }
+    } catch (error) {
+      console.error('Error navigating to next question:', error);
     }
   };
 
   const handlePrevious = () => {
-    if (currentQuestion > 0) {
-      setCurrentQuestion((prev) => {
-        const newStatuses = [...questionStatuses];
-        if (newStatuses[prev] === QuestionStatus.NotViewed) {
-          newStatuses[prev] = QuestionStatus.Viewed;
-        }
-        setQuestionStatuses(newStatuses);
-        return prev - 1;
-      });
+    try {
+      if (currentQuestion > 0) {
+        setCurrentQuestion((prev) => {
+          if (prev < 0 || prev >= questionStatuses.length) {
+            console.error('Invalid current question index:', prev);
+            return prev;
+          }
+          const newStatuses = [...questionStatuses];
+          if (newStatuses[prev] === QuestionStatus.NotViewed) {
+            newStatuses[prev] = QuestionStatus.Viewed;
+          }
+          setQuestionStatuses(newStatuses);
+          return prev - 1;
+        });
+      }
+    } catch (error) {
+      console.error('Error navigating to previous question:', error);
     }
   };
 
@@ -357,68 +398,244 @@ export default function TakeQuiz({ params }: { params: Promise<{ id: string }> }
     }
   }, []);
 
+  // Set dynamic page title for SEO
+  useEffect(() => {
+    if (quiz && quiz.title) {
+      document.title = `${quiz.title} - Quiz Test | Sarkari Results Now`;
+    } else {
+      document.title = 'Take Quiz - Sarkari Results Now';
+    }
+  }, [quiz]);
+
 
   // Show register modal if user is not registered
   if (showRegister) {
-    return <AuthModal onSuccess={handleRegister} />;
+    return (
+      <Suspense fallback={<div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-2 border-amber-600 border-t-transparent"></div></div>}>
+        <AuthModal onSuccess={handleRegister} />
+      </Suspense>
+    );
   }
 
-  // Show loading state while initializing
+  // Show loading state while initializing - maintain layout structure to prevent CLS
   if (isInitializing) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto px-4">
-          <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-amber-200">
-            <div className="w-16 h-16 bg-gradient-to-br from-amber-600 to-orange-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
-              <FileText className="w-8 h-8 text-white" />
-            </div>
-            <h2 className="text-2xl font-bold text-amber-900 mb-2">Initializing Test</h2>
-            <p className="text-amber-700 mb-6">Setting up your quiz environment...</p>
-            <div className="animate-spin rounded-full h-8 w-8 border-2 border-amber-600 border-t-transparent mx-auto"></div>
-            {(() => {
-              if (typeof window === 'undefined') return null;
-              const userData = localStorage.getItem('user');
-              if (!userData) return null;
-              try {
-                const user = JSON.parse(userData);
-                return (
-                  <div className="mt-6 pt-6 border-t border-amber-200">
-                    <p className="text-sm text-amber-800">
-                      Welcome, <span className="font-semibold">{user.name}</span>!
-                    </p>
+      <>
+        <Header />
+        <main className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50">
+          <div className="container mx-auto px-4 py-6 max-w-7xl">
+            {/* Skeleton for main quiz container */}
+            <div className="bg-white rounded-2xl shadow-2xl border-2 border-amber-200 overflow-hidden mb-6">
+              {/* Skeleton for header section */}
+              <div className="bg-gradient-to-br from-amber-50 to-orange-50 border-b border-amber-200 p-6">
+                {/* Skeleton for user profile */}
+                <div className="flex items-center justify-between mb-6 min-h-[60px]">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gray-300 to-gray-400 animate-pulse"></div>
+                    <div>
+                      <div className="h-5 bg-gradient-to-r from-gray-300 to-gray-400 rounded w-32 mb-1 animate-pulse"></div>
+                      <div className="h-4 bg-gradient-to-r from-gray-300 to-gray-400 rounded w-24 animate-pulse"></div>
+                    </div>
                   </div>
-                );
-              } catch (e) {
-                return null; // Avoids crashing if JSON is invalid
-              }
-            })()}
+                </div>
+
+                {/* Skeleton for title and description */}
+                <div className="text-center mb-6">
+                  <div className="h-8 bg-gradient-to-r from-gray-300 to-gray-400 rounded w-64 mx-auto mb-2 animate-pulse"></div>
+                  <div className="h-4 bg-gradient-to-r from-gray-300 to-gray-400 rounded w-48 mx-auto animate-pulse"></div>
+                </div>
+
+                {/* Skeleton for stats grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="bg-gray-50 border-2 border-gray-200 rounded-xl p-4 text-center">
+                      <div className="w-6 h-6 bg-gradient-to-r from-gray-300 to-gray-400 rounded mx-auto mb-2 animate-pulse"></div>
+                      <div className="h-8 bg-gradient-to-r from-gray-300 to-gray-400 rounded w-16 mx-auto mb-1 animate-pulse"></div>
+                      <div className="h-4 bg-gradient-to-r from-gray-300 to-gray-400 rounded w-20 mx-auto animate-pulse"></div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Skeleton for progress bar */}
+                <div className="mb-6">
+                  <div className="flex justify-between items-center mb-2">
+                    <div className="h-4 bg-gradient-to-r from-gray-300 to-gray-400 rounded w-16 animate-pulse"></div>
+                    <div className="h-4 bg-gradient-to-r from-gray-300 to-gray-400 rounded w-12 animate-pulse"></div>
+                  </div>
+                  <div className="h-3 bg-gray-100 rounded-full border border-gray-200 overflow-hidden">
+                    <div className="h-full bg-gradient-to-r from-gray-300 to-gray-400 animate-pulse w-1/3"></div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Skeleton for main content */}
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 p-6">
+                <div className="lg:col-span-3">
+                  <div className="bg-white border-2 border-gray-200 shadow-lg rounded-lg">
+                    <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-4">
+                      <div className="h-6 bg-gradient-to-r from-gray-300 to-gray-400 rounded w-32 animate-pulse"></div>
+                    </div>
+                    <div className="p-6">
+                      <div className="mb-6">
+                        <div className="h-4 bg-gradient-to-r from-gray-300 to-gray-400 rounded w-full mb-2 animate-pulse"></div>
+                        <div className="h-4 bg-gradient-to-r from-gray-300 to-gray-400 rounded w-3/4 animate-pulse"></div>
+                      </div>
+                      <div className="space-y-3">
+                        {[1, 2, 3, 4].map((i) => (
+                          <div key={i} className="p-4 rounded-lg border-2 border-gray-200 bg-gray-50">
+                            <div className="flex items-center space-x-4">
+                              <div className="h-5 w-5 bg-gradient-to-r from-gray-300 to-gray-400 rounded animate-pulse"></div>
+                              <div className="h-4 bg-gradient-to-r from-gray-300 to-gray-400 rounded flex-1 animate-pulse"></div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="lg:col-span-1">
+                  <div className="bg-white border-2 border-gray-200 shadow-lg rounded-lg">
+                    <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-4">
+                      <div className="h-6 bg-gradient-to-r from-gray-300 to-gray-400 rounded w-24 animate-pulse"></div>
+                    </div>
+                    <div className="p-4">
+                      <div className="grid grid-cols-4 gap-2 mb-6">
+                        {Array.from({ length: 16 }, (_, i) => (
+                          <div key={i} className="w-10 h-10 bg-gradient-to-r from-gray-300 to-gray-400 rounded-lg animate-pulse"></div>
+                        ))}
+                      </div>
+                      <div className="space-y-3">
+                        {[1, 2, 3, 4].map((i) => (
+                          <div key={i} className="flex items-center gap-3">
+                            <div className="w-4 h-4 bg-gradient-to-r from-gray-300 to-gray-400 rounded-full animate-pulse"></div>
+                            <div className="h-4 bg-gradient-to-r from-gray-300 to-gray-400 rounded w-20 animate-pulse"></div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+        </main>
+        <Footer />
+      </>
     );
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto px-4">
-          <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-amber-200">
-            <div className="w-16 h-16 bg-gradient-to-br from-amber-600 to-orange-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
-              <Brain className="w-8 h-8 text-white animate-pulse" />
+      <>
+        <Header />
+        <main className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50">
+          <div className="container mx-auto px-4 py-6 max-w-7xl">
+            {/* Skeleton for main quiz container */}
+            <div className="bg-white rounded-2xl shadow-2xl border-2 border-amber-200 overflow-hidden mb-6">
+              {/* Skeleton for header section */}
+              <div className="bg-gradient-to-br from-amber-50 to-orange-50 border-b border-amber-200 p-6">
+                {/* Skeleton for user profile */}
+                <div className="flex items-center justify-between mb-6 min-h-[60px]">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gray-300 to-gray-400 animate-pulse"></div>
+                    <div>
+                      <div className="h-5 bg-gradient-to-r from-gray-300 to-gray-400 rounded w-32 mb-1 animate-pulse"></div>
+                      <div className="h-4 bg-gradient-to-r from-gray-300 to-gray-400 rounded w-24 animate-pulse"></div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Skeleton for title and description */}
+                <div className="text-center mb-6">
+                  <div className="h-8 bg-gradient-to-r from-gray-300 to-gray-400 rounded w-64 mx-auto mb-2 animate-pulse"></div>
+                  <div className="h-4 bg-gradient-to-r from-gray-300 to-gray-400 rounded w-48 mx-auto animate-pulse"></div>
+                </div>
+
+                {/* Skeleton for stats grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="bg-gray-50 border-2 border-gray-200 rounded-xl p-4 text-center">
+                      <div className="w-6 h-6 bg-gradient-to-r from-gray-300 to-gray-400 rounded mx-auto mb-2 animate-pulse"></div>
+                      <div className="h-8 bg-gradient-to-r from-gray-300 to-gray-400 rounded w-16 mx-auto mb-1 animate-pulse"></div>
+                      <div className="h-4 bg-gradient-to-r from-gray-300 to-gray-400 rounded w-20 mx-auto animate-pulse"></div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Skeleton for progress bar */}
+                <div className="mb-6">
+                  <div className="flex justify-between items-center mb-2">
+                    <div className="h-4 bg-gradient-to-r from-gray-300 to-gray-400 rounded w-16 animate-pulse"></div>
+                    <div className="h-4 bg-gradient-to-r from-gray-300 to-gray-400 rounded w-12 animate-pulse"></div>
+                  </div>
+                  <div className="h-3 bg-gray-100 rounded-full border border-gray-200 overflow-hidden">
+                    <div className="h-full bg-gradient-to-r from-gray-300 to-gray-400 animate-pulse w-1/4"></div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Skeleton for main content */}
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 p-6">
+                <div className="lg:col-span-3">
+                  <div className="bg-white border-2 border-gray-200 shadow-lg rounded-lg">
+                    <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-4">
+                      <div className="h-6 bg-gradient-to-r from-gray-300 to-gray-400 rounded w-32 animate-pulse"></div>
+                    </div>
+                    <div className="p-6">
+                      <div className="mb-6">
+                        <div className="h-4 bg-gradient-to-r from-gray-300 to-gray-400 rounded w-full mb-2 animate-pulse"></div>
+                        <div className="h-4 bg-gradient-to-r from-gray-300 to-gray-400 rounded w-3/4 animate-pulse"></div>
+                      </div>
+                      <div className="space-y-3">
+                        {[1, 2, 3, 4].map((i) => (
+                          <div key={i} className="p-4 rounded-lg border-2 border-gray-200 bg-gray-50">
+                            <div className="flex items-center space-x-4">
+                              <div className="h-5 w-5 bg-gradient-to-r from-gray-300 to-gray-400 rounded animate-pulse"></div>
+                              <div className="h-4 bg-gradient-to-r from-gray-300 to-gray-400 rounded flex-1 animate-pulse"></div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="lg:col-span-1">
+                  <div className="bg-white border-2 border-gray-200 shadow-lg rounded-lg">
+                    <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-4">
+                      <div className="h-6 bg-gradient-to-r from-gray-300 to-gray-400 rounded w-24 animate-pulse"></div>
+                    </div>
+                    <div className="p-4">
+                      <div className="grid grid-cols-4 gap-2 mb-6">
+                        {Array.from({ length: 16 }, (_, i) => (
+                          <div key={i} className="w-10 h-10 bg-gradient-to-r from-gray-300 to-gray-400 rounded-lg animate-pulse"></div>
+                        ))}
+                      </div>
+                      <div className="space-y-3">
+                        {[1, 2, 3, 4].map((i) => (
+                          <div key={i} className="flex items-center gap-3">
+                            <div className="w-4 h-4 bg-gradient-to-r from-gray-300 to-gray-400 rounded-full animate-pulse"></div>
+                            <div className="h-4 bg-gradient-to-r from-gray-300 to-gray-400 rounded w-20 animate-pulse"></div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-            <h2 className="text-2xl font-bold text-amber-900 mb-2">Loading Quiz</h2>
-            <p className="text-amber-700 mb-6">Preparing your test questions...</p>
-            <div className="animate-spin rounded-full h-8 w-8 border-2 border-amber-600 border-t-transparent mx-auto"></div>
           </div>
-        </div>
-      </div>
+        </main>
+        <Footer />
+      </>
     );
   }
 
   if (!quiz || !quiz.questions || quiz.questions.length === 0) {
     return (
       <>
-        <Header />
+        <Suspense fallback={<div className="h-16 bg-white shadow-sm animate-pulse"></div>}>
+          <Header />
+        </Suspense>
         <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 flex items-center justify-center p-4">
           <div className="text-center max-w-md mx-auto px-4">
             <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-amber-200">
@@ -440,7 +657,9 @@ export default function TakeQuiz({ params }: { params: Promise<{ id: string }> }
             </div>
           </div>
         </div>
-        <Footer />
+        <Suspense fallback={<div className="h-32 bg-gray-100 animate-pulse"></div>}>
+          <Footer />
+        </Suspense>
       </>
     );
   }
@@ -449,7 +668,9 @@ export default function TakeQuiz({ params }: { params: Promise<{ id: string }> }
   if (quiz && (!quiz.timeLimit || quiz.timeLimit <= 0)) {
     return (
       <>
-        <Header />
+        <Suspense fallback={<div className="h-16 bg-white shadow-sm animate-pulse"></div>}>
+          <Header />
+        </Suspense>
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 p-4">
           <div className="text-center max-w-md mx-auto px-4">
             <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-amber-200">
@@ -471,7 +692,9 @@ export default function TakeQuiz({ params }: { params: Promise<{ id: string }> }
             </div>
           </div>
         </div>
-        <Footer />
+        <Suspense fallback={<div className="h-32 bg-gray-100 animate-pulse"></div>}>
+          <Footer />
+        </Suspense>
       </>
     );
   }
@@ -486,7 +709,9 @@ export default function TakeQuiz({ params }: { params: Promise<{ id: string }> }
 
   return (
     <>
-      <Header />
+      <Suspense fallback={<div className="h-16 bg-white shadow-sm animate-pulse"></div>}>
+        <Header />
+      </Suspense>
       <main className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50">
         <div className="container mx-auto px-4 py-6 max-w-7xl">
 
@@ -495,26 +720,51 @@ export default function TakeQuiz({ params }: { params: Promise<{ id: string }> }
           <div className="bg-white rounded-2xl shadow-2xl border-2 border-amber-200 overflow-hidden mb-6">
             {/* Header Section */}
             <div className="bg-gradient-to-br from-amber-50 to-orange-50 border-b border-amber-200 p-6">
-              {/* User Profile Display */}
-              {(() => {
-                const userData = typeof window !== "undefined" ? localStorage.getItem("user") : null;
-                const user = userData ? JSON.parse(userData) : null;
-                return user ? (
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-600 to-orange-600 flex items-center justify-center shadow-lg border-2 border-white">
-                        <User className="w-6 h-6 text-white" />
+              {/* User Profile Display - Always reserve space to prevent CLS */}
+              <div className="flex items-center justify-between mb-6 min-h-[60px]">
+                {(() => {
+                  try {
+                    const userData = typeof window !== "undefined" ? localStorage.getItem("user") : null;
+                    const user = userData ? JSON.parse(userData) : null;
+                    return user && user.name ? (
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-600 to-orange-600 flex items-center justify-center shadow-lg border-2 border-white">
+                          <User className="w-6 h-6 text-white" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-bold text-amber-900">
+                            {user.name}
+                          </h3>
+                          <p className="text-amber-700 text-sm">Test in Progress</p>
+                        </div>
                       </div>
-                      <div>
-                        <h3 className="text-lg font-bold text-amber-900">
-                          {user.name}
-                        </h3>
-                        <p className="text-amber-700 text-sm">Test in Progress</p>
+                    ) : (
+                      <div className="flex items-center gap-4 opacity-0">
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-600 to-orange-600 flex items-center justify-center shadow-lg border-2 border-white">
+                          <User className="w-6 h-6 text-white" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-bold text-amber-900">Placeholder Name</h3>
+                          <p className="text-amber-700 text-sm">Test in Progress</p>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                ) : null;
-              })()}
+                    );
+                  } catch (error) {
+                    console.error('Error parsing user data in profile display:', error);
+                    return (
+                      <div className="flex items-center gap-4 opacity-0">
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-600 to-orange-600 flex items-center justify-center shadow-lg border-2 border-white">
+                          <User className="w-6 h-6 text-white" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-bold text-amber-900">Placeholder Name</h3>
+                          <p className="text-amber-700 text-sm">Test in Progress</p>
+                        </div>
+                      </div>
+                    );
+                  }
+                })()}
+              </div>
 
               <div className="text-center mb-6">
                 <h1 className="text-2xl sm:text-3xl font-bold text-amber-900 mb-2">
@@ -553,15 +803,15 @@ export default function TakeQuiz({ params }: { params: Promise<{ id: string }> }
                 </div>
               </div>
 
-              {/* Progress Bar */}
+              {/* Progress Bar - Fixed dimensions to prevent CLS */}
               <div className="mb-6">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-sm font-medium text-amber-800">Progress</span>
                   <span className="text-sm font-bold text-amber-900">{Math.round(progress)}%</span>
                 </div>
-                <div className="h-3 bg-amber-100 rounded-full border border-amber-200 overflow-hidden">
+                <div className="relative h-3 bg-amber-100 rounded-full border border-amber-200 overflow-hidden">
                   <div
-                    className="h-full bg-gradient-to-r from-amber-500 to-orange-500 transition-all duration-500"
+                    className="absolute top-0 left-0 h-full bg-gradient-to-r from-amber-500 to-orange-500 transition-all duration-500 ease-out"
                     style={{ width: `${progress}%` }}
                   />
                 </div>
@@ -574,17 +824,21 @@ export default function TakeQuiz({ params }: { params: Promise<{ id: string }> }
               <div className="lg:col-span-3">
                 <Card className="bg-white border-2 border-amber-200 shadow-lg">
                   <CardHeader className="bg-gradient-to-br from-amber-50 to-orange-50 pb-4">
-                    <CardTitle className="flex items-center gap-3 text-amber-900">
+                    <h2 className="flex items-center gap-3 text-amber-900 text-xl font-bold">
                       <div className="w-10 h-10 bg-amber-500 rounded-lg flex items-center justify-center">
                         <Brain className="w-6 h-6 text-white" />
                       </div>
-                      <span className="text-xl font-bold">Question {currentQuestion + 1}</span>
-                    </CardTitle>
+                      <span>Question {currentQuestion + 1}</span>
+                    </h2>
                   </CardHeader>
 
                   <CardContent className="p-6">
+                    {/* LCP-critical content - question text */}
                     <div className="mb-6">
-                      <p className="text-lg text-gray-800 leading-relaxed font-medium">
+                      <p
+                        className="text-lg text-gray-800 leading-relaxed font-medium"
+                        style={{ contentVisibility: 'auto', containIntrinsicSize: '0 200px' }}
+                      >
                         {currentQuestionData.text}
                       </p>
                     </div>
@@ -690,7 +944,7 @@ export default function TakeQuiz({ params }: { params: Promise<{ id: string }> }
               <div className="lg:col-span-1">
                 <Card className="bg-white border-2 border-amber-200 shadow-lg">
                   <CardHeader className="bg-gradient-to-br from-amber-50 to-orange-50 pb-4">
-                    <CardTitle className="text-amber-900">
+                    <h3 className="text-amber-900">
                       <div className="flex items-center justify-between">
                         <span className="text-lg font-bold">Questions</span>
                         <div className="flex items-center gap-2">
@@ -698,7 +952,7 @@ export default function TakeQuiz({ params }: { params: Promise<{ id: string }> }
                           <span className="text-sm text-green-700 font-medium">Active</span>
                         </div>
                       </div>
-                    </CardTitle>
+                    </h3>
                   </CardHeader>
 
                   <CardContent className="p-4">
@@ -750,19 +1004,23 @@ export default function TakeQuiz({ params }: { params: Promise<{ id: string }> }
         </div>
 
         {/* Confirmation Modal */}
-        <ConfirmationModal
-          isOpen={showConfirmModal}
-          onClose={() => setShowConfirmModal(false)}
-          onConfirm={handleSubmit}
-          title={confirmModalData.title}
-          message={confirmModalData.message}
-          confirmText={confirmModalData.confirmText}
-          cancelText={confirmModalData.cancelText}
-          type={confirmModalData.type}
-          unansweredCount={confirmModalData.unansweredCount}
-        />
+        <Suspense fallback={null}>
+          <ConfirmationModal
+            isOpen={showConfirmModal}
+            onClose={() => setShowConfirmModal(false)}
+            onConfirm={handleSubmit}
+            title={confirmModalData.title}
+            message={confirmModalData.message}
+            confirmText={confirmModalData.confirmText}
+            cancelText={confirmModalData.cancelText}
+            type={confirmModalData.type}
+            unansweredCount={confirmModalData.unansweredCount}
+          />
+        </Suspense>
       </main>
-      <Footer />
+      <Suspense fallback={<div className="h-32 bg-gray-100 animate-pulse"></div>}>
+        <Footer />
+      </Suspense>
     </>
   );
 }

@@ -39,6 +39,15 @@ export default function RootLayout({
         {/* 🔹 Favicon */}
         <link rel="icon" type="image/png" href="/logo.png" />
 
+        {/* 🔹 Preload critical fonts for better LCP */}
+        <link
+          rel="preload"
+          href="https://fonts.gstatic.com/s/montserrat/v25/JTUHjIg1_i6t8kCHKm4532VJOt5-QNFgpCtZ6Ew-Y3tcoqK5.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
+
         {/* 🔹 Open Graph (OG) Meta for social sharing */}
         <meta
           property="og:title"
