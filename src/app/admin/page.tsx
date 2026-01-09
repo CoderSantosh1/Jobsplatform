@@ -448,6 +448,14 @@ export default function AdminDashboard() {
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+        <Button className="">
+          <a
+            href="/admin/quizzes"
+            className="text-gray-900  hover:text-blue-500 px-3 py-2 rounded-md text-sm font-medium"
+          >
+            All quiz
+          </a>
+        </Button>
         <Button onClick={handleLogout} variant="outline">
           Logout
         </Button>
@@ -644,7 +652,7 @@ export default function AdminDashboard() {
                     }
                     className="w-full p-2 border rounded-md"
                   />
-                  </div>
+                </div>
 
                 <div>
                   <label className="block text-sm font-medium mb-2">
@@ -653,7 +661,7 @@ export default function AdminDashboard() {
                   <input
                     type="text"
                     value={resultsFormData.downloadnotificationresultlis}
-                    onChange={(e) =>  
+                    onChange={(e) =>
                       setResultsFormData({
                         ...resultsFormData,
                         downloadnotificationresultlis: e.target.value,
