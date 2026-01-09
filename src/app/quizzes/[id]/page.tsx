@@ -83,8 +83,8 @@ export default function TakeQuiz({ params }: { params: Promise<{ id: string }> }
     type: "warning" as "warning" | "danger" | "success" | "info",
     unansweredCount: 0,
   });
-  const [lang, setLang] = useState<'en' | 'hi' | null>(null);
-  const t = lang ? LANG[lang] : LANG['en'];
+  const [lang, setLang] = useState<'en' | 'hi'>('en');
+  const t = LANG[lang];
 
   // Initialize user check
   useEffect(() => {
@@ -392,9 +392,8 @@ export default function TakeQuiz({ params }: { params: Promise<{ id: string }> }
       const stored = localStorage.getItem('lang');
       if (stored === 'hi' || stored === 'en') {
         setLang(stored);
-      } else {
-        setLang('en');
       }
+      // If stored is not 'hi' or 'en', keep the default 'en'
     }
   }, []);
 
@@ -705,7 +704,6 @@ export default function TakeQuiz({ params }: { params: Promise<{ id: string }> }
   const seconds = timeLeft % 60;
   const answeredQuestions = answers.filter((answer) => answer !== -1).length;
 
-  if (!lang) return null; // or a loading spinner
 
   return (
     <>

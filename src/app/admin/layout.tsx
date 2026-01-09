@@ -41,12 +41,12 @@ export default function AdminLayout({
                 >
                   News
                 </a>
-                <a
+                {/* <a
                   href="/admin/quizzes"
                   className="text-gray-900  hover:text-blue-500 px-3 py-2 rounded-md text-sm font-medium"
                 >
                   Quiz
-                </a>
+                </a> */}
               </div>
             </div>
           </div>
