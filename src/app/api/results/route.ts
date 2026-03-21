@@ -13,6 +13,9 @@ export async function POST(request: Request) {
     await connectToDatabase();
 
     const body = await request.json();
+    const downloadLink1 = body.downloadLink1 || body.downloadLink || "";
+    const downloadLink2 = body.downloadLink2 || "";
+    const downloadLink3 = body.downloadLink3 || "";
 
     // Convert string → array for official websites
     let websites: string[] = [];
@@ -38,7 +41,9 @@ export async function POST(request: Request) {
       organization: body.organization,
       resultDate: body.resultDate,
       category: body.category,
-      downloadLink: body.downloadLink,
+      downloadLink1,
+      downloadLink2,
+      downloadLink3,
       youtubeLink: body.youtubeLink,
       officalwebsites: websites,
       downloadnotificationresultlis: notifications,
@@ -53,7 +58,9 @@ export async function POST(request: Request) {
       organization: (newResult as any).organization,
       resultDate: (newResult as any).resultDate,
       category: (newResult as any).category,
-      downloadLink: (newResult as any).downloadLink,
+      downloadLink1: (newResult as any).downloadLink1 || (newResult as any).downloadLink || "",
+      downloadLink2: (newResult as any).downloadLink2 || "",
+      downloadLink3: (newResult as any).downloadLink3 || "",
       youtubeLink: (newResult as any).youtubeLink || "",
       officalwebsites: (newResult as any).officalwebsites || [],
       downloadnotificationresultlis: (newResult as any).downloadnotificationresultlis || [],
@@ -93,7 +100,9 @@ export async function GET() {
       organization: result.organization,
       resultDate: result.resultDate,
       category: result.category,
-      downloadLink: result.downloadLink,
+      downloadLink1: result.downloadLink1 || result.downloadLink || "",
+      downloadLink2: result.downloadLink2 || "",
+      downloadLink3: result.downloadLink3 || "",
       youtubeLink: result.youtubeLink || "",
       officalwebsites: result.officalwebsites || [],
       downloadnotificationresultlis: result.downloadnotificationresultlis || [],

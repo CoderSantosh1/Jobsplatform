@@ -9,7 +9,9 @@ interface ResultFormData {
   organization: string;
   resultDate: string;
   category: string;
-  downloadLink: string;
+  downloadLink1: string;
+  downloadLink2: string;
+  downloadLink3: string;
   youtubeLink: string;
   description: string;
   status: string;
@@ -29,7 +31,9 @@ export default function ResultForm({ initialData, onSubmit, onCancel }: ResultFo
     organization: '',
     resultDate: '',
     category: 'other',
-    downloadLink: '',
+    downloadLink1: '',
+    downloadLink2: '',
+    downloadLink3: '',
     youtubeLink: '',
     description: initialData?.description || '',
     status: 'draft',
@@ -53,7 +57,9 @@ export default function ResultForm({ initialData, onSubmit, onCancel }: ResultFo
         organization: '',
         resultDate: '',
         category: 'other',
-        downloadLink: '',
+        downloadLink1: '',
+        downloadLink2: '',
+        downloadLink3: '',
         youtubeLink: '',
         description: '',
         status: 'draft',
@@ -65,8 +71,11 @@ export default function ResultForm({ initialData, onSubmit, onCancel }: ResultFo
 
   return (
     <div className="h-screen overflow-auto p-4 bg-gray-100">
-      <div className="bg-white rounded-lg shadow-lg p-6 max-w-2xl mx-auto">
-        <h2 className="text-2xl font-semibold mb-6">{initialData ? 'Edit Result' : 'Post New Result'}</h2>
+      <div className="bg-white rounded-lg shadow-lg p-6 max-w-2xl mx-auto border border-orange-100">
+        {/* <div className="mb-6 rounded-lg border border-orange-200 bg-orange-50 p-4"> */}
+          <h2 className="text-2xl font-semibold mb-4">{initialData ? 'Edit Result' : 'Post New Result'}</h2>
+
+        {/* </div> */}
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-sm font-medium mb-2">Exam Name</label>
@@ -112,15 +121,49 @@ export default function ResultForm({ initialData, onSubmit, onCancel }: ResultFo
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-2">Download Link</label>
+          <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 space-y-4">
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900">Result Access Section</h3>
+              <p className="mt-1 text-xs text-gray-600">
+                All fields are optional. Use them for direct links, alternate links, or status text.
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">Download Link 1 / Text (Optional)</label>
             <input
-              type="url"
-              value={formData.downloadLink}
-              onChange={(e) => setFormData({ ...formData, downloadLink: e.target.value })}
+              type="text"
+              value={formData.downloadLink1}
+              onChange={(e) => setFormData({ ...formData, downloadLink1: e.target.value })}
               className="w-full p-2 border rounded-md"
-              placeholder="https://example.com/result"
+              placeholder="https://example.com/result-main or Coming Soon"
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">Download Link 2 / Text (Optional)</label>
+            <input
+              type="text"
+              value={formData.downloadLink2}
+              onChange={(e) => setFormData({ ...formData, downloadLink2: e.target.value })}
+              className="w-full p-2 border rounded-md"
+              placeholder="https://example.com/result-mirror or Coming Soon"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">Download Link 3 / Text (Optional)</label>
+            <input
+              type="text"
+              value={formData.downloadLink3}
+              onChange={(e) => setFormData({ ...formData, downloadLink3: e.target.value })}
+              className="w-full p-2 border rounded-md"
+              placeholder="https://example.com/result-3 or Comming Soon-21/03/2026"
+            />
+            <p className="mt-2 text-xs text-gray-500">
+              Example: official URL, alternate link, Coming Soon, or Comming Soon-21/03/2026.
+            </p>
+          </div>
           </div>
 
           <div>

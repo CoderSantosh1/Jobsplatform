@@ -41,7 +41,9 @@ export async function GET(
       organization: (result as any).organization,
       resultDate: (result as any).resultDate,
       category: (result as any).category,
-      downloadLink: (result as any).downloadLink,
+      downloadLink1: (result as any).downloadLink1 || (result as any).downloadLink || "",
+      downloadLink2: (result as any).downloadLink2 || "",
+      downloadLink3: (result as any).downloadLink3 || "",
       youtubeLink: (result as any).youtubeLink || "",
       officalwebsites: (result as any).officalwebsites || [],
       downloadnotificationresultlis: (result as any).downloadnotificationresultlis || [],
@@ -121,6 +123,9 @@ export async function PUT(
     }
 
     const body = await request.json();
+    body.downloadLink1 = body.downloadLink1 || body.downloadLink || "";
+    body.downloadLink2 = body.downloadLink2 || "";
+    body.downloadLink3 = body.downloadLink3 || "";
 
     // Normalize official websites (string OR array → array)
     if (body.officalwebsites !== undefined) {
@@ -185,7 +190,9 @@ export async function PUT(
       organization: (updatedResult as any).organization,
       resultDate: (updatedResult as any).resultDate,
       category: (updatedResult as any).category,
-      downloadLink: (updatedResult as any).downloadLink,
+      downloadLink1: (updatedResult as any).downloadLink1 || (updatedResult as any).downloadLink || "",
+      downloadLink2: (updatedResult as any).downloadLink2 || "",
+      downloadLink3: (updatedResult as any).downloadLink3 || "",
       youtubeLink: (updatedResult as any).youtubeLink || "",
       officalwebsites: (updatedResult as any).officalwebsites || [],
       downloadnotificationresultlis: (updatedResult as any).downloadnotificationresultlis || [],
