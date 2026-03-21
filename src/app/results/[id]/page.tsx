@@ -31,12 +31,14 @@ interface Result {
   organization: string;
   category: string;
   status: string;
-  downloadLink?: string;
+  downloadLink1?: string;
+  downloadLink2?: string;
+  downloadLink3?: string;
   createdAt: string;
   updatedAt: string;
-  officalwebsites: string;
+  officalwebsites: string[];
   youtubeLink: string;
-  downloadnotificationresultlis: string;
+  downloadnotificationresultlis: string[];
 }
 
 export default function ResultDetails() {
@@ -46,6 +48,12 @@ export default function ResultDetails() {
   const [result, setResult] = useState<Result | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const downloadLinks = [
+    result?.downloadLink1,
+    result?.downloadLink2,
+    result?.downloadLink3,
+  ].filter(Boolean) as string[];
+  const isUrl = (value: string) => /^https?:\/\//i.test(value);
 
   useEffect(() => {
     const fetchResult = async () => {
@@ -237,37 +245,64 @@ export default function ResultDetails() {
                     Useful Important Links:
                   </TableCell>
                 </TableRow>
-                {/* Download Result row */}
-                <TableRow>
-                  <TableCell
-                    align="center"
-                    sx={{
-                      fontWeight: "bold",
-                      fontSize: "14px",
-                      color: "magenta",
-                    }}
-                  >
-                    Download Result
-                  </TableCell>
 
-                  <TableCell
-                    align="center"
-                    sx={{
-                      fontWeight: "bold",
-                      fontSize: "14px",
-                      color: "magenta",
-                    }}
-                  >
-                    <a
-                      href={result.downloadLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ textDecoration: "none", color: "blue" }}
+                {downloadLinks.length > 0 && (
+                  <TableRow>
+                    <TableCell
+                      align="center"
+                      sx={{
+                        fontWeight: "bold",
+                        fontSize: "14px",
+                        color: "magenta",
+                      }}
                     >
-                      Click Here
-                    </a>
-                  </TableCell>
-                </TableRow>
+                      Download Results
+                    </TableCell>
+
+                    <TableCell
+                      align="center"
+                      sx={{
+                        fontWeight: "bold",
+                        fontSize: "14px",
+                        color: "magenta",
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                          flexWrap: "wrap",
+                          gap: 1,
+                        }}
+                      >
+                        {downloadLinks.map((link, index) => (
+                          <Box
+                            key={`${link}-${index}`}
+                            component="span"
+                            sx={{ display: "inline-flex", alignItems: "center" }}
+                          >
+                            {index > 0 && (
+                              <Box component="span" sx={{ color: "#222", mx: 1 }}>|</Box>
+                            )}
+                            {isUrl(link) ? (
+                              <a
+                                href={link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{ textDecoration: "none", color: "blue" }}
+                              >
+                                {`Link ${index + 1}`}
+                              </a>
+                            ) : (
+                              <span style={{ color: "blue" }}>{link}</span>
+                            )}
+                          </Box>
+                        ))}
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                )}
                 {/* Notification download link */}
                 <TableRow>
                   <TableCell
@@ -288,14 +323,18 @@ export default function ResultDetails() {
                       color: "magenta",
                     }}
                   >
-                    <a
-                      href={result.downloadnotificationresultlis}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ textDecoration: "none", color: "blue" }}
-                    >
-                      Click Here
-                    </a>
+                    {result.downloadnotificationresultlis?.length ? (
+                      <a
+                        href={result.downloadnotificationresultlis[0]}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ textDecoration: "none", color: "blue" }}
+                      >
+                        Click Here
+                      </a>
+                    ) : (
+                      "N/A"
+                    )}
                   </TableCell>
                 </TableRow>
                 {/*You tube link*/}
@@ -318,14 +357,18 @@ export default function ResultDetails() {
                       color: "magenta",
                     }}
                   >
-                    <a
-                      href={result.youtubeLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ textDecoration: "none", color: "blue" }}
-                    >
-                      Click Here
-                    </a>
+                    {result.youtubeLink ? (
+                      <a
+                        href={result.youtubeLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ textDecoration: "none", color: "blue" }}
+                      >
+                        Click Here
+                      </a>
+                    ) : (
+                      "N/A"
+                    )}
                   </TableCell>
                 </TableRow>
                 <TableRow>
@@ -347,14 +390,18 @@ export default function ResultDetails() {
                       color: "magenta",
                     }}
                   >
-                    <a
-                      href={result.officalwebsites}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ textDecoration: "none", color: "blue" }}
-                    >
-                      Click Here
-                    </a>
+                    {result.officalwebsites?.length ? (
+                      <a
+                        href={result.officalwebsites[0]}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ textDecoration: "none", color: "blue" }}
+                      >
+                        Click Here
+                      </a>
+                    ) : (
+                      "N/A"
+                    )}
                   </TableCell>
                 </TableRow>
               </TableBody>

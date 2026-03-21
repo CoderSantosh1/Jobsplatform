@@ -38,12 +38,46 @@ const ResultSchema = new mongoose.Schema({
   },
   downloadLink: {
     type: String,
-    required: [true, "Please provide a download link"],
+    required: false,
     validate: {
       validator: function (value: string) {
-        return /^(http|https):\/\/[^ "]+$/.test(value);
+        if (!value) return true;
+        return true;
       },
-      message: "Please provide a valid URL for the download link",
+      message: "Download link can be a URL or plain text",
+    },
+  },
+  downloadLink1: {
+    type: String,
+    required: false,
+    validate: {
+      validator: function (value: string) {
+        if (!value) return true;
+        return true;
+      },
+      message: "Download link 1 can be a URL or plain text",
+    },
+  },
+  downloadLink2: {
+    type: String,
+    required: false,
+    validate: {
+      validator: function (value: string) {
+        if (!value) return true;
+        return true;
+      },
+      message: "Download link 2 can be a URL or plain text",
+    },
+  },
+  downloadLink3: {
+    type: String,
+    required: false,
+    validate: {
+      validator: function (value: string) {
+        if (!value) return true;
+        return true;
+      },
+      message: "Download link 3 can be a URL or plain text",
     },
   },
   youtubeLink: {
@@ -88,6 +122,17 @@ const ResultSchema = new mongoose.Schema({
   },
 });
 
-const Result = mongoose.models.Result || mongoose.model('Result', ResultSchema);
+const existingResultModel = mongoose.models.Result as mongoose.Model<any> | undefined;
+
+if (existingResultModel) {
+  existingResultModel.schema.add({
+    downloadLink1: ResultSchema.obj.downloadLink1,
+    downloadLink2: ResultSchema.obj.downloadLink2,
+    downloadLink3: ResultSchema.obj.downloadLink3,
+  });
+}
+
+const Result: mongoose.Model<any> =
+  existingResultModel || mongoose.model<any>('Result', ResultSchema);
 
 export default Result;

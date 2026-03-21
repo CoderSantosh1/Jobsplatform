@@ -72,7 +72,9 @@ interface ResultFormData {
   organization: string;
   resultDate: string;
   category: string;
-  downloadLink: string;
+  downloadLink1: string;
+  downloadLink2: string;
+  downloadLink3: string;
   youtubeLink: string;
   description: string;
   status: string;
@@ -170,7 +172,9 @@ export default function AdminDashboard() {
     organization: "",
     resultDate: "",
     category: "",
-    downloadLink: "",
+    downloadLink1: "",
+    downloadLink2: "",
+    downloadLink3: "",
     youtubeLink: "",
     description: "",
     status: "published",
@@ -296,13 +300,7 @@ export default function AdminDashboard() {
       formData.append("status", newsFormData.status);
       formData.append("publishDate", newsFormData.publishDate);
       if (newsFormData.image && newsFormData.image instanceof File) {
-        console.log("Appending image to FormData:", newsFormData.image);
         formData.append("image", newsFormData.image);
-      } else {
-        console.log(
-          "No image selected or image is not a File:",
-          newsFormData.image
-        );
       }
 
       const response = await fetch("/api/news", {
@@ -350,14 +348,15 @@ export default function AdminDashboard() {
           organization: "",
           resultDate: "",
           category: "",
-          downloadLink: "",
+          downloadLink1: "",
+          downloadLink2: "",
+          downloadLink3: "",
           youtubeLink: "",
           description: "",
           status: "draft",
           officalwebsites: "",
           downloadnotificationresultlis: "",
         });
-        console.log("Result form data after reset:", resultsFormData);
       } else {
         alert("Failed to post results");
       }
@@ -447,7 +446,10 @@ export default function AdminDashboard() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+        <div>
+          <h1 className="text-3xl font-bold">Admin Dashboard - Job Management System</h1>
+          <p className="text-gray-600 mt-2">Manage jobs, results, admit cards, news, answer keys, admissions, quizzes, and categories</p>
+        </div>
         <Button className="">
           <a
             href="/admin/quizzes"
@@ -493,7 +495,7 @@ export default function AdminDashboard() {
               <JobForm
                 onSubmit={handleCreateJobSubmit} // Assumes handleCreateJobSubmit is defined in AdminPage
                 onCancel={() => {
-                  console.log("New job form cancelled.");
+                  // Form cancelled - no action needed
                 }}
               />
             </div>
@@ -505,8 +507,11 @@ export default function AdminDashboard() {
       {activeTab === "results" && (
         <>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="bg-white  rounded-lg shadow-lg p-6">
-              <h2 className="text-2xl font-semibold mb-6">Post New Results</h2>
+            <div className="bg-white rounded-lg shadow-lg p-6 border border-orange-100">
+              {/* <div className="mb-6 rounded-lg border border-orange-200 bg-orange-50 p-4"> */}
+                <h2 className="text-2xl font-semibold text-gray-900 mb-4">Post New Results</h2>
+
+              {/* </div> */}
               <form onSubmit={handleResultSubmit} className="space-y-6">
                 <div>
                   <label className="block text-sm font-medium mb-2">
@@ -602,23 +607,68 @@ export default function AdminDashboard() {
                   </select>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Download Link
-                  </label>
+                <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 space-y-4">
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-900">Result Access Section</h3>
+                    <p className="mt-1 text-xs text-gray-600">
+                      All fields are optional. Use them for result links, alternate links, or simple status text.
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Download Link 1 / Text (Optional)
+                    </label>
                   <input
-                    type="url"
-                    value={resultsFormData.downloadLink}
+                    type="text"
+                    value={resultsFormData.downloadLink1}
                     onChange={(e) =>
                       setResultsFormData({
                         ...resultsFormData,
-                        downloadLink: e.target.value,
+                        downloadLink1: e.target.value,
                       })
                     }
                     className="w-full p-2 border rounded-md"
-                    required
-                    pattern="https?:\/\/(www\.)?[\w\-\.]+\.[a-zA-Z]{2,}(\/\S*)?$"
+                    placeholder="https://example.com/result-main or Coming Soon"
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Download Link 2 / Text (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={resultsFormData.downloadLink2}
+                    onChange={(e) =>
+                      setResultsFormData({
+                        ...resultsFormData,
+                        downloadLink2: e.target.value,
+                      })
+                    }
+                    className="w-full p-2 border rounded-md"
+                    placeholder="https://example.com/result-mirror or Coming Soon"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Download Link 3 / Text (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={resultsFormData.downloadLink3}
+                    onChange={(e) =>
+                      setResultsFormData({
+                        ...resultsFormData,
+                        downloadLink3: e.target.value,
+                      })
+                    }
+                    className="w-full p-2 border rounded-md"
+                    placeholder="https://example.com/result-3 or Comming Soon-21/03/2026"
+                  />
+                  <p className="mt-2 text-xs text-gray-500">
+                    Example: official URL, alternate link, Coming Soon, or Comming Soon-21/03/2026.
+                  </p>
+                </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-2">

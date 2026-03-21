@@ -12,7 +12,9 @@ interface Result {
   organization: string;
   resultDate: string;
   category: string;
-  downloadLink: string;
+  downloadLink1?: string;
+  downloadLink2?: string;
+  downloadLink3?: string;
   youtubeLink?: string;
   status: string;
   createdAt: string;
@@ -26,7 +28,9 @@ interface ResultFormData {
   organization: string;
   resultDate: string;
   category: string;
-  downloadLink: string;
+  downloadLink1: string;
+  downloadLink2: string;
+  downloadLink3: string;
   youtubeLink: string;
   status: string;
   description: string;
@@ -73,7 +77,9 @@ export default function ResultList() {
       organization: result.organization,
       resultDate: result.resultDate,
       category: result.category,
-      downloadLink: result.downloadLink,
+      downloadLink1: result.downloadLink1 || '',
+      downloadLink2: result.downloadLink2 || '',
+      downloadLink3: result.downloadLink3 || '',
       youtubeLink: result.youtubeLink || '',
       status: result.status,
       description: result.description,

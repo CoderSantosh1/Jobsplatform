@@ -4,7 +4,9 @@ export interface Result {
   organization: string;
   resultDate: string;
   category: string;
-  downloadLink: string;
+  downloadLink1?: string;
+  downloadLink2?: string;
+  downloadLink3?: string;
   status: string;
   createdAt: string;
   updatedAt: string;
