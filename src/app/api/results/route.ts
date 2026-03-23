@@ -112,7 +112,7 @@ export async function GET() {
       __v: result.__v,
     }));
 
-    return NextResponse.json({ success: true, data: processedResults });
+    return NextResponse.json({ success: true, data: processedResults }, { headers: { "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate", Pragma: "no-cache", Expires: "0" } });
   } catch (error) {
     console.error("GET /api/results ERROR:", error);
     return NextResponse.json(
@@ -121,3 +121,4 @@ export async function GET() {
     );
   }
 }
+

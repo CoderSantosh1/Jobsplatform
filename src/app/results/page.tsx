@@ -29,7 +29,7 @@ export default function ResultsPage() {
   useEffect(() => {
     const fetchResults = async () => {
       try {
-        const response = await fetch('/api/results');
+        const response = await fetch('/api/results', { cache: 'no-store' });
         if (!response.ok) {
           throw new Error('Failed to fetch results');
         }
