@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { unstable_noStore as noStore } from "next/cache";
 import Link from "next/link";
 import Script from "next/script";
 import Header from "@/components/Header";
@@ -16,6 +17,8 @@ import News from "@/lib/models/News";
 import AnswerKey from "@/lib/models/AnswerKey";
 import Admission from "@/lib/models/Admission";
 import QuizCategory from "@/lib/models/QuizCategory";
+
+export const dynamic = "force-dynamic";
 
 interface JobItem {
   _id: string;
@@ -68,6 +71,7 @@ function toPlain<T>(value: T): T {
 }
 
 async function getHomeData() {
+  noStore();
   await connectToDatabase();
 
   const [jobs, results, admitCards, news, answerKeys, admissions, categories] =

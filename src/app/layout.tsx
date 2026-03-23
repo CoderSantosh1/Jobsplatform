@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Montserrat } from "next/font/google";
+import Script from "next/script";
 import { ThemeProvider } from "@/components/theme-provider";
 import CleanURL from "@/components/CleanURL";
 import "./globals.css";
@@ -16,7 +17,6 @@ export const metadata: Metadata = {
   description:
     "Sarkari Results Now provides all Sarkari Results, Admit Cards, Latest Government Job Updates, Free Test Series",
 };
-
 
 export default function RootLayout({
   children,
@@ -62,35 +62,30 @@ export default function RootLayout({
           content="https://www.sarkariresultsnow.com/og-image.png"
         />
         <meta property="og:url" content="https://www.sarkariresultsnow.com/" />
-
-        {/* ✅ Load AdSense Library (official async script) */}
-
-        <script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6447497690677792"
-          crossOrigin="anonymous"
-        ></script>
-
-        <script
-          async
-          src="https://www.googletagmanager.com/gtag/js?id=G-8GZPT68Z06"
-        />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-8GZPT68Z06');
-    `,
-          }}
-        />
       </head>
 
-      <body
-        className={`${inter.className} antialiased`}
-        suppressHydrationWarning
-      >
+      <body className={`${inter.className} antialiased`} suppressHydrationWarning>
+        <Script
+          id="google-adsense"
+          async
+          strategy="afterInteractive"
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6447497690677792"
+          crossOrigin="anonymous"
+        />
+        <Script
+          id="google-analytics"
+          async
+          strategy="afterInteractive"
+          src="https://www.googletagmanager.com/gtag/js?id=G-8GZPT68Z06"
+        />
+        <Script id="google-analytics-config" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-8GZPT68Z06');
+          `}
+        </Script>
         <ThemeProvider
           attribute="class"
           defaultTheme="light"
