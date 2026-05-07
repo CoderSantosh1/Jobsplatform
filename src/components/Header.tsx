@@ -60,12 +60,9 @@ export default function Header() {
             >
               Results
             </Link>
-            <Link
-              href="/news"
-              className="text-[#000000] hover:text-blue-800 font-medium"
-            >
-              News
-            </Link>
+            <a href="/news" className="text-[#000000] hover:text-blue-800 font-medium">
+              Latest Sarkari Job News
+            </a>
             <Link
               href="/admit-cards"
               className="text-[#000000] hover:text-blue-800 font-medium"

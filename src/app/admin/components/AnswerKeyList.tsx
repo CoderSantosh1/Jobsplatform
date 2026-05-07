@@ -123,7 +123,7 @@ export default function AnswerKeyList() {
                 {answerKey.organization} - Category: {answerKey.category}
               </p>
               <p className="text-sm text-gray-700 mt-1 truncate">Description: {answerKey.description}</p>
-              {answerKey.downloadLink && (
+              {answerKey.description && (
                 <p className="text-sm text-blue-600 hover:underline mt-1">
                   <span>Download Link</span>
                 </p>
