@@ -6,6 +6,28 @@ import CleanURL from "@/components/CleanURL";
 import "./globals.css";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { Analytics } from "@vercel/analytics/react";
+import { DEFAULT_OG_IMAGE, SITE_NAME, SITE_URL } from "@/lib/seo";
+import JsonLd from "@/components/seo/JsonLd";
+
+const SITE_SCHEMA = [
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: SITE_NAME,
+    alternateName: "SarkariResultsNow",
+    url: SITE_URL,
+    inLanguage: ["en-IN", "hi-IN"],
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: SITE_NAME,
+    url: SITE_URL,
+    logo: `${SITE_URL}/logo.png`,
+    email: "support@sarkariresultsnow.com",
+    sameAs: ["https://www.instagram.com/sarkariresultsnow/", "https://t.me/sarkariresultsnow"],
+  },
+];
 
 const inter = Montserrat({
   subsets: ["latin"],
@@ -13,9 +35,21 @@ const inter = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "Sarkari Results Now – Sarkari Exam, Job Alerts & Admit Cards & Free Test Serires Available",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "Sarkari Results Now – Sarkari Result, Govt Jobs, Admit Card & Free Mock Tests",
+    template: `%s | ${SITE_NAME}`,
+  },
   description:
-    "Sarkari Results Now provides all Sarkari Results, Admit Cards, Latest Government Job Updates, Free Test Series",
+    "Latest Sarkari Result, government job notifications, admit cards, answer keys and free mock tests for SSC, Railway, Bank, Police and State exams.",
+  applicationName: SITE_NAME,
+  openGraph: {
+    siteName: SITE_NAME,
+    type: "website",
+    locale: "en_IN",
+    images: [DEFAULT_OG_IMAGE],
+  },
+  twitter: { card: "summary_large_image", images: [DEFAULT_OG_IMAGE] },
 };
 
 export default function RootLayout({
@@ -24,7 +58,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en-IN" suppressHydrationWarning>
       <head>
         {/* 🔹 Google Verification & AdSense Config */}
         <meta
@@ -36,9 +70,6 @@ export default function RootLayout({
           name="google-site-verification"
           content="YRllvaBEISVbmMxHK3hy4i3K6fVmcIqebYsdEh0iT7E"
         />
-        {/* 🔹 Favicon */}
-        <link rel="icon" type="image/png" href="/logo.png" />
-
         {/* 🔹 Preload critical fonts for better LCP */}
         <link
           rel="preload"
@@ -47,21 +78,7 @@ export default function RootLayout({
           type="font/woff2"
           crossOrigin="anonymous"
         />
-
-        {/* 🔹 Open Graph (OG) Meta for social sharing */}
-        <meta
-          property="og:title"
-          content="Sarkariresultsnow - Latest Govt Job Results, Admit Cards & News"
-        />
-        <meta
-          property="og:description"
-          content="Get the latest updates on government job results, admit cards, sarkari news, and more. Stay informed with Sarkariresultsnow for all your govt job needs."
-        />
-        <meta
-          property="og:image"
-          content="https://www.sarkariresultsnow.com/og-image.png"
-        />
-        <meta property="og:url" content="https://www.sarkariresultsnow.com/" />
+        <JsonLd data={SITE_SCHEMA} />
       </head>
 
       <body className={`${inter.className} antialiased`} suppressHydrationWarning>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { EXAMS } from "@/lib/exams";
 
 export default function Footer() {
   return (
@@ -17,7 +18,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="/latest-jobs"
+                  href="/jobs"
                   className="text-blue-600 hover:text-blue-800"
                 >
                   Latest Jobs
@@ -33,7 +34,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="/admit-card"
+                  href="/admit-cards"
                   className="text-blue-600 hover:text-blue-800"
                 >
                   Admit Card
@@ -46,7 +47,7 @@ export default function Footer() {
             <ul className="space-y-2">
               <li>
                 <Link
-                  href="/answer-key"
+                  href="/answer-keys"
                   className="text-blue-600 hover:text-blue-800"
                 >
                   Answer Key
@@ -54,23 +55,23 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="/syllabus"
+                  href="/admissions"
                   className="text-blue-600 hover:text-blue-800"
                 >
-                  Syllabus
+                  Admissions
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/search"
+                  href="/quizzes"
                   className="text-blue-600 hover:text-blue-800"
                 >
-                  Search
+                  Free Mock Tests
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/contact-us"
+                  href="/contact"
                   className="text-blue-600 hover:text-blue-800"
                 >
                   Contact Us
@@ -83,7 +84,7 @@ export default function Footer() {
               Contact Information
             </h3>
             <p className="text-gray-700 mb-2 hover:text-blue-900  ">
-              <a href="mailto:sarkariresultsnow.com">
+              <a href="mailto:support@sarkariresultsnow.com">
                 support@sarkariresultsnow.com
               </a>
             </p>
@@ -106,7 +107,7 @@ export default function Footer() {
               >
                 <Image
                   src="/telegram.png"
-                  alt="Telogram"
+                  alt="Telegram"
                   width={24}
                   height={24}
                 />
@@ -134,22 +135,43 @@ export default function Footer() {
           </div>
         </div>
 
+        {/* Popular exam landing pages */}
+        <div className="border-t border-gray-200 pt-4 mb-4">
+          <h3 className="text-lg font-bold text-red-600 mb-2 text-center">Popular Exams</h3>
+          <ul className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-sm">
+            {EXAMS.map((e) => (
+              <li key={e.slug}>
+                <Link href={`/${e.slug}`} className="text-blue-600 hover:text-blue-800">
+                  {e.name}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+
         {/* Disclaimer */}
         <div className="border-t border-gray-200 pt-4 mb-4">
           <p className="text-sm text-gray-600 text-center">
-            Provide the best jobs and results, admitCard, Jobslatestnews,
-            university result for students. We do not endorse any particular job
-            or result.
+            Sarkari Results Now is an independent information portal and is not
+            affiliated with any government organisation. Always verify details on
+            the official website before applying.
           </p>
         </div>
 
         {/* Copyright */}
         <div className="text-center">
-          <h2 className="text-xl font-bold text-red-600 mb-1">
-            Sarkariresultsnow
-          </h2>
+          <nav className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-sm mb-3">
+            <Link href="/about" className="text-blue-600 hover:text-blue-800">About Us</Link>
+            <Link href="/privacy-policy" className="text-blue-600 hover:text-blue-800">Privacy Policy</Link>
+            <Link href="/disclaimer" className="text-blue-600 hover:text-blue-800">Disclaimer</Link>
+            <Link href="/terms" className="text-blue-600 hover:text-blue-800">Terms &amp; Conditions</Link>
+            <Link href="/contact" className="text-blue-600 hover:text-blue-800">Contact Us</Link>
+          </nav>
+          <p className="text-xl font-bold text-red-600 mb-1">
+            SarkariResultsNow.com
+          </p>
           <p className="text-sm text-gray-600 mt-2">
-            &copy; 2023 Sarkariresultsnow. All Rights
+            &copy; {new Date().getFullYear()} SarkariResultsNow.com. All Rights
             Reserved.
           </p>
         </div>

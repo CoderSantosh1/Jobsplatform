@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { testSeriesPath } from "@/lib/slug";
 
 interface Subcategory {
   _id?: string;
@@ -161,7 +162,7 @@ const FreeTestSeriesMegaMenu: React.FC = () => {
                     selectedCategory?.name === cat.name
                   }
                 >
-                  <img
+                  <img loading="lazy" decoding="async"
                     src={getIconUrl(cat.icon)}
                     alt={typeof cat.name === "string" ? cat.name : ""}
                     className={`w-5 h-5 object-contain rounded bg-white ${
@@ -182,7 +183,7 @@ const FreeTestSeriesMegaMenu: React.FC = () => {
             {selectedCategory ? (
               <>
                 <div className="mb-4 flex items-center gap-3">
-                  <img
+                  <img loading="lazy" decoding="async"
                     src={getIconUrl(selectedCategory.icon)}
                     alt={selectedCategory.name}
                     className="w-6 h-6 object-contain rounded shadow bg-white"
@@ -196,12 +197,10 @@ const FreeTestSeriesMegaMenu: React.FC = () => {
                     (sub) => (
                       <Link
                         key={sub._id || sub.name}
-                        href={`/quizzes?category=${encodeURIComponent(
-                          selectedCategory.name
-                        )}&subcategory=${encodeURIComponent(sub.name)}`}
+                        href={testSeriesPath(selectedCategory.name, sub.name)}
                         className="flex items-center gap-3 bg-white text-[4px] hover:bg-blue-50 border rounded-lg p-2 shadow transition min-h-[60px] focus:outline-none focus:ring-2 focus:ring-blue-300"
                       >
-                        <img
+                        <img loading="lazy" decoding="async"
                           src={getIconUrl(sub.icon)}
                           alt={sub.name}
                           className="w-5 h-5 object-contain rounded bg-white"
@@ -278,7 +277,7 @@ const FreeTestSeriesMegaMenu: React.FC = () => {
                     }}
                     tabIndex={0}
                   >
-                    <img
+                    <img loading="lazy" decoding="async"
                       src={getIconUrl(cat.icon)}
                       alt={typeof cat.name === "string" ? cat.name : ""}
                       className="w-4 h-4 object-contain rounded bg-white"
@@ -313,7 +312,7 @@ const FreeTestSeriesMegaMenu: React.FC = () => {
                 aria-controls={`mobile-cat-panel-${cat._id || cat.name}`}
                 type="button"
               >
-                <img
+                <img loading="lazy" decoding="async"
                   src={getIconUrl(cat.icon)}
                   alt={typeof cat.name === "string" ? cat.name : ""}
                   className="w-8 h-8 object-contain rounded bg-white"
@@ -346,13 +345,11 @@ const FreeTestSeriesMegaMenu: React.FC = () => {
                     {flattenSubcategories(cat.subcategories).map((sub) => (
                       <Link
                         key={sub._id || sub.name}
-                        href={`/quizzes?category=${encodeURIComponent(
-                          typeof cat.name === "string" ? cat.name : ""
-                        )}&subcategory=${encodeURIComponent(sub.name)}`}
+                        href={testSeriesPath(typeof cat.name === "string" ? cat.name : "", sub.name)}
                         className="flex items-center bg-white hover:bg-blue-50 border border-gray-200 rounded-xl shadow p-1 gap-3 min-h-[48px] focus:outline-none focus:ring-2 focus:ring-blue-300 transition"
                         tabIndex={0}
                       >
-                        <img
+                        <img loading="lazy" decoding="async"
                           src={getIconUrl(sub.icon)}
                           alt={sub.name}
                           className="w-7 h-7 object-contain rounded bg-white"

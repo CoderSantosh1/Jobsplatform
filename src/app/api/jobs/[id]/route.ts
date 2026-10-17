@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { idFromParam } from '@/lib/slug';
 import { connectToDatabase as connectDB } from '@/lib/db';
 import Job from '@/lib/models/Job';
 
@@ -11,7 +12,7 @@ export async function GET(
   try {
     await connectDB();
 
-    const { id: jobId } = await context.params;
+    const jobId = idFromParam((await context.params).id);
     if (!jobId) {
       return NextResponse.json(
         { success: false, error: 'Job ID is required' },

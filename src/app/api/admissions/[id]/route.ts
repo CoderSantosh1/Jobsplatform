@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { idFromParam } from '@/lib/slug';
 import { connectToDatabase as connectDB } from '@/lib/db';
 import Admission from '@/lib/models/Admission'; // Assuming Admission model exists
 import mongoose from 'mongoose';
@@ -6,7 +7,7 @@ import mongoose from 'mongoose';
 export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
     await connectDB();
-    const { id } = await context.params;
+    const id = idFromParam((await context.params).id);
     console.log(`GET /api/admissions/${id} hit`);
 
     if (!id || !mongoose.Types.ObjectId.isValid(id)) {

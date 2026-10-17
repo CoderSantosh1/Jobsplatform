@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { idFromParam } from '@/lib/slug';
 import { connectToDatabase } from "@/lib/db";
 import Result from "@/lib/models/Result";
 import mongoose from "mongoose";
@@ -15,7 +16,7 @@ export async function GET(
   try {
     await connectToDatabase();
 
-    const { id: resultId } = await context.params;
+    const resultId = idFromParam((await context.params).id);
 
     if (!mongoose.Types.ObjectId.isValid(resultId)) {
       return NextResponse.json(

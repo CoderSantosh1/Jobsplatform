@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { idFromParam } from '@/lib/slug';
 import { connectToDatabase as connectDB } from '@/lib/db';
 import Job from '@/lib/models/News';
 import { IncomingForm, File } from 'formidable';
@@ -13,7 +14,7 @@ export async function GET(
   try {
     await connectDB();
 
-    const { id: newsId } = await context.params;
+    const newsId = idFromParam((await context.params).id);
     if (!newsId) {
       return NextResponse.json(
         { success: false, error: 'newskey id is required' },

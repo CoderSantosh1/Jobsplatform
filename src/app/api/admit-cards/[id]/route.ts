@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { idFromParam } from '@/lib/slug';
 import { connectToDatabase as connectDB } from '@/lib/db';
 import AdmitCard from '@/lib/models/AdmitCard';
 import mongoose from 'mongoose';
@@ -13,7 +14,7 @@ export async function GET(
   try {
     await connectDB();
 
-    const { id: admitCardId } = await context.params;
+    const admitCardId = idFromParam((await context.params).id);
     if (!admitCardId || !mongoose.Types.ObjectId.isValid(admitCardId)) {
       return NextResponse.json(
         { success: false, error: 'Invalid admit card ID' },

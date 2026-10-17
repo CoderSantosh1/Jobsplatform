@@ -1,611 +1,229 @@
-'use client';
+import type { Metadata } from "next";
+import { notFound, permanentRedirect } from "next/navigation";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import Breadcrumbs from "@/components/seo/Breadcrumbs";
+import JsonLd from "@/components/seo/JsonLd";
+import PostFooter from "@/components/seo/PostFooter";
+import { getDetail, getLatest, getRelated } from "@/lib/content";
+import { detailMetadata } from "@/lib/seo-server";
+import { detailSegment } from "@/lib/slug";
+import { SITE_NAME, SITE_URL, clip, displayDate, isBlank } from "@/lib/seo";
 
-import React, { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import Navbar from "../../../components/Header"
-import Footer from '@/components/Footer';
-import BackImages from "@/assists/back.png"
-import Image from 'next/image';
-import GoogleAdsense from '@/components/GoogleAdsense';
-import {
-  TableBody,
-  TableCell,
-  TableRow,
-  Table,
-  TableContainer,
-  Paper
-} from "@mui/material";
-interface Job {
-  _id: string;
-  title: string;
-  organization: string;
-  location: string;
-  description: string;
-  requirements: string[];
-  salary?: string;
-  totalVacancy: string;
-  applicationDeadline: string;
-  status: string;
-  minimumAge?: string;
-  maximumAge?: string;
-  gender?: string;
-  qualification?: string;
-  applyJob: string;
-  category?: string;
-  applicationBeginDate?: string;
-  lastDateApplyOnline?: string;
-  formCompleteLastDate?: string;
-  correctionDate?: string;
-  examDate?: string;
-  admitCardDate?: string;
-  applicationFeeGeneral?: string;
-  applicationFeeSCST?: string;
-  paymentMethod?: string;
-  createdAt: string; // Added for posted date
+// Pages are built on first request and refreshed every 5 minutes.
+export const revalidate = 300;
+export async function generateStaticParams() {
+  return [];
 }
 
-export default function JobDetail() {
-  const params = useParams();
-  const router = useRouter();
-  const [job, setJob] = useState<Job | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [retryCount, setRetryCount] = useState(0);
-  const maxRetries = 3;
+type Props = { params: Promise<{ id: string }> };
 
-  useEffect(() => {
-    const fetchJob = async () => {
-      try {
-        setLoading(true);
-        setError('');
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  return detailMetadata("jobs", (await params).id);
+}
 
-        // Remove the duplicate declaration of `params` inside the `fetchJob` function
-        if (!params || !params.id) {
-          setError('Invalid parameters');
-          setLoading(false);
-          return;
-        }
+function Row({ label, value, highlight }: { label: string; value?: string | null; highlight?: boolean }) {
+  if (isBlank(value)) return null;
+  return (
+    <li>
+      <span className="font-semibold">{label}:</span>{" "}
+      <span className={highlight ? "text-red-600 font-semibold" : "text-blue-800"}>{value}</span>
+    </li>
+  );
+}
 
-        const response = await fetch(`/api/jobs/${params.id}`);
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(response.status === 404 ? 'Job not found' : errorText || 'Failed to fetch job details');
-        }
+function withRupee(fee?: string) {
+  if (isBlank(fee)) return undefined;
+  const text = String(fee).trim();
+  return /^\d+$/.test(text) ? `₹${text}/-` : text;
+}
 
-        const data = await response.json();
-        if (!data.data) {
-          throw new Error('Job data is missing');
-        }
+export default async function JobDetailPage({ params }: Props) {
+  const { id } = await params;
+  const job = await getDetail("jobs", id);
+  if (!job) notFound();
+  const segment = detailSegment(job);
+  if (decodeURIComponent(id) !== segment) permanentRedirect(`/jobs/${segment}`);
 
-        setJob(data.data);
-        setRetryCount(0); // Reset retry count on successful fetch
-      } catch (err) {
-        console.error('Error fetching job:', err);
-        const errorMessage = err instanceof Error ? err.message : 'Error fetching job details';
-        setError(errorMessage);
+  const [related, latest] = await Promise.all([getRelated("jobs", job), getLatest("jobs", job._id)]);
 
-        // Implement retry logic
-        if (retryCount < maxRetries) {
-          setRetryCount(prev => prev + 1);
-          setTimeout(() => fetchJob(), 1000 * (retryCount + 1)); // Exponential backoff
-          return;
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
+  const lastDate = displayDate(job.lastDateApplyOnline) || displayDate(job.applicationDeadline);
+  const deadline = new Date(job.lastDateApplyOnline || job.applicationDeadline);
+  const expired = !Number.isNaN(deadline.getTime()) && deadline.getTime() < Date.now() - 24 * 60 * 60 * 1000;
+  const requirements: string[] = (Array.isArray(job.requirements) ? job.requirements : [job.requirements]).filter(
+    (r: unknown) => !isBlank(r),
+  );
+  const feeGeneral = withRupee(job.applicationFeeGeneral);
+  const feeReserved = withRupee(job.applicationFeeSCST);
+  const ageRange =
+    !isBlank(job.minimumAge) || !isBlank(job.maximumAge)
+      ? [!isBlank(job.minimumAge) && `${job.minimumAge} years (min)`, !isBlank(job.maximumAge) && `${job.maximumAge} years (max)`]
+          .filter(Boolean)
+          .join(" – ")
+      : undefined;
 
-    if (params?.id) {
-      fetchJob();
-    }
-  }, [params?.id, retryCount, maxRetries]);
+  const faqs = [
+    lastDate && { q: `What is the last date to apply for ${job.title}?`, a: `The last date to apply online is ${lastDate}.` },
+    !isBlank(job.totalVacancy) && { q: `How many vacancies are there?`, a: `${job.organization} has announced ${job.totalVacancy} posts.` },
+    ageRange && { q: "What is the age limit?", a: `Age limit: ${ageRange}. Age relaxation applies as per the official notification.` },
+    !isBlank(job.qualification) && { q: "What qualification is required?", a: String(job.qualification) },
+    (feeGeneral || feeReserved) && {
+      q: "What is the application fee?",
+      a: [feeGeneral && `General / OBC / EWS: ${feeGeneral}`, feeReserved && `SC / ST / Female: ${feeReserved}`].filter(Boolean).join("; ") + ".",
+    },
+  ].filter(Boolean) as { q: string; a: string }[];
 
-  if (loading) {
-    return (
+  const datePosted = new Date(job.createdAt ?? Date.now());
+  const validThrough = Number.isNaN(deadline.getTime()) ? undefined : deadline;
+  const jobPosting = {
+    "@context": "https://schema.org",
+    "@type": "JobPosting",
+    title: job.title,
+    description: (job.description || job.title).replace(/\n/g, "<br>"),
+    datePosted: datePosted.toISOString(),
+    ...(validThrough && { validThrough: validThrough.toISOString() }),
+    employmentType: "FULL_TIME",
+    hiringOrganization: { "@type": "Organization", name: job.organization, ...(job.applyJob && { sameAs: job.applyJob }) },
+    jobLocation: {
+      "@type": "Place",
+      address: { "@type": "PostalAddress", addressLocality: job.location || "India", addressCountry: "IN" },
+    },
+    ...(!isBlank(job.totalVacancy) && { totalJobOpenings: Number(job.totalVacancy) || undefined }),
+    ...(!isBlank(job.qualification) && { educationRequirements: job.qualification }),
+    directApply: false,
+    identifier: { "@type": "PropertyValue", name: SITE_NAME, value: job._id },
+    url: `${SITE_URL}/jobs/${segment}`,
+  };
 
-      <div className="flex flex-col justify-center items-center min-h-screen">
-        <div className="mb-2">Loading...</div>
-        {retryCount > 0 && (
-          <div className="text-sm text-gray-500">
-            Retry attempt {retryCount} of {maxRetries}...
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex flex-col justify-center items-center min-h-screen">
-        <div className="text-black-500 mb-4">{error}</div>
-        {retryCount < maxRetries && (
-          <button
-            onClick={() => setRetryCount(prev => prev + 1)}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-          >
-            Retry
-          </button>
-        )}
-        <button
-          onClick={() => router.back()}
-          className="mt-4 text-gray-600 hover:text-gray-900"
-        >
-          ← Back to Jobs
-        </button>
-      </div>
-    );
-  }
-
-  if (!job) {
-    return (
-      <div className="flex flex-col justify-center items-center min-h-screen">
-        <div className="text-gray-700 mb-4">Job not found</div>
-        <button
-          onClick={() => router.back()}
-          className="text-gray-600 hover:text-gray-900"
-        >
-          ← Back to Jobs
-        </button>
-      </div>
-    );
-  }
+  const linkRow = "flex justify-between gap-4 px-4 py-3 border-b last:border-b-0";
 
   return (
-    <React.Fragment>
-      <Navbar />
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-7xl mx-auto bg-white shadow-lg overflow-hidden">
-          <div className="p-2">
-            <h1 className="text-3xl font-bold text-red-800 ">{job.title}</h1>
+    <>
+      <Header />
+      <main className="container mx-auto px-4 py-6">
+        <article className="max-w-5xl mx-auto bg-white shadow-lg p-4 md:p-6">
+          <Breadcrumbs items={[{ name: "Latest Jobs", href: "/jobs" }, { name: job.title, href: `/jobs/${segment}` }]} />
+          {!expired && <JsonLd data={jobPosting} />}
 
-            {/* Ad placement at the top of the content */}
-            <div className="my-4">
-              <GoogleAdsense
-                adSlot="YOUR_AD_SLOT_ID_HERE"
-                style={{ display: "block" }}
-                className="w-full"
-              />
-            </div>
+          <h1 className="text-2xl md:text-3xl font-bold text-red-800">{job.title}</h1>
+          <p className="mt-1 text-gray-700">
+            {job.organization}
+            {!isBlank(job.location) && ` · ${job.location}`}
+            {!isBlank(job.totalVacancy) && ` · ${job.totalVacancy} Posts`}
+          </p>
+          {expired && (
+            <p className="mt-3 rounded border border-amber-300 bg-amber-50 px-3 py-2 text-amber-900">
+              Application closed: the last date ({lastDate}) has passed. This page is kept for reference; check the
+              related updates below for the admit card, answer key and result.
+            </p>
+          )}
 
-            <div className="col-mb-12">
-              <p className="text-black-700 whitespace-pre-line">
-                {job.description}
-              </p>
-            </div>
-            <div className="row">
-              {/* <div className="col-md-6 ">
+          {!isBlank(job.description) && <p className="mt-4 text-gray-800 whitespace-pre-line">{job.description}</p>}
 
-                    {/* Job Details Section */}
-              <div className="col-md-6 ">
-                <div className="border border-blue-600 w-full ">
-                  <table className="w-full table-fixed">
-                    <tbody className="bg-white divide-y divide-blue-500">
-                      {job.requirements && (
-                        <tr>
-                          <td className="px-6 py-2 text-sm text-black-600 break-words whitespace-pre-wrap w-full text-center">
-                            <p className="font-bold text-lg text-red-900 ">
-                              {job.requirements}
-                            </p>
-                            {job.organization && (
-                              <p className="font-bold text-lg text-pink-700 ">
-                                {job.organization}
-                              </p>
-                            )}
-                            {job.location && job.category && (
-                              <p className="font-bold text-lg text-blue-700">
-                                {job.location}{" "}
-                                {job.category && `• ${job.category}`}
-                              </p>
-                            )}
-                            {job.totalVacancy && (
-                              <p className="font-bold text-lg text-green-700">
-                                Total Vacancy: {job.totalVacancy}
-                              </p>
-                            )}
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-2  ">
-                {/* Important Dates Section */}
-                <div className="border border-blue-700 overflow-hidden w-full">
-                  <div className="bg-white p-2">
-                    <h2 className="text-sm font-semibold text-red-900 mb-3">
-                      Important Dates
-                    </h2>
-                    <div className="text-sm text-black-700 space-y-1">
-                      {job.applicationBeginDate && (
-                        <div>
-                          <span className="font-bold text-[8px]">
-                            Application Begin:
-                          </span>{" "}
-                          <span className="font-semibold  text-[8px]">
-                            {new Date(
-                              job.applicationBeginDate
-                            ).toLocaleDateString()}
-                          </span>
-                        </div>
-                      )}
-                      {job.lastDateApplyOnline && (
-                        <div>
-                          <span className="font-bold text-[8px]">
-                            Last Date for Apply Online:
-                          </span>{" "}
-                          <span className="text-red-600 font-semibold  text-[8px]">
-                            {new Date(
-                              job.lastDateApplyOnline
-                            ).toLocaleDateString()}
-                          </span>
-                        </div>
-                      )}
-                      {job.formCompleteLastDate && (
-                        <div>
-                          <span className="font-bold text-[8px]">
-                            Pay Exam Fee Last Date:
-                          </span>{" "}
-                          <span className="text-blue-500 font-bold text-[10px]">
-                            {new Date(
-                              job.formCompleteLastDate
-                            ).toLocaleDateString()}
-                          </span>
-                        </div>
-                      )}
-                      {job.correctionDate && (
-                        <div>
-                          <span className="font-bold text-[10px]">
-                            Correction Date:
-                          </span>{" "}
-                          <span className="text-blue-500 font-bold text-[10px]">
-                            {job.correctionDate}
-                          </span>
-                        </div>
-                      )}
-                      {job.examDate && (
-                        <div>
-                          <span className="font-bold text-[10px]">
-                            Exam Date:
-                          </span>{" "}
-                          <span className="text-blue-500 font-bold text-[10px]">
-                            {job.examDate}
-                          </span>
-                        </div>
-                      )}
-                      {job.admitCardDate && (
-                        <div>
-                          <span className="font-bold text-[10px]">
-                            Admit Card Available:
-                          </span>{" "}
-                          <span className="text-blue-500 font-bold text-[10px]">
-                            {job.admitCardDate}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
+          <div className="mt-5 grid gap-4 md:grid-cols-2">
+            <section className="border border-blue-700 p-4">
+              <h2 className="font-bold text-red-900 mb-2">Important Dates</h2>
+              <ul className="space-y-1 text-sm">
+                <Row label="Application Begin" value={displayDate(job.applicationBeginDate)} />
+                <Row label="Last Date to Apply Online" value={lastDate} highlight />
+                <Row label="Last Date to Pay Fee" value={displayDate(job.formCompleteLastDate)} />
+                <Row label="Correction Date" value={displayDate(job.correctionDate)} />
+                <Row label="Exam Date" value={displayDate(job.examDate)} />
+                <Row label="Admit Card" value={displayDate(job.admitCardDate)} />
+              </ul>
+            </section>
 
-                {/* Application Fee Section */}
+            {(feeGeneral || feeReserved || !isBlank(job.paymentMethod)) && (
+              <section className="border border-blue-700 p-4">
+                <h2 className="font-bold text-red-900 mb-2">Application Fee</h2>
+                <ul className="space-y-1 text-sm">
+                  <Row label="General / OBC / EWS" value={feeGeneral} />
+                  <Row label="SC / ST / Female" value={feeReserved} />
+                  <Row label="Payment Mode" value={job.paymentMethod} />
+                </ul>
+              </section>
+            )}
 
-                {(job.applicationFeeGeneral ||
-                  job.applicationFeeSCST ||
-                  job.paymentMethod) && (
-                  <div className="border border-blue-700 overflow-hidden w-full">
-                    <div className="bg-white p-4">
-                      <h2 className="text-sm font-semibold text-red-900 mb-3">
-                        Application Fee
-                      </h2>
-                      <div className="text-sm text-black-700 space-y-1">
-                        {job.applicationFeeGeneral && (
-                          <div>
-                            <span className="font-bold text-[8px]">
-                              General / OBC / EWS:
-                            </span>{" "}
-                            <span className="text-blue-500 font-bold text-[10px]">
-                              {job.applicationFeeGeneral}/-
-                            </span>
-                          </div>
-                        )}
-                        {job.applicationFeeSCST && (
-                          <div>
-                            <span className="font-bold text-[10px]">
-                              SC / ST / Female:
-                            </span>{" "}
-                            <span className="text-blue-500 font-bold text-[10px]">
-                              {job.applicationFeeSCST}/-
-                            </span>
-                          </div>
-                        )}
-                        {job.paymentMethod && (
-                          <div>
-                            <span className="font-bold text-[10px]">
-                              Pay the Exam Fee:{" "}
-                            </span>
-                            <span className="text-blue-500 font-bold text-[10px]">
-                              {job.paymentMethod}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
+            <section className="border border-blue-700 p-4">
+              <h2 className="font-bold text-red-900 mb-2">Age Limit &amp; Eligibility</h2>
+              <ul className="space-y-1 text-sm">
+                <Row label="Minimum Age" value={isBlank(job.minimumAge) ? undefined : `${job.minimumAge} Years`} />
+                <Row label="Maximum Age" value={isBlank(job.maximumAge) ? undefined : `${job.maximumAge} Years`} />
+                <Row label="Gender" value={job.gender} />
+                <Row label="Qualification" value={job.qualification} />
+              </ul>
+              {requirements.length > 0 && (
+                <ul className="mt-2 list-disc pl-5 text-sm space-y-1">
+                  {requirements.map((r, i) => (
+                    <li key={i} className="whitespace-pre-line">{r}</li>
+                  ))}
+                </ul>
+              )}
+            </section>
 
-              {/* Salary Section (optional display below) */}
-              <div className="grid grid-cols-2 md:grid-cols-2  ">
-                <div className="border border-blue-700 overflow-hidden w-full">
-                  <div className="bg-white p-4">
-                    {job.minimumAge && (
-                      <div>
-                        <span className="font-bold text-[10px]">
-                          Minimum Age:{" "}
-                        </span>
-                        <span className="text-blue-700 font-bold text-[10px] ">
-                          {" "}
-                          {job.minimumAge} Years
-                        </span>
-                      </div>
-                    )}
-                    {job.maximumAge && (
-                      <div>
-                        <span className="font-bold text-[10px]">
-                          Maximum Age:{" "}
-                        </span>
-                        <span className="text-blue-700 font-bold text-[10px]">
-                          {" "}
-                          {job.maximumAge} Years
-                        </span>
-                      </div>
-                    )}
-
-                    {job.gender && (
-                      <div>
-                        <span className="font-bold text-[10px]">Gender: </span>
-                        <span className="text-blue-700 font-bold text-[10px]">
-                          {" "}
-                          {job.gender}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="border border-blue-700 overflow-hidden w-full">
-                  <div className="bg-white p-4">
-                    {job.qualification && (
-                      <div>
-                        <span className="font-bold text-[10px]">
-                          Qualification:-{" "}
-                        </span>
-                        <span className="text-blue-700  text-[10px]">
-                          {" "}
-                          {job.qualification}
-                        </span>
-                      </div>
-                    )}
-
-                    {job.salary && (
-                      <div>
-                        <span className="font-bold text-[10px]">Salary:- </span>
-                        <span className="text-blue-700 font-bold text-[10px]">
-                          {" "}
-                          {job.salary}
-                        </span>
-                      </div>
-                    )}
-
-                    {job.totalVacancy && (
-                      <div>
-                        <span className="font-bold text-[10px]">
-                          Total Seats:-{" "}
-                        </span>
-                        <span className="text-blue-700 font-bold text-[10px]">
-                          {" "}
-                          {job.totalVacancy}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-              {/* download link section */}
-              <TableContainer component={Paper} sx={{ mt: 2 }}>
-                <Table
-                  sx={{
-                    "& .MuiTableCell-root": {
-                      border: "1px solid #ddd",
-                      padding: "16px",
-                    },
-                  }}
-                >
-                  <TableBody>
-                    {/* Green heading row */}
-                    <TableRow>
-                      <TableCell
-                        colSpan={2}
-                        align="center"
-                        sx={{
-                          fontWeight: "bold",
-                          fontSize: "22px",
-                          color: "green",
-                        }}
-                      >
-                        Useful Important Links:
-                      </TableCell>
-                    </TableRow>
-
-                    {/* Download Result row */}
-                    <TableRow>
-                      <TableCell
-                        align="center"
-                        sx={{
-                          fontWeight: "bold",
-                          fontSize: "14px",
-                          color: "magenta",
-                        }}
-                      >
-                        Applay Jobs
-                      </TableCell>
-
-                      <TableCell
-                        align="center"
-                        sx={{ fontWeight: "bold", fontSize: "14px" }}
-                      >
-                        <a
-                          href={job.applyJob}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{ textDecoration: "none", color: "blue" }}
-                        >
-                          Click Here
-                        </a>
-                      </TableCell>
-                    </TableRow>
-                    {/* Notification download link */}
-                    <TableRow>
-                      <TableCell
-                        align="center"
-                        sx={{
-                          fontWeight: "bold",
-                          fontSize: "14px",
-                          color: "magenta",
-                        }}
-                      >
-                        Download Notification
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        sx={{
-                          fontWeight: "bold",
-                          fontSize: "14px",
-                          color: "magenta",
-                        }}
-                      >
-                        <a
-                          href={job.applyJob}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{ textDecoration: "none", color: "blue" }}
-                        >
-                          Click Here
-                        </a>
-                      </TableCell>
-                    </TableRow>
-                    {/* YouTube Link */}
-                    <TableRow>
-                      <TableCell
-                        align="center"
-                        sx={{
-                          fontWeight: "bold",
-                          fontSize: "14px",
-                          color: "magenta",
-                        }}
-                      >
-                        How to Applay This Jobs
-                      </TableCell>
-
-                      <TableCell
-                        align="center"
-                        sx={{ fontWeight: "bold", fontSize: "14px" }}
-                      >
-                        <a
-                          href={job.applyJob}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{ textDecoration: "none", color: "blue" }}
-                        >
-                          Click Here
-                        </a>
-                      </TableCell>
-                    </TableRow>
-
-                    {/* Official Website */}
-                    <TableRow>
-                      <TableCell
-                        align="center"
-                        sx={{
-                          fontWeight: "bold",
-                          fontSize: "14px",
-                          color: "magenta",
-                        }}
-                      >
-                        Official Website
-                      </TableCell>
-
-                      <TableCell
-                        align="center"
-                        sx={{ fontWeight: "bold", fontSize: "14px" }}
-                      >
-                        <a
-                          href={job.applyJob}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{ textDecoration: "none", color: "blue" }}
-                        >
-                          Click Here
-                        </a>
-                      </TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </TableContainer>
-
-              {/* joined telegram whatsapp and insta section */}
-              <div className="mt-4 p-4 border border-blue-700 bg-white rounded">
-                <p className="text-sm font-medium text-gray-800 mb-3">
-                  Join our Social Media for more updates:
-                </p>
-
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <a
-                    href="https://t.me/sarkariresultsnow"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-block w-full sm:w-auto text-blue-600 border border-blue-600 px-4 py-2 rounded font-semibold hover:bg-blue-600 hover:text-white transition text-center"
-                  >
-                    Telegram
-                  </a>
-
-                  <a
-                    href="https://chat.whatsapp.com/BA5S3uiul7iHKwi4jIeuuf"
-                    className="inline-block w-full sm:w-auto text-green-600 border border-green-600 px-4 py-2 rounded font-semibold hover:bg-green-600 hover:text-white transition text-center"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    WhatsApp
-                  </a>
-                  <a
-                    href="https://www.instagram.com/sarkariresultsnow/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-block w-full sm:w-auto text-pink-600 border border-pink-600 px-4 py-2 rounded font-semibold hover:bg-pink-600 hover:text-white transition text-center"
-                  >
-                    Instagram
-                  </a>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <button
-                onClick={() => router.push("/")}
-                className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
-              >
-                <Image
-                  src={BackImages}
-                  alt="Back"
-                  width={20}
-                  height={20}
-                  className="mr-2 mt-4"
-                />
-              </button>
-            </div>
+            <section className="border border-blue-700 p-4">
+              <h2 className="font-bold text-red-900 mb-2">Vacancy &amp; Salary</h2>
+              <ul className="space-y-1 text-sm">
+                <Row label="Total Vacancy" value={job.totalVacancy} />
+                <Row label="Salary / Pay Scale" value={job.salary} />
+                <Row label="Job Location" value={job.location} />
+              </ul>
+            </section>
           </div>
-        </div>
-      </div>
+
+          <section className="mt-5">
+            <h2 className="text-lg font-bold text-red-800 mb-2">How to Apply for {clip(job.title, 80)}</h2>
+            <ol className="list-decimal pl-6 space-y-1 text-gray-800">
+              <li>Read the official notification and check that you meet the eligibility and age limit.</li>
+              <li>Open the &quot;Apply Online&quot; link below and register with your mobile number and email.</li>
+              <li>Fill in the application form and upload your photo, signature and documents.</li>
+              <li>Pay the application fee (if applicable) and submit the form{lastDate ? ` before ${lastDate}` : ""}.</li>
+              <li>Download and keep a printout of the submitted form for future reference.</li>
+            </ol>
+          </section>
+
+          {job.applyJob && (
+            <section className="mt-5 border border-gray-300 rounded">
+              <h2 className="text-center text-xl font-bold text-green-700 py-3 border-b">Important Links</h2>
+              <div className={linkRow}>
+                <span className="font-semibold text-fuchsia-700">Apply Online</span>
+                <a href={job.applyJob} target="_blank" rel="noopener noreferrer nofollow" className="text-blue-700 font-semibold hover:underline">
+                  {expired ? "Application closed" : `Apply for ${clip(job.title, 40)}`}
+                </a>
+              </div>
+              <div className={linkRow}>
+                <span className="font-semibold text-fuchsia-700">Official Notification / Website</span>
+                <a href={job.applyJob} target="_blank" rel="noopener noreferrer nofollow" className="text-blue-700 font-semibold hover:underline">
+                  {job.organization} official website
+                </a>
+              </div>
+            </section>
+          )}
+
+          {faqs.length > 0 && (
+            <section className="mt-5">
+              <h2 className="text-lg font-bold text-red-800 mb-2">Frequently Asked Questions</h2>
+              <dl className="space-y-3">
+                {faqs.map((f) => (
+                  <div key={f.q}>
+                    <dt className="font-semibold">{f.q}</dt>
+                    <dd className="text-gray-800">{f.a}</dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
+          )}
+
+          <PostFooter
+            updatedAt={job.updatedAt ?? job.createdAt}
+            officialUrl={job.applyJob}
+            related={related}
+            latest={latest}
+            latestTitle="More Latest Jobs"
+          />
+        </article>
+      </main>
       <Footer />
-    </React.Fragment>
+    </>
   );
-          }
+}

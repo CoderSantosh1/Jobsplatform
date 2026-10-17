@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { unstable_noStore as noStore } from "next/cache";
+
 import Link from "next/link";
 import Script from "next/script";
 import Header from "@/components/Header";
@@ -17,8 +17,8 @@ import News from "@/lib/models/News";
 import AnswerKey from "@/lib/models/AnswerKey";
 import Admission from "@/lib/models/Admission";
 import QuizCategory from "@/lib/models/QuizCategory";
+import { detailPath } from "@/lib/slug";
 
-export const dynamic = "force-dynamic";
 
 interface JobItem {
   _id: string;
@@ -71,17 +71,17 @@ function toPlain<T>(value: T): T {
 }
 
 async function getHomeData() {
-  noStore();
+
   await connectToDatabase();
 
   const [jobs, results, admitCards, news, answerKeys, admissions, categories] =
     await Promise.all([
-      Job.find().sort({ createdAt: -1 }).lean(),
-      Result.find().sort({ resultDate: -1 }).lean(),
-      AdmitCard.find().sort({ applicationDeadline: -1 }).lean(),
-      News.find().sort({ postedDate: -1 }).lean(),
-      AnswerKey.find().sort({ postedDate: -1 }).lean(),
-      Admission.find().sort({ postedDate: -1 }).lean(),
+      Job.find().sort({ createdAt: -1 }).select("_id title organization").limit(11).lean(),
+      Result.find().sort({ resultDate: -1 }).select("_id title organization").limit(11).lean(),
+      AdmitCard.find().sort({ applicationDeadline: -1 }).select("_id title organization").limit(11).lean(),
+      News.find().sort({ postedDate: -1 }).select("_id title organization").limit(11).lean(),
+      AnswerKey.find().sort({ postedDate: -1 }).select("_id title organization").limit(11).lean(),
+      Admission.find().sort({ postedDate: -1 }).select("_id title organization").limit(11).lean(),
       QuizCategory.find().lean(),
     ]);
 
@@ -104,17 +104,17 @@ export default async function Home() {
     ...results.slice(0, 5).map((item) => ({
       id: item._id,
       text: item.organization,
-      href: `/results/${item._id}`,
+      href: detailPath("results", item),
     })),
     ...jobs.slice(0, 5).map((item) => ({
       id: item._id,
       text: item.organization,
-      href: `/jobs/${item._id}`,
+      href: detailPath("jobs", item),
     })),
     ...admitCards.slice(0, 5).map((item) => ({
       id: item._id,
       text: item.organization,
-      href: `/admit-cards/${item._id}`,
+      href: detailPath("admit-cards", item),
     })),
   ];
 
@@ -170,6 +170,9 @@ export default async function Home() {
       <div className="bg-[#fff] min-h-screen">
         <main className="flex flex-col items-center justify-center w-full max-w-7xl mx-auto px-2 sm:px-4">
           <div className="w-full space-y-6 py-4">
+            <h1 className="text-xl md:text-2xl font-bold text-center text-gray-900">
+              Sarkari Result 2026 – Latest Govt Jobs, Results, Admit Cards &amp; Free Mock Tests
+            </h1>
             <div className="bg-[#fFfFff] min-h-screen">
               <main className="flex flex-col items-center justify-center bg-[#fFfFf] w-full max-w-7xl mx-auto px-2 sm:px-4">
                 <div className="w-full space-y-6 py-4">
@@ -216,7 +219,7 @@ export default async function Home() {
                             <tr key={index} className="border-t-2 border-red-500 hover:bg-[#fdfefe]">
                               <td className="p-2 border-x text-left align-top break-words whitespace-pre-wrap">
                                 {results[index] ? (
-                                  <Link href={`/results/${results[index]._id}`} className="text-[#014F59] hover:underline hover:text-blue-800">
+                                  <Link href={detailPath('results', results[index])} className="text-[#014F59] hover:underline hover:text-blue-800">
                                     {results[index].title}
                                   </Link>
                                 ) : (
@@ -225,7 +228,7 @@ export default async function Home() {
                               </td>
                               <td className="p-2 border-x text-left align-top break-words whitespace-pre-wrap">
                                 {jobs[index] ? (
-                                  <Link href={`/jobs/${jobs[index]._id}`} className="text-[#014F59] hover:underline hover:text-blue-800">
+                                  <Link href={detailPath('jobs', jobs[index])} className="text-[#014F59] hover:underline hover:text-blue-800">
                                     {jobs[index].title}
                                   </Link>
                                 ) : (
@@ -234,7 +237,7 @@ export default async function Home() {
                               </td>
                               <td className="p-2 text-left align-top break-words whitespace-pre-wrap">
                                 {news[index] ? (
-                                  <Link href={`/news/${news[index]._id}`} className="text-[#014F59] hover:underline hover:text-blue-800">
+                                  <Link href={detailPath('news', news[index])} className="text-[#014F59] hover:underline hover:text-blue-800">
                                     {news[index].title}
                                   </Link>
                                 ) : (
@@ -290,7 +293,7 @@ export default async function Home() {
                             <tr key={index} className="border-t-2 border-red-500 hover:bg-[#f5f7f2]">
                               <td className="p-2 border-x text-left align-top break-words whitespace-pre-wrap">
                                 {admitCards[index] ? (
-                                  <Link href={`/admit-cards/${admitCards[index]._id}`} className="text-[#014F59] hover:underline hover:text-blue-800">
+                                  <Link href={detailPath('admit-cards', admitCards[index])} className="text-[#014F59] hover:underline hover:text-blue-800">
                                     {admitCards[index].title}
                                   </Link>
                                 ) : (
@@ -299,7 +302,7 @@ export default async function Home() {
                               </td>
                               <td className="p-2 border-x text-left align-top break-words whitespace-pre-wrap">
                                 {answerKeys[index] ? (
-                                  <Link href={`/answer-keys/${answerKeys[index]._id}`} className="text-[#014F59] hover:underline hover:text-blue-800">
+                                  <Link href={detailPath('answer-keys', answerKeys[index])} className="text-[#014F59] hover:underline hover:text-blue-800">
                                     {answerKeys[index].title}
                                   </Link>
                                 ) : (
@@ -308,7 +311,7 @@ export default async function Home() {
                               </td>
                               <td className="p-2 text-left align-top break-words whitespace-pre-wrap">
                                 {admissions[index] ? (
-                                  <Link href={`/admissions/${admissions[index]._id}`} className="text-[#014F59] hover:underline hover:text-blue-800">
+                                  <Link href={detailPath('admissions', admissions[index])} className="text-[#014F59] hover:underline hover:text-blue-800">
                                     {admissions[index].title}
                                   </Link>
                                 ) : (
@@ -357,34 +360,27 @@ export default async function Home() {
 
       <div className="bg-[#FFF] mb-4 mt-4">
         <div className="flex flex-col items-center justify-center bg-[#f5f7f2] w-5/14 max-w-7xl mx-auto px-4">
-          <AnnouncementBar title="SarkariResultsNow Latest Job">
-            Most Recent Sarkari Work, Sarkari Test Result, Most Recent On The Web And Disconnected Structure, Concede Card, Prospectus, Affirmation, Ansawer Key, Grant, Notice Etc.If You Need To Get Refreshes Connected With Sarkari Occupations On Sarkari Result.Com.Cm Like Concede Warning Like Govt. Test, Sarkari Result, Most Recent Bord Result, Bihar Result Tenth And So On You Could Sarkari Result Most Recent Occupation At Any Point Website Page Consistently.
-          </AnnouncementBar>
-
-          <AnnouncementBar title="Sarkari Results">
-            <b>Sarkari Results:</b> Sarkari Results Is A Famous Site In India That Gives Data About Sarkari Work Tests, Sarkari Result 2025, And Other Related Refreshes. It Is One Of The Notable Entries That Many Work Searchers Use To Secure Data About Government Position Opening, Concede Cards, Test Dates, And Results.
-          </AnnouncementBar>
-          <AnnouncementBar title="Sarkari Result Bihar">
-            Each Data Connected With Sarkari Test Result In Bihar Can Be Seen As Here Like: OFSS Bihar, Bihar Board Tenth Outcome, Sarkari Result Bihar Board 2025, Bihar Board Matric 2025, Bihar Police 2025, Bihar Board Tenth, Bihar Ssc, Bihar Je, Bihar Common Court, Sarkari Result Bihar Board Result, Bihar Work, Bihar Result, Bihar 5+2 Most Recent Work, Bihar Sarkari Result , Bihar Sarkari Test, Bihar Govt Work, Concede Card, Bihar Sarkari Result, Eleventh Affirmation And So Forth.
-          </AnnouncementBar>
-          <AnnouncementBar title="Sarkari Result Hindi">
-            Uttar Pradesh (Sarkariresult.Com.Cm UP Board) Is A State Where Lakhs Of Young People Give Sarkari Test Consistently To Land Government Positions, So Here UP Board Plays A Significant Part, So Here You Will Get Sarkari Result Up Board 2024, Up Barricade Result , Board 2025,Up Board Test Result, Sarkari Result Up Board Class Tenth, Up Board Result Date, Sarkari Result Up Board 2024 In Hindi And So On. Will Continue To Get Refreshes.
-          </AnnouncementBar>
-          <AnnouncementBar title="Sarkariresult">
-            Sarkariresult: Data Presents To You All The Most Recent News Like Outcome, Online Structure, Naukri, Test Result 2025, Work Result, Information Hindi Test, Government Work Data, And Updates, Notice And Output Gives.
-          </AnnouncementBar>
-          <AnnouncementBar title="SarkariResultsNow">
-            SarkariResultsNow.in is an independent portal dedicated to helping job seekers, students, and aspirants stay updated with the latest government job notifications, exam results, admit cards, answer keys, and current affairs.
-            <br />
-            <br />
-            Our mission is to make public information more accessible by presenting updates from official government portals in a clean and organized format. We do not represent any government body, and all data shared here is sourced from publicly available and verified official announcements.
-            <br />
-            <br />
-            If you have questions or concerns, feel free to contact us via the{' '}
-            <Link href="/contact" style={{ textDecoration: "underline", color: "#1a124d" }}>
-              Contact
-            </Link>{' '}
-            page.
+          <AnnouncementBar title="About Sarkari Results Now">
+            <p>
+              Sarkari Results Now brings together the latest government job notifications, exam results,
+              admit cards, answer keys and admission updates from central and state recruitment bodies such
+              as SSC, UPSC, IBPS, Railways, State PSCs and police boards. Every post lists the important
+              dates, vacancy details, eligibility, application fee and a direct link to the official
+              website, so you can check the facts at the source before you apply.
+            </p>
+            <p className="mt-3">
+              Alongside job updates, we offer free mock tests and test series for popular exams in Hindi and
+              English to help you practise at your own pace. We are an independent portal and are not
+              affiliated with any government body. Read more{' '}
+              <Link href="/about" style={{ textDecoration: "underline", color: "#1a124d" }}>
+                about us
+              </Link>{' '}
+              or{' '}
+              <Link href="/contact" style={{ textDecoration: "underline", color: "#1a124d" }}>
+                contact us
+              </Link>
+              .
+            </p>
           </AnnouncementBar>
         </div>
       </div>

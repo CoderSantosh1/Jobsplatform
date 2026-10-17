@@ -2,6 +2,7 @@
 
 import React, { useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { testSeriesPath } from "@/lib/slug";
 
 export interface Subcategory {
   _id?: string;
@@ -118,7 +119,7 @@ export default function PopularExamsClient({ categories }: { categories: Categor
         {exams.map((exam) => (
           <Link
             key={exam._id || exam.name}
-            href={`/quizzes?category=${encodeURIComponent(activeCategory?.name || "")}&subcategory=${encodeURIComponent(exam.name)}`}
+            href={testSeriesPath(activeCategory?.name || "", exam.name)}
             className="group flex items-center justify-between rounded-xl border bg-white px-4 py-4 shadow-sm hover:shadow transition"
           >
             <div className="flex items-center gap-3">
