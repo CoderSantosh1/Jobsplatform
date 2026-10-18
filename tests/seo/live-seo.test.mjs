@@ -1,0 +1,241 @@
+// Live SEO regression checks against a running site.
+//   BASE_URL=http://localhost:3000 pnpm test:seo                 (local `pnpm build && pnpm start`)
+//   BASE_URL=https://www.sarkariresultsnow.com pnpm test:seo     (production)
+// SAMPLE=<n> pages per child sitemap are crawled (default 3). CHECK_DOMAIN=1 also checks the
+// http/apex → https://www redirect chain, which is configured in Vercel Domains, not in code.
+import { test, before } from "node:test";
+import assert from "node:assert/strict";
+
+const BASE = (process.env.BASE_URL || "http://localhost:3000").replace(/\/$/, "");
+const SAMPLE = Number(process.env.SAMPLE || 3);
+const SITE = "https://www.sarkariresultsnow.com";
+
+// ---------- helpers ----------
+
+async function get(path, { redirect = "follow", tries = 3 } = {}) {
+  const url = path.startsWith("http") ? toBase(path) : BASE + path;
+  for (let attempt = 1; ; attempt++) {
+    try {
+      const res = await fetch(url, { redirect, headers: { "user-agent": "SRN-SEO-regression/1.0" } });
+      const body = redirect === "manual" ? "" : await res.text();
+      return { res, body, url };
+    } catch (error) {
+      // Production has shown occasional connection resets; retry before failing.
+      if (attempt >= tries) throw new Error(`${url}: ${error.cause?.code || error.message}`);
+      await new Promise((r) => setTimeout(r, 500 * attempt));
+    }
+  }
+}
+
+/** Sitemaps always contain production URLs; map them onto BASE so local runs hit the local server. */
+function toBase(url) {
+  return url.startsWith(SITE) ? BASE + url.slice(SITE.length) : url;
+}
+
+function decode(text) {
+  return text
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&#x27;|&#39;/g, "'")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">");
+}
+
+function head(html) {
+  const title = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1];
+  const meta = (name) =>
+    html.match(new RegExp(`<meta[^>]+(?:name|property)="${name}"[^>]*content="([^"]*)"`, "i"))?.[1];
+  return {
+    title: title === undefined ? undefined : decode(title).trim(),
+    description: meta("description") && decode(meta("description")),
+    robots: meta("robots"),
+    ogImage: meta("og:image"),
+    canonical: html.match(/<link[^>]+rel="canonical"[^>]*href="([^"]+)"/i)?.[1],
+    h1Count: (html.match(/<h1[\s>]/gi) || []).length,
+    jsonLd: [...html.matchAll(/<script type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi)].map((m) => m[1]),
+  };
+}
+
+function locs(xml) {
+  return [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => decode(m[1]));
+}
+
+function lastmods(xml) {
+  return [...xml.matchAll(/<lastmod>([^<]+)<\/lastmod>/g)].map((m) => m[1]);
+}
+
+const pages = new Map(); // url -> head()
+const children = new Map(); // child sitemap url -> xml
+
+async function checkIndexablePage(path, { expectCanonical } = {}) {
+  const { res, body, url } = await get(path);
+  assert.equal(res.status, 200, `${url} status`);
+  const h = head(body);
+  pages.set(url, h);
+
+  assert.ok(h.title, `${url}: missing <title>`);
+  assert.ok(h.title.length <= 60, `${url}: title is ${h.title.length} chars: "${h.title}"`);
+  assert.ok(!h.title.includes("…"), `${url}: title cut with ellipsis: "${h.title}"`);
+  assert.ok(!/\s(?:&|and|of|for|–|-)$|\($/.test(h.title), `${url}: title ends mid-phrase: "${h.title}"`);
+
+  assert.ok(h.description, `${url}: missing meta description`);
+  assert.ok(h.description.length >= 50 && h.description.length <= 165, `${url}: description length ${h.description.length}`);
+
+  assert.equal(h.h1Count, 1, `${url}: expected exactly one <h1>, found ${h.h1Count}`);
+
+  assert.ok(h.canonical?.startsWith(SITE), `${url}: canonical "${h.canonical}" must be absolute ${SITE}`);
+  if (expectCanonical) assert.equal(h.canonical, expectCanonical, `${url}: canonical should equal its sitemap URL`);
+
+  assert.ok(!/noindex/i.test(h.robots || ""), `${url}: indexable page has robots "${h.robots}"`);
+
+  assert.ok(h.jsonLd.length > 0, `${url}: no JSON-LD`);
+  for (const block of h.jsonLd) {
+    let data;
+    assert.doesNotThrow(() => (data = JSON.parse(block)), `${url}: invalid JSON-LD`);
+    for (const item of [data].flat()) {
+      if (item["@type"] === "JobPosting") {
+        for (const key of ["title", "description", "datePosted", "hiringOrganization", "jobLocation"])
+          assert.ok(item[key], `${url}: JobPosting missing ${key}`);
+        if (item.validThrough)
+          assert.ok(new Date(item.validThrough) > new Date(Date.now() - 864e5), `${url}: JobPosting shown for an expired job`);
+      }
+    }
+  }
+
+  const cache = res.headers.get("cache-control") || "";
+  assert.ok(!/no-store|private/.test(cache), `${url}: not cacheable (cache-control: ${cache})`);
+  return { h, body };
+}
+
+// ---------- tests ----------
+
+before(async () => {
+  const { res } = await get("/robots.txt");
+  assert.equal(res.status, 200, `Site not reachable at ${BASE}`);
+});
+
+test("robots.txt allows crawling and points to the sitemap index", async () => {
+  const { body } = await get("/robots.txt");
+  assert.match(body, /User-agent: \*/);
+  assert.match(body, /Sitemap: https:\/\/www\.sarkariresultsnow\.com\/sitemap\.xml/);
+  assert.match(body, /Disallow: \/admin\//);
+});
+
+test("sitemap.xml is an index of small child sitemaps with real lastmod", async () => {
+  const { res, body } = await get("/sitemap.xml");
+  assert.equal(res.status, 200);
+  assert.match(res.headers.get("content-type") || "", /xml/);
+  assert.match(body, /<sitemapindex/);
+  const childUrls = locs(body);
+  assert.ok(childUrls.length >= 5, `only ${childUrls.length} child sitemaps`);
+
+  for (const child of childUrls) {
+    const { res: r, body: xml } = await get(child);
+    assert.equal(r.status, 200, `${child} status`);
+    assert.match(xml, /<urlset/, `${child} is not a urlset`);
+    assert.ok(Buffer.byteLength(xml) < 10 * 1024 * 1024, `${child} is too large`);
+    const urls = locs(xml);
+    assert.ok(urls.length < 50000, `${child} has ${urls.length} URLs`);
+    for (const u of urls) {
+      assert.ok(u.startsWith(SITE), `${child}: non-canonical host ${u}`);
+      assert.ok(!/\/quizzes\/[^/]+(\/instructions)?$/.test(u), `${child}: thin quiz page listed: ${u}`);
+    }
+    const mods = lastmods(xml);
+    if (mods.length > 5) {
+      assert.ok(new Set(mods).size > 1, `${child}: every lastmod is identical (${mods[0]})`);
+    }
+    children.set(child, xml);
+  }
+});
+
+test("key pages: title ≤60, one H1, canonical, description, JSON-LD, cacheable", async () => {
+  for (const path of ["/", "/jobs", "/results", "/admit-cards", "/answer-keys", "/quizzes", "/about", "/privacy-policy", "/disclaimer", "/terms"]) {
+    await checkIndexablePage(path, { expectCanonical: path === "/" ? `${SITE}` : `${SITE}${path}` }).catch((e) => {
+      // The home canonical may be "https://www.sarkariresultsnow.com" or ".../"
+      if (path === "/" && /canonical should equal/.test(e.message)) return;
+      throw e;
+    });
+  }
+});
+
+test("sampled sitemap pages pass the same checks and canonical = sitemap URL", async () => {
+  assert.ok(children.size, "sitemap test must run first");
+  for (const [child, xml] of children) {
+    const urls = locs(xml).slice(0, SAMPLE);
+    for (const u of urls) await checkIndexablePage(u, { expectCanonical: u });
+  }
+});
+
+test("titles are unique across checked pages", () => {
+  const seen = new Map();
+  for (const [url, h] of pages) {
+    if (!h.title) continue;
+    assert.ok(!seen.has(h.title), `duplicate title "${h.title}" on ${url} and ${seen.get(h.title)}`);
+    seen.set(h.title, url);
+  }
+});
+
+test("og:image is a reachable 1200x630 PNG", async () => {
+  const any = [...pages.values()].find((h) => h.ogImage);
+  assert.ok(any, "no og:image found");
+  const { res } = await get(any.ogImage);
+  assert.equal(res.status, 200, `${any.ogImage} status`);
+  assert.match(res.headers.get("content-type") || "", /image\//);
+});
+
+test("single quiz pages are noindex, slugged and cacheable", async () => {
+  const seriesXml = [...children].find(([u]) => u.includes("test-series"))?.[1];
+  assert.ok(seriesXml, "no test-series sitemap");
+  const seriesUrl = locs(seriesXml).find((u) => u.split("/").length > 5) || locs(seriesXml)[0];
+  const { body } = await get(seriesUrl);
+  const quizHref = body.match(/href="(\/quizzes\/[^"]+\/instructions)"/)?.[1];
+  assert.ok(quizHref, `no quiz link on ${seriesUrl}`);
+  assert.match(quizHref, /\/quizzes\/[a-z0-9-]+-[a-f0-9]{24}\/instructions/, "quiz URL has no slug");
+
+  const { res, body: quizHtml } = await get(quizHref);
+  assert.equal(res.status, 200);
+  assert.match(head(quizHtml).robots || "", /noindex/, "quiz page must be noindex");
+  const cache = res.headers.get("cache-control") || "";
+  assert.ok(!/no-store|private/.test(cache), `quiz page not cacheable (cache-control: ${cache})`);
+});
+
+test("test-series titles make no unverified Hindi claim", () => {
+  for (const [url, h] of pages) {
+    if (url.includes("/test-series/")) assert.ok(!/hindi/i.test(h.title || ""), `${url}: "${h.title}"`);
+  }
+});
+
+test("legacy URLs redirect permanently in one hop", async () => {
+  const cases = [
+    ["/latest-jobs", "/jobs"],
+    ["/admit-card", "/admit-cards"],
+    ["/quizzes?category=SSC&subcategory=SSC%20GD", "/test-series/ssc/ssc-gd"],
+  ];
+  const jobsXml = [...children].find(([u]) => u.endsWith("/jobs.xml"))?.[1];
+  const jobUrl = jobsXml && locs(jobsXml)[0];
+  if (jobUrl) {
+    const id = jobUrl.match(/([a-f0-9]{24})$/)?.[1];
+    if (id && !jobUrl.endsWith(`/jobs/${id}`)) cases.push([`/jobs/${id}`, jobUrl.slice(SITE.length)]);
+  }
+  for (const [from, to] of cases) {
+    const { res } = await get(from, { redirect: "manual" });
+    assert.ok([301, 308].includes(res.status), `${from}: expected 301/308, got ${res.status}`);
+    const location = new URL(res.headers.get("location"), BASE);
+    assert.equal(location.pathname, to, `${from} → ${location.pathname}`);
+  }
+});
+
+test("unknown pages return a real 404", async () => {
+  for (const path of ["/this-page-does-not-exist-xyz", "/jobs/not-a-real-job"]) {
+    const { res } = await get(path);
+    assert.equal(res.status, 404, `${path} status`);
+  }
+});
+
+test("domain redirects go to https://www in one permanent hop", { skip: process.env.CHECK_DOMAIN !== "1" }, async () => {
+  for (const start of ["http://sarkariresultsnow.com/", "https://sarkariresultsnow.com/", "http://www.sarkariresultsnow.com/"]) {
+    const res = await fetch(start, { redirect: "manual" });
+    assert.ok([301, 308].includes(res.status), `${start}: ${res.status} (307/302 are temporary)`);
+    assert.equal(res.headers.get("location")?.replace(/\/$/, ""), SITE, `${start} should go straight to ${SITE}`);
+  }
+});

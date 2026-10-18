@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const exam = getExam((await params).exam);
   if (!exam) return {};
   return pageMetadata({
-    title: `${exam.name} 2026 – Notification, Admit Card, Result & Mock Test`,
+    title: `${exam.name} 2026: Notification, Admit Card, Result`,
     description: `${exam.name} 2026: latest notification, admit card, answer key, result and free ${exam.name} mock tests in one place. ${exam.about}`,
     path: `/${exam.slug}`,
   });

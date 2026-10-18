@@ -3,8 +3,8 @@ import { cache } from "react";
 import { connectToDatabase } from "@/lib/db";
 import Quiz from "@/lib/models/Quiz";
 import { getDetail } from "@/lib/content";
-import { detailPath, idFromParam, type Section } from "@/lib/slug";
-import { clip, formatDate, pageMetadata } from "@/lib/seo";
+import { detailPath, idFromParam, quizPath, type Section } from "@/lib/slug";
+import { TITLE_MAX, clip, formatDate, pageMetadata } from "@/lib/seo";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type AnyDoc = Record<string, any>;
@@ -37,14 +37,14 @@ async function loadDoc(section: DetailSection, param: string): Promise<AnyDoc | 
 }
 
 /** Append `suffix` to `title` only when the result still fits in `max` characters. */
-function withSuffix(title: string, suffix: string, max = 60): string {
+function withSuffix(title: string, suffix: string, max = TITLE_MAX - 6): string {
   const lower = title.toLowerCase();
   if (suffix.toLowerCase().split(/\W+/).filter(Boolean).every((w) => lower.includes(w))) return title;
   return `${title}${suffix}`.length <= max ? `${title}${suffix}` : title;
 }
 
 function build(section: string, doc: AnyDoc): { title: string; description: string } {
-  const title = clip(doc.title, 70);
+  const title = String(doc.title ?? "").replace(/s+/g, " ").trim();
   const org = doc.organization ? `${doc.organization}: ` : "";
 
   switch (section) {
@@ -91,7 +91,7 @@ function build(section: string, doc: AnyDoc): { title: string; description: stri
       ].filter(Boolean);
       return {
         title: withSuffix(title, " – Free Mock Test"),
-        description: `${clip(doc.description, 110)}${facts.length ? ` (${facts.join(", ")})` : ""}. Attempt this free online mock test in Hindi and English.`,
+        description: `${clip(doc.description, 110)}${facts.length ? ` (${facts.join(", ")})` : ""}. Attempt this free online mock test with a timer and answers.`,
       };
     }
     default:
@@ -115,6 +115,9 @@ export async function detailMetadata(section: DetailSection, param: string): Pro
   if (!doc) {
     return pageMetadata({ title: FALLBACK[section], description: FALLBACK[section], path: `/${section}/${param}`, noIndex: true });
   }
-  const path = section === "quizzes" ? `/quizzes/${doc._id}/instructions` : detailPath(section, doc as { _id: string; title: string });
-  return pageMetadata({ ...build(section, doc), path });
+  if (section === "quizzes") {
+    // Single quizzes are thin, near-identical pages: keep them out of the index; /test-series pages rank instead.
+    return pageMetadata({ ...build(section, doc), path: quizPath(doc as { _id: string; title: string }), noIndex: true });
+  }
+  return pageMetadata({ ...build(section, doc), path: detailPath(section, doc as { _id: string; title: string }) });
 }

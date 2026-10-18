@@ -10,9 +10,9 @@ import { pageMetadata } from "@/lib/seo";
 export const revalidate = 600;
 
 export const metadata = pageMetadata({
-  title: "Free Mock Test & Test Series 2026 – Hindi & English",
+  title: "Free Mock Tests & Test Series 2026 for Govt Exams",
   description:
-    "Attempt free online mock tests and test series for SSC GD, CGL, Railway, Bank, Police and State exams in Hindi and English.",
+    "Attempt free online mock tests and test series for SSC GD, CGL, Railway, Bank, Police and State exams, with a timer, score and answers.",
   path: "/quizzes",
 });
 
@@ -29,8 +29,8 @@ export default async function QuizzesPage() {
         <h1 className="text-2xl md:text-4xl font-bold text-amber-900">Free Mock Tests &amp; Test Series</h1>
         <p className="mt-2 text-amber-900 max-w-4xl">
           Practise with free online mock tests for SSC, Railway, Bank, Police, Defence and State exams. Every test
-          follows the real exam pattern, has a timer and shows your score with answers at the end. Pick your exam
-          below to see all its tests.
+          follows the real exam pattern, has a timer and shows your score with answers at the end. Every exam below links to its full
+          test series.
         </p>
 
         <section className="mt-6">
@@ -46,7 +46,7 @@ export default async function QuizzesPage() {
                 </h3>
                 {g.subcategories.length > 0 && (
                   <ul className="mt-2 flex flex-wrap gap-2 text-sm">
-                    {g.subcategories.slice(0, 8).map((s) => (
+                    {g.subcategories.map((s) => (
                       <li key={s.slug}>
                         <Link
                           href={`/test-series/${g.slug}/${s.slug}`}
@@ -56,13 +56,6 @@ export default async function QuizzesPage() {
                         </Link>
                       </li>
                     ))}
-                    {g.subcategories.length > 8 && (
-                      <li>
-                        <Link href={`/test-series/${g.slug}`} className="inline-block px-3 py-1 text-blue-700 hover:underline">
-                          +{g.subcategories.length - 8} more
-                        </Link>
-                      </li>
-                    )}
                   </ul>
                 )}
               </div>

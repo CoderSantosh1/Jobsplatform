@@ -16,6 +16,7 @@ import {
 } from "lucide-react"
 import { instructions } from "./lang"
 import AuthModal from '@/components/AuthModal'
+import { idFromParam } from "@/lib/slug";
 
 const statusLegend = {
   en: [
@@ -36,7 +37,8 @@ const statusLegend = {
 
 export default function QuizInstructions({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
-  const resolvedParams = React.use(params)
+  // URLs may carry a readable slug ("ssc-gd-mock-test-<id>"); everything below uses the bare id.
+  const resolvedParams = { id: idFromParam(React.use(params).id) };
   const [lang, setLang] = useState<'en' | 'hi'>('en')
   const [languageLoading, setLanguageLoading] = useState(false);
   const [showRegister, setShowRegister] = useState(false);

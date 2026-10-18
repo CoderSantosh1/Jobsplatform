@@ -9,6 +9,7 @@ import { Trophy, Target, Clock, CheckCircle2, XCircle, ArrowLeft, Brain, LogOut,
 import Link from "next/link"
 import Header from "@/components/Header"
 import Footer from "@/components/Footer"
+import { idFromParam } from "@/lib/slug";
 
 interface QuizAttempt {
   _id: string
@@ -36,7 +37,8 @@ interface User {
 export default function QuizResults({ params }: { params: Promise<{ id: string }> }) {
   const searchParams = useSearchParams()
   const router = useRouter()
-  const resolvedParams = React.use(params)
+  // URLs may carry a readable slug ("ssc-gd-mock-test-<id>"); everything below uses the bare id.
+  const resolvedParams = { id: idFromParam(React.use(params).id) };
   const [quiz, setQuiz] = useState<Quiz | null>(null)
   const [attempt, setAttempt] = useState<QuizAttempt | null>(null)
   const [loading, setLoading] = useState(true)

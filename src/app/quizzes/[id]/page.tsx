@@ -13,6 +13,7 @@ import { AlertCircle, Clock, CheckCircle2, Flag, ArrowRight, Brain, ArrowLeft, U
 import Link from "next/link"
 import { title } from 'process';
 import { LANG } from "./lang";
+import { idFromParam } from "@/lib/slug";
 
 // Dynamic imports for non-critical components to reduce render-blocking
 const Header = React.lazy(() => import('@/components/Header'));
@@ -63,7 +64,8 @@ const getStatusColor = (status: QuestionStatus): string => {
 
 export default function TakeQuiz({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
-  const resolvedParams = React.use(params);
+  // URLs may carry a readable slug ("ssc-gd-mock-test-<id>"); everything below uses the bare id.
+  const resolvedParams = { id: idFromParam(React.use(params).id) };
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentQuestion, setCurrentQuestion] = useState(0);

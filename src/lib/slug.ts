@@ -37,3 +37,8 @@ export function testSeriesPath(category: string, subcategory?: string): string {
   const base = `/test-series/${slugify(category) || "all"}`;
   return subcategory ? `${base}/${slugify(subcategory) || "all"}` : base;
 }
+
+/** Instructions page of a quiz, e.g. /quizzes/ssc-gd-mock-test-01-<id>/instructions. */
+export function quizPath(quiz: { _id: unknown; title?: string }): string {
+  return `/quizzes/${detailSegment(quiz)}/instructions`;
+}

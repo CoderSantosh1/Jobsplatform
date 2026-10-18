@@ -32,23 +32,25 @@ if (!cached) {
 
 export default async function connectDB() {
   if (cached.conn) {
-    console.log('Using cached database connection');
     return cached.conn;
   }
 
   if (!cached.promise) {
+    // Serverless-friendly pool: every Vercel function instance keeps its own pool, so a large
+    // minPoolSize multiplies into hundreds of idle Atlas connections and causes resets/timeouts.
     const opts = {
       bufferCommands: true,
-      serverSelectionTimeoutMS: 60000,
-      socketTimeoutMS: 75000,
-      maxPoolSize: 50,
-      minPoolSize: 10,
-      connectTimeoutMS: 30000,
+      serverSelectionTimeoutMS: 10000,
+      socketTimeoutMS: 45000,
+      maxPoolSize: 10,
+      minPoolSize: 0,
+      maxIdleTimeMS: 60000,
+      connectTimeoutMS: 10000,
       heartbeatFrequencyMS: 10000,
       autoIndex: true
     };
 
-    let retries = 3;
+    let retries = 1;
     const connect = async () => {
       try {
         console.log('Attempting to connect to MongoDB...');
@@ -66,7 +68,7 @@ export default async function connectDB() {
         } else if (retries > 0 && !dbError.message.includes('bad auth')) {
           console.warn(`Connection failed, retrying... (${retries} attempts remaining)`);
           retries--;
-          await new Promise(resolve => setTimeout(resolve, 5000));
+          await new Promise(resolve => setTimeout(resolve, 1000));
           return connect();
         } else {
           console.error('MongoDB Connection Error:', dbError.message);

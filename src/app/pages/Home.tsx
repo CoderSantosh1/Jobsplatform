@@ -369,8 +369,8 @@ export default async function Home() {
               website, so you can check the facts at the source before you apply.
             </p>
             <p className="mt-3">
-              Alongside job updates, we offer free mock tests and test series for popular exams in Hindi and
-              English to help you practise at your own pace. We are an independent portal and are not
+              Alongside job updates, we offer free timed mock tests and test series for popular exams to help
+              you practise at your own pace. We are an independent portal and are not
               affiliated with any government body. Read more{' '}
               <Link href="/about" style={{ textDecoration: "underline", color: "#1a124d" }}>
                 about us

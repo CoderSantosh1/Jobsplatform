@@ -2,6 +2,7 @@ import Link from "next/link";
 import { HideIfStarted } from "./QuizClientBits";
 import type { QuizSummary } from "@/lib/quizzes";
 import { clip } from "@/lib/seo";
+import { quizPath } from "@/lib/slug";
 
 /** Compact quiz card: one title, a short description and the key numbers. */
 export default function QuizCard({ quiz }: { quiz: QuizSummary }) {
@@ -9,7 +10,7 @@ export default function QuizCard({ quiz }: { quiz: QuizSummary }) {
     <HideIfStarted quizId={quiz._id}>
       <li className="bg-white border-2 border-amber-200 hover:border-amber-400 rounded-xl shadow p-4 flex flex-col">
         <h3 className="text-lg font-bold text-amber-900 leading-snug">
-          <Link href={`/quizzes/${quiz._id}/instructions`} className="hover:underline">
+          <Link href={quizPath(quiz)} className="hover:underline">
             {quiz.title}
           </Link>
         </h3>
@@ -22,7 +23,7 @@ export default function QuizCard({ quiz }: { quiz: QuizSummary }) {
           {quiz.subcategory && ` › ${quiz.subcategory}`}
         </p>
         <Link
-          href={`/quizzes/${quiz._id}/instructions`}
+          href={quizPath(quiz)}
           className="mt-auto pt-3"
           aria-label={`Start ${quiz.title}`}
         >

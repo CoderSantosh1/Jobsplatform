@@ -11,14 +11,15 @@ import AdmitCard from "@/lib/models/AdmitCard";
 import AnswerKey from "@/lib/models/AnswerKey";
 import Admission from "@/lib/models/Admission";
 import { detailPath, type Section } from "@/lib/slug";
-import { SITE_URL } from "@/lib/seo";
+import { SITE_URL, isPastDeadline, parseDate } from "@/lib/seo";
 
 type ListSection = Exclude<Section, "news">;
-type Row = { _id: string; title: string };
+type Row = { _id: string; title: string; lastDateApplyOnline?: string; applicationDeadline?: string };
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const QUERIES: Record<ListSection, () => Promise<any[]>> = {
-  jobs: () => Job.find({ status: "published" }).sort({ createdAt: -1 }).select("_id title").lean(),
+  jobs: () =>
+    Job.find({ status: "published" }).sort({ createdAt: -1 }).select("_id title lastDateApplyOnline applicationDeadline").lean(),
   results: () => Result.find().sort({ resultDate: -1 }).select("_id title").lean(),
   "admit-cards": () => AdmitCard.find().sort({ createdAt: -1 }).select("_id title").lean(),
   "answer-keys": () => AnswerKey.find().sort({ postedDate: -1 }).select("_id title").lean(),
@@ -72,6 +73,9 @@ export default async function SectionList({
                     <Link href={detailPath(section, r)} className="text-[#014F59] hover:underline hover:text-blue-800">
                       {r.title}
                     </Link>
+                    {section === "jobs" && isPastDeadline(parseDate(r.lastDateApplyOnline) ?? parseDate(r.applicationDeadline)) && (
+                      <span className="ml-2 text-xs font-semibold text-gray-500">(Closed)</span>
+                    )}
                   </td>
                 </tr>
               ))}

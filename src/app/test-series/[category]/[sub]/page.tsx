@@ -10,6 +10,7 @@ import ExamUpdates from "@/components/quiz/ExamUpdates";
 import { findCategory, findQuizzes, sampleQuestions } from "@/lib/quizzes";
 import { searchPosts } from "@/lib/content";
 import { SITE_URL, clip, pageMetadata } from "@/lib/seo";
+import { quizPath } from "@/lib/slug";
 
 export const revalidate = 600;
 export async function generateStaticParams() {
@@ -24,7 +25,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!found?.sub) return { title: "Mock Test", robots: { index: false } };
   const { category: c, sub: s } = found;
   return pageMetadata({
-    title: `${s.name} Mock Test 2026 – ${s.count} Free Tests in Hindi & English`,
+    title: `${s.name} Mock Test 2026 – ${s.count} Free Tests`,
     description: `Attempt ${s.count} free ${s.name} mock tests online. Timed practice sets based on the latest ${s.name} exam pattern with score and answers, part of the ${c.name} test series.`,
     path: `/test-series/${c.slug}/${s.slug}`,
   });
@@ -67,7 +68,7 @@ export default async function SubcategoryPage({ params }: Props) {
             itemListElement: quizzes.slice(0, 50).map((q, i) => ({
               "@type": "ListItem",
               position: i + 1,
-              url: `${SITE_URL}/quizzes/${q._id}/instructions`,
+              url: `${SITE_URL}${quizPath(q)}`,
               name: q.title,
             })),
           }}
@@ -77,8 +78,8 @@ export default async function SubcategoryPage({ params }: Props) {
           This page lists all {quizzes.length} free {s.name} mock tests on Sarkari Results Now.
           {avgQuestions > 0 && ` A typical test has about ${avgQuestions} questions`}
           {avgMinutes > 0 && ` with a ${avgMinutes}-minute timer`}
-          {avgQuestions > 0 && "."} Tests follow the latest {s.name} exam pattern and are available in Hindi and
-          English. Attempt them in order, review the answers after each test and track your progress to find weak
+          {avgQuestions > 0 && "."} Tests follow the latest {s.name} exam pattern and are free to
+          attempt. Attempt them in order, review the answers after each test and track your progress to find weak
           topics before the real exam.
         </p>
 

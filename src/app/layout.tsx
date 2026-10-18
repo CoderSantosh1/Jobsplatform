@@ -6,7 +6,7 @@ import CleanURL from "@/components/CleanURL";
 import "./globals.css";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { Analytics } from "@vercel/analytics/react";
-import { DEFAULT_OG_IMAGE, SITE_NAME, SITE_URL } from "@/lib/seo";
+import { DEFAULT_OG_IMAGE, SITE_NAME, SITE_SHORT, SITE_URL } from "@/lib/seo";
 import JsonLd from "@/components/seo/JsonLd";
 
 const SITE_SCHEMA = [
@@ -37,8 +37,8 @@ const inter = Montserrat({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Sarkari Results Now – Sarkari Result, Govt Jobs, Admit Card & Free Mock Tests",
-    template: `%s | ${SITE_NAME}`,
+    default: "Sarkari Results Now: Sarkari Result, Govt Jobs, Admit Card",
+    template: `%s | ${SITE_SHORT}`,
   },
   description:
     "Latest Sarkari Result, government job notifications, admit cards, answer keys and free mock tests for SSC, Railway, Bank, Police and State exams.",

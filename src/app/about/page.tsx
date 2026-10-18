@@ -24,7 +24,7 @@ export default function AboutPage() {
         <li>Summarise each official notification: posts, vacancies, eligibility, age limit, fee and important dates.</li>
         <li>Give a direct link to the official website so you can verify every detail at the source.</li>
         <li>Publish results, admit cards and answer keys as soon as they are released.</li>
-        <li>Offer free online mock tests and test series in Hindi and English.</li>
+        <li>Offer free online mock tests and test series with a timer, score and answers.</li>
       </ul>
 
       <h2>How we source information</h2>

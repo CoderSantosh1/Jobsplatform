@@ -8,7 +8,9 @@
     "clean": "rimraf node_modules .next",
     "build": "prisma generate && next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "node --test \"tests/unit/**/*.test.ts\"",
+    "test:seo": "node --test --test-concurrency=1 \"tests/seo/**/*.test.mjs\""
   },
   "dependencies": {
     "@emotion/react": "^11.11.3",

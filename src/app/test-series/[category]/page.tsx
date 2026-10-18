@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { category: c } = found;
   return pageMetadata({
     title: `${c.name} Test Series 2026 – ${c.count} Free Mock Tests`,
-    description: `Free ${c.name} mock tests in Hindi and English: ${c.subcategories
+    description: `Free ${c.name} mock tests online: ${c.subcategories
       .slice(0, 5)
       .map((s) => s.name)
       .join(", ")} and more. Timed tests with score and answers.`,

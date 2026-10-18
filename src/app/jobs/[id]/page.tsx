@@ -8,7 +8,7 @@ import PostFooter from "@/components/seo/PostFooter";
 import { getDetail, getLatest, getRelated } from "@/lib/content";
 import { detailMetadata } from "@/lib/seo-server";
 import { detailSegment } from "@/lib/slug";
-import { SITE_NAME, SITE_URL, clip, displayDate, isBlank } from "@/lib/seo";
+import { SITE_NAME, SITE_URL, clip, displayDate, isBlank, isPastDeadline, parseDate } from "@/lib/seo";
 
 // Pages are built on first request and refreshed every 5 minutes.
 export const revalidate = 300;
@@ -48,8 +48,8 @@ export default async function JobDetailPage({ params }: Props) {
   const [related, latest] = await Promise.all([getRelated("jobs", job), getLatest("jobs", job._id)]);
 
   const lastDate = displayDate(job.lastDateApplyOnline) || displayDate(job.applicationDeadline);
-  const deadline = new Date(job.lastDateApplyOnline || job.applicationDeadline);
-  const expired = !Number.isNaN(deadline.getTime()) && deadline.getTime() < Date.now() - 24 * 60 * 60 * 1000;
+  const deadline = parseDate(job.lastDateApplyOnline) ?? parseDate(job.applicationDeadline);
+  const expired = isPastDeadline(deadline);
   const requirements: string[] = (Array.isArray(job.requirements) ? job.requirements : [job.requirements]).filter(
     (r: unknown) => !isBlank(r),
   );
@@ -74,7 +74,7 @@ export default async function JobDetailPage({ params }: Props) {
   ].filter(Boolean) as { q: string; a: string }[];
 
   const datePosted = new Date(job.createdAt ?? Date.now());
-  const validThrough = Number.isNaN(deadline.getTime()) ? undefined : deadline;
+  const validThrough = deadline;
   const jobPosting = {
     "@context": "https://schema.org",
     "@type": "JobPosting",
