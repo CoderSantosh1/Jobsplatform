@@ -8,8 +8,9 @@ export async function POST(request: Request) {
     const body = await request.json();
     console.log('Received request body:', JSON.stringify(body, null, 2));
     
-    // Validate totalVacancy
-    if (!body.totalVacancy || isNaN(Number(body.totalVacancy)) || Number(body.totalVacancy) <= 0) {
+    // totalVacancy is optional (many notifications don't give a count); if given it must be a positive number
+    if (typeof body.totalVacancy === 'string') body.totalVacancy = body.totalVacancy.trim();
+    if (body.totalVacancy && (isNaN(Number(body.totalVacancy)) || Number(body.totalVacancy) <= 0)) {
       console.log('Invalid totalVacancy:', body.totalVacancy);
       return NextResponse.json(
         { success: false, error: 'Total vacancy must be a positive number' },

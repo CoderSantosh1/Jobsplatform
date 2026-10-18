@@ -52,6 +52,7 @@ function head(html) {
     ogImage: meta("og:image"),
     canonical: html.match(/<link[^>]+rel="canonical"[^>]*href="([^"]+)"/i)?.[1],
     h1Count: (html.match(/<h1[\s>]/gi) || []).length,
+    h1: decode((html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i)?.[1] || "").replace(/<[^>]+>/g, "")).replace(/\s+/g, " ").trim(),
     jsonLd: [...html.matchAll(/<script type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi)].map((m) => m[1]),
   };
 }
@@ -67,7 +68,14 @@ function lastmods(xml) {
 const pages = new Map(); // url -> head()
 const children = new Map(); // child sitemap url -> xml
 
-async function checkIndexablePage(path, { expectCanonical } = {}) {
+/** The <title> must start with the same words as the H1 (catches mangled titles, e.g. a lost "s"). */
+function assertTitleMatchesH1(url, h) {
+  const norm = (s) => s.toLowerCase().replace(/\s+/g, " ").trim();
+  const start = norm(h.title.split(/ – | \| |: /)[0]).slice(0, 20);
+  assert.ok(norm(h.h1).startsWith(start), `${url}: title "${h.title}" does not match H1 "${h.h1}"`);
+}
+
+async function checkIndexablePage(path, { expectCanonical, titleMatchesH1 = false } = {}) {
   const { res, body, url } = await get(path);
   assert.equal(res.status, 200, `${url} status`);
   const h = head(body);
@@ -82,9 +90,14 @@ async function checkIndexablePage(path, { expectCanonical } = {}) {
   assert.ok(h.description.length >= 50 && h.description.length <= 165, `${url}: description length ${h.description.length}`);
 
   assert.equal(h.h1Count, 1, `${url}: expected exactly one <h1>, found ${h.h1Count}`);
+  assert.ok(!/ {2}/.test(h.title), `${url}: title has double spaces: "${h.title}"`);
+  if (titleMatchesH1) assertTitleMatchesH1(url, h);
 
   assert.ok(h.canonical?.startsWith(SITE), `${url}: canonical "${h.canonical}" must be absolute ${SITE}`);
-  if (expectCanonical) assert.equal(h.canonical, expectCanonical, `${url}: canonical should equal its sitemap URL`);
+  if (expectCanonical) {
+    const trim = (u) => u.replace(/\/$/, "");
+    assert.equal(trim(h.canonical), trim(expectCanonical), `${url}: canonical should equal its sitemap URL`);
+  }
 
   assert.ok(!/noindex/i.test(h.robots || ""), `${url}: indexable page has robots "${h.robots}"`);
 
@@ -162,7 +175,9 @@ test("sampled sitemap pages pass the same checks and canonical = sitemap URL", a
   assert.ok(children.size, "sitemap test must run first");
   for (const [child, xml] of children) {
     const urls = locs(xml).slice(0, SAMPLE);
-    for (const u of urls) await checkIndexablePage(u, { expectCanonical: u });
+    // Detail and test-series pages put the post/exam name first in both <title> and H1.
+    const titleMatchesH1 = !child.endsWith("/pages.xml");
+    for (const u of urls) await checkIndexablePage(u, { expectCanonical: u, titleMatchesH1 });
   }
 });
 
@@ -192,9 +207,19 @@ test("single quiz pages are noindex, slugged and cacheable", async () => {
   assert.ok(quizHref, `no quiz link on ${seriesUrl}`);
   assert.match(quizHref, /\/quizzes\/[a-z0-9-]+-[a-f0-9]{24}\/instructions/, "quiz URL has no slug");
 
+  const linkText = decode(
+    body.match(new RegExp(`href="${quizHref.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"[^>]*>([^<]+)<`))?.[1] || "",
+  ).trim();
+
   const { res, body: quizHtml } = await get(quizHref);
   assert.equal(res.status, 200);
-  assert.match(head(quizHtml).robots || "", /noindex/, "quiz page must be noindex");
+  const quizHead = head(quizHtml);
+  assert.match(quizHead.robots || "", /noindex/, "quiz page must be noindex");
+  // The quiz <title> must keep the quiz name intact (regression: every "s" was once stripped).
+  if (linkText) {
+    const prefix = linkText.slice(0, Math.min(linkText.length, 25)).toLowerCase();
+    assert.ok(quizHead.title.toLowerCase().startsWith(prefix), `quiz title "${quizHead.title}" vs link "${linkText}"`);
+  }
   const cache = res.headers.get("cache-control") || "";
   assert.ok(!/no-store|private/.test(cache), `quiz page not cacheable (cache-control: ${cache})`);
 });

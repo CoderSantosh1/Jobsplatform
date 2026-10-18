@@ -4,7 +4,8 @@ import { connectToDatabase } from "@/lib/db";
 import Quiz from "@/lib/models/Quiz";
 import { getDetail } from "@/lib/content";
 import { detailPath, idFromParam, quizPath, type Section } from "@/lib/slug";
-import { TITLE_MAX, clip, formatDate, pageMetadata } from "@/lib/seo";
+import { pageMetadata } from "@/lib/seo";
+import { detailText } from "@/lib/detail-titles";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type AnyDoc = Record<string, any>;
@@ -36,69 +37,6 @@ async function loadDoc(section: DetailSection, param: string): Promise<AnyDoc | 
   }
 }
 
-/** Append `suffix` to `title` only when the result still fits in `max` characters. */
-function withSuffix(title: string, suffix: string, max = TITLE_MAX - 6): string {
-  const lower = title.toLowerCase();
-  if (suffix.toLowerCase().split(/\W+/).filter(Boolean).every((w) => lower.includes(w))) return title;
-  return `${title}${suffix}`.length <= max ? `${title}${suffix}` : title;
-}
-
-function build(section: string, doc: AnyDoc): { title: string; description: string } {
-  const title = String(doc.title ?? "").replace(/s+/g, " ").trim();
-  const org = doc.organization ? `${doc.organization}: ` : "";
-
-  switch (section) {
-    case "jobs": {
-      const posts = doc.totalVacancy ? ` – ${doc.totalVacancy} Posts` : "";
-      const lastDate = doc.lastDateApplyOnline || formatDate(doc.applicationDeadline);
-      const t = withSuffix(withSuffix(title, posts), lastDate ? `, Last Date ${lastDate}` : "");
-      const parts = [
-        `${org}${doc.title}`,
-        doc.totalVacancy && `${doc.totalVacancy} posts`,
-        lastDate && `last date ${lastDate}`,
-      ].filter(Boolean);
-      return {
-        title: withSuffix(t, " – Apply Online"),
-        description: `${parts.join(", ")}. Check eligibility, age limit, application fee, important dates and the official apply link.`,
-      };
-    }
-    case "results":
-      return {
-        title: withSuffix(title, " – Direct Link"),
-        description: `${org}${doc.title}${doc.resultDate ? ` declared on ${formatDate(doc.resultDate)}` : ""}. Check how to download the result, the direct link and the next selection stage.`,
-      };
-    case "admit-cards":
-      return {
-        title: withSuffix(title, " – Download"),
-        description: `${org}${doc.title}. Download the admit card / hall ticket from the official link and check exam date, venue and instructions.`,
-      };
-    case "answer-keys":
-      return {
-        title: withSuffix(title, " – Download PDF"),
-        description: `${org}${doc.title}. Download the official answer key PDF, check your score and raise objections before the deadline.`,
-      };
-    case "admissions":
-      return {
-        title,
-        description: `${org}${doc.title}${doc.applicationDeadline ? `, last date ${formatDate(doc.applicationDeadline)}` : ""}. Check eligibility, application process and the official link.`,
-      };
-    case "news":
-      return { title, description: `${org}${clip(doc.content, 200)}` };
-    case "quizzes": {
-      const facts = [
-        doc.timeLimit && `${doc.timeLimit} minutes`,
-        doc.totalMarks && `${doc.totalMarks} marks`,
-      ].filter(Boolean);
-      return {
-        title: withSuffix(title, " – Free Mock Test"),
-        description: `${clip(doc.description, 110)}${facts.length ? ` (${facts.join(", ")})` : ""}. Attempt this free online mock test with a timer and answers.`,
-      };
-    }
-    default:
-      return { title, description: doc.description ?? "" };
-  }
-}
-
 const FALLBACK: Record<string, string> = {
   jobs: "Government Job Details",
   results: "Sarkari Result Details",
@@ -117,7 +55,7 @@ export async function detailMetadata(section: DetailSection, param: string): Pro
   }
   if (section === "quizzes") {
     // Single quizzes are thin, near-identical pages: keep them out of the index; /test-series pages rank instead.
-    return pageMetadata({ ...build(section, doc), path: quizPath(doc as { _id: string; title: string }), noIndex: true });
+    return pageMetadata({ ...detailText(section, doc), path: quizPath(doc as { _id: string; title: string }), noIndex: true });
   }
-  return pageMetadata({ ...build(section, doc), path: detailPath(section, doc as { _id: string; title: string }) });
+  return pageMetadata({ ...detailText(section, doc), path: detailPath(section, doc as { _id: string; title: string }) });
 }

@@ -246,7 +246,7 @@ export default function JobForm({ initialData, onSubmit, onCancel }: JobFormProp
           <Input id="salary" name="salary" value={formData.salary} onChange={handleChange} />
         </div>
         <div>
-          <label htmlFor="totalVacancy" className="block text-sm font-medium text-gray-700">Total seats</label>
+          <label htmlFor="totalVacancy" className="block text-sm font-medium text-gray-700">Total vacancies (leave empty if the notification does not say)</label>
           <Input 
             id="totalVacancy" 
             name="totalVacancy" 
@@ -255,8 +255,7 @@ export default function JobForm({ initialData, onSubmit, onCancel }: JobFormProp
             className={errors.totalVacancy ? 'border-red-500' : ''}
             type="number"
             min="1"
-            required
-            placeholder="Enter number of seats"
+            placeholder="e.g. 250 (optional)"
           />
           {errors.totalVacancy && <p className="text-red-500 text-sm mt-1">{errors.totalVacancy}</p>}
         </div>

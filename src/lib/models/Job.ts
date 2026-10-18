@@ -115,7 +115,8 @@ const jobSchema = new mongoose.Schema({
     required: false,
     validate: {
       validator: function(value: string) {
-        return !isNaN(Number(value)) && Number(value) > 0;
+        // Optional: empty means the notification did not announce a count.
+        return !value || (!isNaN(Number(value)) && Number(value) > 0);
       },
       message: 'Total vacancy must be a positive number'
     },
