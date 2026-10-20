@@ -8,6 +8,8 @@ import Admission from "@/lib/models/Admission";
 import News from "@/lib/models/News";
 import Quiz from "@/lib/models/Quiz";
 import { EXAMS } from "@/lib/exams";
+import { getExamContent } from "@/lib/exam-content";
+import { uniqueByTitle } from "@/lib/dedupe";
 import { LEGAL_LAST_UPDATED } from "@/lib/legal";
 import { slugify, detailPath, type Section } from "@/lib/slug";
 import { SITE_URL } from "@/lib/seo";
@@ -63,7 +65,8 @@ async function sectionRows(section: Section): Promise<Row[]> {
 }
 
 async function sectionEntries(section: Section): Promise<UrlEntry[]> {
-  const rows = await sectionRows(section);
+  // A post entered twice is listed once, at its canonical (oldest) copy.
+  const rows = uniqueByTitle(await sectionRows(section));
   return rows.map((r) => ({ loc: `${SITE_URL}${detailPath(section, { _id: r._id, title: r.title })}`, lastmod: modified(r) }));
 }
 
@@ -87,6 +90,10 @@ async function pagesEntries(): Promise<UrlEntry[]> {
   const dates = await Promise.all(sections.map(sectionLatest));
   const bySection = Object.fromEntries(sections.map((s, i) => [s, dates[i]])) as Record<Section, Date | undefined>;
   const quizzes = await quizLatest();
+  // Exam pages with nothing to show are noindex, so they must not be submitted either.
+  const exams = (await Promise.all(EXAMS.map(async (e) => ((await getExamContent(e)).hasContent ? e : null)))).filter(
+    (e): e is (typeof EXAMS)[number] => e !== null,
+  );
   const legal = new Date(LEGAL_LAST_UPDATED);
 
   return [
@@ -94,7 +101,7 @@ async function pagesEntries(): Promise<UrlEntry[]> {
     ...sections.map((s) => ({ loc: `${SITE_URL}/${s}`, lastmod: bySection[s] })),
     { loc: `${SITE_URL}/quizzes`, lastmod: quizzes },
     // Exam pages aggregate posts from every section; they change whenever a section does.
-    ...EXAMS.map((e) => ({ loc: `${SITE_URL}/${e.slug}`, lastmod: latest(dates) })),
+    ...exams.map((e) => ({ loc: `${SITE_URL}/${e.slug}`, lastmod: latest(dates) })),
     ...["/about", "/privacy-policy", "/disclaimer", "/terms", "/contact"].map((p) => ({ loc: `${SITE_URL}${p}`, lastmod: legal })),
   ];
 }
@@ -105,16 +112,21 @@ async function testSeriesEntries(): Promise<UrlEntry[]> {
   ])) as { _id: { c?: string; s?: string }; last?: Date }[];
 
   const categories = new Map<string, Date | undefined>();
+  const subCounts = new Map<string, number>();
   const entries: UrlEntry[] = [];
   for (const r of rows) {
     const c = r._id.c?.trim();
     if (!c) continue;
     const cSlug = slugify(c) || "all";
     categories.set(cSlug, latest([categories.get(cSlug), r.last]));
+    if (r._id.s?.trim()) subCounts.set(cSlug, (subCounts.get(cSlug) ?? 0) + 1);
     const s = r._id.s?.trim();
     if (s) entries.push({ loc: `${SITE_URL}/test-series/${cSlug}/${slugify(s) || "all"}`, lastmod: r.last });
   }
-  const categoryEntries = [...categories].map(([slug, last]) => ({ loc: `${SITE_URL}/test-series/${slug}`, lastmod: last }));
+  // Single-exam categories redirect to their exam page, so only list categories with 0 or 2+ exams.
+  const categoryEntries = [...categories]
+    .filter(([slug]) => (subCounts.get(slug) ?? 0) !== 1)
+    .map(([slug, last]) => ({ loc: `${SITE_URL}/test-series/${slug}`, lastmod: last }));
   // Two Hindi-only names can both slug to "all"; keep one URL each.
   const seen = new Set<string>();
   return [...categoryEntries, ...entries].filter((e) => !seen.has(e.loc) && seen.add(e.loc));

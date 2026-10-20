@@ -39,7 +39,10 @@ export default async function QuizzesPage() {
             {groups.map((g) => (
               <div key={g.slug} className="bg-white rounded-xl border border-amber-200 p-4">
                 <h3 className="font-bold text-amber-900">
-                  <Link href={`/test-series/${g.slug}`} className="hover:underline">
+                  <Link
+                    href={g.subcategories.length === 1 ? `/test-series/${g.slug}/${g.subcategories[0].slug}` : `/test-series/${g.slug}`}
+                    className="hover:underline"
+                  >
                     {g.name} Test Series
                   </Link>{" "}
                   <span className="text-sm font-normal text-gray-500">({g.count} tests)</span>

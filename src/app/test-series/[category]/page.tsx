@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Breadcrumbs from "@/components/seo/Breadcrumbs";
@@ -38,6 +38,8 @@ export default async function CategoryPage({ params }: Props) {
   const found = await findCategory(category);
   if (!found) notFound();
   const c = found.category;
+  // A category with a single exam would duplicate that exam's page; send visitors and Google there.
+  if (c.subcategories.length === 1) permanentRedirect(`/test-series/${c.slug}/${c.subcategories[0].slug}`);
   const [quizzes, posts] = await Promise.all([findQuizzes({ category: c.name }, 24), searchPosts(c.name, 4)]);
 
   return (

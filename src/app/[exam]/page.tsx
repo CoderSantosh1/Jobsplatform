@@ -7,8 +7,7 @@ import Breadcrumbs from "@/components/seo/Breadcrumbs";
 import ExamUpdates from "@/components/quiz/ExamUpdates";
 import { QuizGrid } from "@/components/quiz/QuizCard";
 import { EXAMS, getExam } from "@/lib/exams";
-import { searchPosts } from "@/lib/content";
-import { findQuizzes } from "@/lib/quizzes";
+import { getExamContent } from "@/lib/exam-content";
 import { pageMetadata } from "@/lib/seo";
 
 // Only the exams in EXAMS get a page; any other top-level path is a normal 404.
@@ -24,29 +23,21 @@ type Props = { params: Promise<{ exam: string }> };
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const exam = getExam((await params).exam);
   if (!exam) return {};
+  const { hasContent } = await getExamContent(exam);
   return pageMetadata({
     title: `${exam.name} 2026: Notification, Admit Card, Result`,
     description: `${exam.name} 2026: latest notification, admit card, answer key, result and free ${exam.name} mock tests in one place. ${exam.about}`,
     path: `/${exam.slug}`,
+    // Until the site has posts or tests for this exam the page is boilerplate; keep it out of the index.
+    noIndex: !hasContent,
   });
-}
-
-function escapeRegex(text: string) {
-  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 export default async function ExamPage({ params }: Props) {
   const exam = getExam((await params).exam);
   if (!exam) notFound();
 
-  const pattern = exam.search.split(/\s+/).map(escapeRegex).join(".*");
-  const [posts, quizzes] = await Promise.all([
-    searchPosts(exam.search, 6),
-    findQuizzes(
-      { $or: [{ subcategory: { $regex: pattern, $options: "i" } }, { title: { $regex: pattern, $options: "i" } }] },
-      8,
-    ),
-  ]);
+  const { posts, quizzes } = await getExamContent(exam);
 
   return (
     <>

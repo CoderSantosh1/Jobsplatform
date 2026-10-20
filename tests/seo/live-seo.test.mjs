@@ -75,7 +75,17 @@ function assertTitleMatchesH1(url, h) {
   assert.ok(norm(h.h1).startsWith(start), `${url}: title "${h.title}" does not match H1 "${h.h1}"`);
 }
 
-async function checkIndexablePage(path, { expectCanonical, titleMatchesH1 = false } = {}) {
+/** Visible words inside <main>, ignoring header/footer boilerplate. */
+function mainWordCount(html) {
+  const main = html.match(/<main[\s\S]*?<\/main>/i)?.[0] || html;
+  const text = main
+    .replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&[a-z#0-9]+;/gi, " ");
+  return (text.match(/[\p{L}\p{N}]+/gu) || []).length;
+}
+
+async function checkIndexablePage(path, { expectCanonical, titleMatchesH1 = false, minWords = 0 } = {}) {
   const { res, body, url } = await get(path);
   assert.equal(res.status, 200, `${url} status`);
   const h = head(body);
@@ -92,6 +102,11 @@ async function checkIndexablePage(path, { expectCanonical, titleMatchesH1 = fals
   assert.equal(h.h1Count, 1, `${url}: expected exactly one <h1>, found ${h.h1Count}`);
   assert.ok(!/ {2}/.test(h.title), `${url}: title has double spaces: "${h.title}"`);
   if (titleMatchesH1) assertTitleMatchesH1(url, h);
+  // "Soft 404": a 200 page with almost nothing on it.
+  if (minWords) {
+    const words = mainWordCount(body);
+    assert.ok(words >= minWords, `${url}: only ${words} words of main content (soft-404 risk)`);
+  }
 
   assert.ok(h.canonical?.startsWith(SITE), `${url}: canonical "${h.canonical}" must be absolute ${SITE}`);
   if (expectCanonical) {
@@ -153,6 +168,16 @@ test("sitemap.xml is an index of small child sitemaps with real lastmod", async 
       assert.ok(u.startsWith(SITE), `${child}: non-canonical host ${u}`);
       assert.ok(!/\/quizzes\/[^/]+(\/instructions)?$/.test(u), `${child}: thin quiz page listed: ${u}`);
     }
+    // "Duplicate without user-selected canonical": the same post must not be submitted twice.
+    if (/\/(jobs|results|admit-cards|answer-keys|admissions|news)\.xml$/.test(child)) {
+      const seenSlugs = new Map();
+      for (const u of urls) {
+        const slug = u.replace(/-?[a-f0-9]{24}$/, "");
+        if (slug.endsWith("/")) continue; // no Latin title, id-only URL
+        assert.ok(!seenSlugs.has(slug), `${child}: duplicate post listed twice:\n  ${seenSlugs.get(slug)}\n  ${u}`);
+        seenSlugs.set(slug, u);
+      }
+    }
     const mods = lastmods(xml);
     if (mods.length > 5) {
       assert.ok(new Set(mods).size > 1, `${child}: every lastmod is identical (${mods[0]})`);
@@ -177,7 +202,37 @@ test("sampled sitemap pages pass the same checks and canonical = sitemap URL", a
     const urls = locs(xml).slice(0, SAMPLE);
     // Detail and test-series pages put the post/exam name first in both <title> and H1.
     const titleMatchesH1 = !child.endsWith("/pages.xml");
-    for (const u of urls) await checkIndexablePage(u, { expectCanonical: u, titleMatchesH1 });
+    for (const u of urls) await checkIndexablePage(u, { expectCanonical: u, titleMatchesH1, minWords: 120 });
+  }
+});
+
+test("every page in pages.xml is a 200, self-canonical and not noindex (no submitted redirects/noindex)", async () => {
+  const pagesXml = [...children].find(([u]) => u.endsWith("/pages.xml"))?.[1];
+  assert.ok(pagesXml, "no pages.xml");
+  let examPages = 0;
+  let examPagesWithUpdates = 0;
+  for (const u of locs(pagesXml)) {
+    const { res, body } = await get(u);
+    if (/^https:\/\/www\.sarkariresultsnow\.com\/[a-z0-9-]+$/.test(u) && /2026: Notification/.test(head(body).title || "")) {
+      examPages++;
+      if (/Updates<\/h2>/.test(body)) examPagesWithUpdates++;
+    }
+    assert.ok(!res.redirected, `${u}: redirects to ${res.url} (sitemaps must list final URLs only)`);
+    assert.equal(res.status, 200, `${u}: status ${res.status}`);
+    const h = head(body);
+    assert.ok(!/noindex/i.test(h.robots || ""), `${u}: submitted in sitemap but noindex`);
+    assert.equal((h.canonical || "").replace(/\/$/, ""), u.replace(/\/$/, ""), `${u}: canonical "${h.canonical}"`);
+  }
+  // Regression: exam pages once matched no posts because of a broken search regex.
+  if (examPages >= 3) assert.ok(examPagesWithUpdates > 0, `none of ${examPages} exam pages lists any job/result updates`);
+});
+
+test("test-series URLs in the sitemap do not redirect", async () => {
+  const xml = [...children].find(([u]) => u.endsWith("/test-series.xml"))?.[1];
+  assert.ok(xml, "no test-series.xml");
+  for (const u of locs(xml).slice(0, SAMPLE * 5)) {
+    const { res } = await get(u, { redirect: "manual" });
+    assert.equal(res.status, 200, `${u}: status ${res.status}`);
   }
 });
 
@@ -257,10 +312,22 @@ test("unknown pages return a real 404", async () => {
   }
 });
 
-test("domain redirects go to https://www in one permanent hop", { skip: process.env.CHECK_DOMAIN !== "1" }, async () => {
-  for (const start of ["http://sarkariresultsnow.com/", "https://sarkariresultsnow.com/", "http://www.sarkariresultsnow.com/"]) {
-    const res = await fetch(start, { redirect: "manual" });
-    assert.ok([301, 308].includes(res.status), `${start}: ${res.status} (307/302 are temporary)`);
-    assert.equal(res.headers.get("location")?.replace(/\/$/, ""), SITE, `${start} should go straight to ${SITE}`);
+test("domain redirects reach https://www with permanent hops only", { skip: process.env.CHECK_DOMAIN !== "1" }, async () => {
+  // Vercel always upgrades http→https on the same host first, so http://apex takes 2 hops; that is fine
+  // as long as every hop is permanent (301/308) and the chain ends at the www origin.
+  for (const start of ["http://sarkariresultsnow.com/jobs?x=1", "https://sarkariresultsnow.com/jobs?x=1", "http://www.sarkariresultsnow.com/jobs?x=1"]) {
+    let url = start;
+    let hops = 0;
+    for (;;) {
+      const res = await fetch(url, { redirect: "manual" });
+      if (res.status < 300 || res.status >= 400) {
+        assert.equal(res.status, 200, `${start}: ended with ${res.status} at ${url}`);
+        break;
+      }
+      assert.ok([301, 308].includes(res.status), `${url}: ${res.status} is a temporary redirect`);
+      url = new URL(res.headers.get("location"), url).href;
+      assert.ok(++hops <= 2, `${start}: more than 2 redirects`);
+    }
+    assert.equal(url, `${SITE}/jobs?x=1`, `${start} should end at ${SITE}/jobs?x=1 (path and query kept)`);
   }
 });

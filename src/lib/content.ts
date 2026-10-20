@@ -8,6 +8,8 @@ import AnswerKey from "@/lib/models/AnswerKey";
 import Admission from "@/lib/models/Admission";
 import News from "@/lib/models/News";
 import { detailPath, idFromParam, type Section } from "@/lib/slug";
+import { canonicalOf, titleKey, titleRegexSource } from "@/lib/dedupe";
+import { titleWordRegexes } from "@/lib/search";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export type Doc = Record<string, any> & { _id: string; title: string };
@@ -100,6 +102,39 @@ export const getRelated = cache(async (section: Section, doc: Doc, limit = 8): P
   }
 });
 
+/** Documents each section shows publicly (same rules as the lists and the sitemap). */
+export const PUBLIC_FILTER: Record<Section, Record<string, unknown>> = {
+  jobs: { status: "published" },
+  results: {},
+  "admit-cards": {},
+  "answer-keys": { status: { $ne: "draft" } },
+  admissions: { status: { $ne: "draft" } },
+  news: { status: { $ne: "draft" } },
+};
+
+/**
+ * When the same post was entered more than once, the oldest public copy is canonical.
+ * Returns that copy (possibly `doc` itself), so later copies can point their canonical tag at it.
+ */
+export const getCanonicalCopy = cache(async (section: Section, doc: Doc): Promise<{ _id: string; title: string }> => {
+  const key = titleKey(doc.title);
+  if (!key) return doc;
+  try {
+    await connectToDatabase();
+    const rows = await MODELS[section]
+      .find({ ...PUBLIC_FILTER[section], title: { $regex: titleRegexSource(key), $options: "i" } })
+      .select("_id title")
+      .sort({ _id: 1 })
+      .limit(20)
+      .lean<{ _id: unknown; title: string }[]>();
+    const copies = rows.filter((r) => titleKey(r.title) === key).map((r) => ({ _id: String(r._id), title: r.title }));
+    return canonicalOf([...copies, { _id: String(doc._id), title: doc.title }]) ?? doc;
+  } catch (error) {
+    console.error("getCanonicalCopy failed", error);
+    return doc;
+  }
+});
+
 /** Latest posts of one section, for "more" links on a detail page. */
 export const getLatest = cache(async (section: Section, excludeId: string, limit = 6): Promise<RelatedLink[]> => {
   try {
@@ -121,10 +156,10 @@ export const getLatest = cache(async (section: Section, excludeId: string, limit
 
 /** Posts in any section whose title matches every word of `term`, newest first. Used by exam and test-series pages. */
 export const searchPosts = cache(async (term: string, perSection = 5): Promise<Record<Section, RelatedLink[]>> => {
-  const words = (term.match(/[A-Za-z0-9]+/g) ?? []).filter((w) => w.length > 1);
+  const regexes = titleWordRegexes(term);
   const empty = Object.fromEntries((Object.keys(MODELS) as Section[]).map((s) => [s, []])) as unknown as Record<Section, RelatedLink[]>;
-  if (!words.length) return empty;
-  const query = { $and: words.map((w) => ({ title: { $regex: `\b${escapeRegex(w)}`, $options: "i" } })) };
+  if (!regexes.length) return empty;
+  const query = { $and: regexes.map((source) => ({ title: { $regex: source, $options: "i" } })) };
   try {
     await connectToDatabase();
     const entries = await Promise.all(
