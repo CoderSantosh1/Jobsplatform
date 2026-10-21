@@ -17,7 +17,8 @@ export async function POST(req: Request) {
 
   console.log(`Attempting login with email: ${email}`);
   if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-    const token = jwt.sign({ email }, JWT_SECRET, { expiresIn: '1h' });
+    // Long-lived so dashboard actions (including push notifications) keep working; log out to end it early.
+    const token = jwt.sign({ email }, JWT_SECRET, { expiresIn: '30d' });
     return NextResponse.json({ token });
   }
 
