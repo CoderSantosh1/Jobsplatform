@@ -6,6 +6,7 @@
 
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import SendPushButton from './SendPushButton';
 import JobForm from './JobForm';
 
 interface Job {
@@ -161,6 +162,7 @@ export default function JobList() {
                 >
                   Delete
                 </Button>
+                <SendPushButton type="jobs" id={job._id} status={job.status} />
               </div>
             </div>
           ))

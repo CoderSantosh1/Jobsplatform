@@ -4,6 +4,7 @@
 
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import SendPushButton from './SendPushButton';
 import ResultForm from './ResultForm';
 
 interface Result {
@@ -196,6 +197,7 @@ export default function ResultList() {
                 >
                   Delete
                 </Button>
+                <SendPushButton type="results" id={result._id} status={result.status} />
               </div>
             </div>
           ))

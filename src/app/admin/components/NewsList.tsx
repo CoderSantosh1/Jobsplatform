@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import SendPushButton from './SendPushButton';
 import NewsForm from './NewsForm';
 
 interface News {
@@ -247,6 +248,7 @@ export default function NewsList() {
                 <Button variant="destructive" onClick={() => handleDeleteNews(item._id)}>
                   Delete
                 </Button>
+                <SendPushButton type="news" id={item._id} status={item.status} />
               </div>
             </div>
           ))

@@ -3,6 +3,7 @@ import { Montserrat } from "next/font/google";
 import Script from "next/script";
 import { ThemeProvider } from "@/components/theme-provider";
 import CleanURL from "@/components/CleanURL";
+import PushOptIn from "@/components/PushOptIn";
 import "./globals.css";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { Analytics } from "@vercel/analytics/react";
@@ -114,6 +115,9 @@ export default function RootLayout({
 
           {/* ✅ Page Content */}
           {children}
+
+          {/* Opt-in card for exam alert push notifications (never prompts on load) */}
+          <PushOptIn />
 
           {/* ✅ Vercel Analytics & Speed Tracking */}
           <SpeedInsights />

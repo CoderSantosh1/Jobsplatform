@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import SendPushButton from './SendPushButton';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
 import jsPDF from "jspdf";
@@ -12,6 +13,7 @@ interface Quiz {
   title: string;
   description: string;
   timeLimit: number;
+  status?: string;
   questions: Array<{
     _id: string;
     text: string;
@@ -196,6 +198,7 @@ const handleDownloadCSV = (quiz: Quiz) => {
               >
                 Delete
               </Button>
+              <SendPushButton type="quizzes" id={quiz._id} status={quiz.status} />
             </div>
           </div>
         </Card>

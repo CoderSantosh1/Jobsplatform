@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import SendPushButton from './SendPushButton';
 import AdmitCardForm from './AdmitCardForm';
 import AdmitCard from '@/lib/models/AdmitCard';
 
@@ -148,6 +149,7 @@ export default function AdmitCardList() {
                 >
                   Delete
                 </Button>
+                <SendPushButton type="admit-cards" id={admitCard._id} status={admitCard.status} />
               </div>
             </div>
           ))

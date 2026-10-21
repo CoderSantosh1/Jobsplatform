@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import SendPushButton from './SendPushButton';
 import Link from 'next/link';
 import AnswerKeyForm from './AnswerKeyForm';
 
@@ -150,6 +151,7 @@ export default function AnswerKeyList() {
                 >
                   Delete
                 </Button>
+                <SendPushButton type="answer-keys" id={answerKey._id} status={answerKey.status} />
               </div>
             </Link>
           ))

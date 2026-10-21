@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import SendPushButton from './SendPushButton';
 import AdmissionForm from './AdmissionForm'; // Assuming AdmissionForm exists and is correctly typed
 
 // Define the structure of an Admission, mirroring AdmitCard for now
@@ -164,6 +165,7 @@ export default function AdmissionList() {
                 >
                   Delete
                 </Button>
+                <SendPushButton type="admissions" id={admission._id} status={admission.status} />
               </div>
             </div>
           ))
