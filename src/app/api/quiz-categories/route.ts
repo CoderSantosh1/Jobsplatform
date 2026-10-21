@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import QuizCategory from '@/lib/models/QuizCategory';
+import { requireAdmin } from '@/lib/admin-guard';
 
 // GET: List all categories with subcategories
 export async function GET() {
@@ -11,6 +12,8 @@ export async function GET() {
 
 // POST: Add a new category or subcategory
 export async function POST(request: Request) {
+  const denied = requireAdmin(request);
+  if (denied) return denied;
   await connectDB();
   const { name, icon, subcategory, subcategoryIcon } = await request.json();
   if (!name) {
@@ -59,6 +62,8 @@ export async function POST(request: Request) {
 
 // PUT: Edit category or subcategory
 export async function PUT(request: Request) {
+  const denied = requireAdmin(request);
+  if (denied) return denied;
   await connectDB();
   const { oldName, newName, newIcon, oldSubcategory, newSubcategory, newSubcategoryIcon } = await request.json();
   if (oldName && newName) {
@@ -85,6 +90,8 @@ export async function PUT(request: Request) {
 
 // DELETE: Remove category or subcategory
 export async function DELETE(request: Request) {
+  const denied = requireAdmin(request);
+  if (denied) return denied;
   await connectDB();
   const { name, subcategory } = await request.json();
   if (name && !subcategory) {

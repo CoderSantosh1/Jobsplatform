@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/db';
 import AdmitCard from '@/lib/models/AdmitCard';
+import { requireAdmin } from '@/lib/admin-guard';
 
 export async function GET() {
   try {
@@ -17,6 +18,8 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const denied = requireAdmin(request);
+  if (denied) return denied;
   try {
     const body = await request.json();
     await connectToDatabase();

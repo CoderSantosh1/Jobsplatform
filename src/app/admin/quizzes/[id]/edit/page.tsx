@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { adminFetch } from "@/lib/admin-fetch";
 
 /* ================= TYPES ================= */
 
@@ -75,7 +76,7 @@ export default function EditQuiz({
 
   const fetchQuiz = async () => {
     try {
-      const response = await fetch(`/api/quizzes/${id}`);
+      const response = await adminFetch(`/api/quizzes/${id}`);
       if (!response.ok) throw new Error();
       const data = await response.json();
       setQuiz(data);
@@ -89,7 +90,7 @@ export default function EditQuiz({
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch("/api/quiz-categories");
+      const response = await adminFetch("/api/quiz-categories");
       if (!response.ok) throw new Error();
       const data = await response.json();
       setCategories(data);
@@ -198,7 +199,7 @@ export default function EditQuiz({
 
     try {
       setSaving(true);
-      const response = await fetch(`/api/quizzes/${id}`, {
+      const response = await adminFetch(`/api/quizzes/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(quiz),

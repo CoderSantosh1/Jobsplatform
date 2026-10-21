@@ -2,8 +2,11 @@ import { NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Quiz from '@/lib/models/Quiz';
 import Question from '@/lib/models/Question';
+import { requireAdmin } from '@/lib/admin-guard';
 
 export async function POST(request: Request) {
+  const denied = requireAdmin(request);
+  if (denied) return denied;
   try {
     await connectDB();
     const body = await request.json();

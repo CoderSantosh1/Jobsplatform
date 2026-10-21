@@ -1,6 +1,7 @@
 // @ts-ignore: Could not find module 'cloudinary' types
 import { v2 as cloudinary, UploadApiResponse } from 'cloudinary';
 import { NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/admin-guard';
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -9,6 +10,8 @@ cloudinary.config({
 });
 
 export async function POST(request: Request) {
+  const denied = requireAdmin(request);
+  if (denied) return denied;
   try {
     // Debug: Log presence of env vars
     console.log('Cloudinary ENV:', {

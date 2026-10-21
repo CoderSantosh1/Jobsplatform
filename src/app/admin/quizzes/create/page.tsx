@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import { adminFetch } from '@/lib/admin-fetch';
 
 interface Question {
   text: string;
@@ -119,7 +120,7 @@ export default function CreateQuiz() {
 
     try {
       setLoading(true);
-      const response = await fetch('/api/quizzes', {
+      const response = await adminFetch('/api/quizzes', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

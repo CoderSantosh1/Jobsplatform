@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import NewsForm from './NewsForm';
+import { adminFetch } from '@/lib/admin-fetch';
 
 interface News {
   _id: string;
@@ -41,7 +42,7 @@ export default function NewsList() {
   const fetchNews = async () => {
     try {
       setError(null);
-      const response = await fetch('/api/news');
+      const response = await adminFetch('/api/news');
       if (response.ok) {
         const data = await response.json();
         const sortedNews = data.data.sort((a: News, b: News) =>
@@ -82,7 +83,7 @@ export default function NewsList() {
       if ('postedDate' in formData && formData.postedDate) {
         data.append('publishDate', formData.postedDate as string);
       }
-      const response = await fetch('/api/news', {
+      const response = await adminFetch('/api/news', {
         method: 'POST',
         body: data,
       });
@@ -126,7 +127,7 @@ export default function NewsList() {
       if ('postedDate' in formData && formData.postedDate) {
         data.append('publishDate', formData.postedDate as string);
       }
-      const response = await fetch(`/api/news/${selectedNews._id}`, {
+      const response = await adminFetch(`/api/news/${selectedNews._id}`, {
         method: 'PUT',
         body: data,
       });
@@ -155,7 +156,7 @@ export default function NewsList() {
     if (!confirm('Are you sure you want to delete this news item?')) return;
 
     try {
-      const response = await fetch(`/api/news/${id}`, {
+      const response = await adminFetch(`/api/news/${id}`, {
         method: 'DELETE',
       });
 

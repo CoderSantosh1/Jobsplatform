@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
 import jsPDF from "jspdf";
+import { adminFetch } from '@/lib/admin-fetch';
 
 interface Quiz {
   _id: string;
@@ -41,7 +42,7 @@ export default function QuizList() {
 
   const fetchQuizzes = async () => {
     try {
-      const response = await fetch('/api/quizzes');
+      const response = await adminFetch('/api/quizzes');
       if (!response.ok) {
         throw new Error('Failed to fetch quizzes');
       }
@@ -113,7 +114,7 @@ const handleDownloadCSV = (quiz: Quiz) => {
     }
 
     try {
-      const response = await fetch(`/api/quizzes/${id}`, {
+      const response = await adminFetch(`/api/quizzes/${id}`, {
         method: 'DELETE',
       });
 

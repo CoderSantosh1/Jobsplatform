@@ -4,6 +4,7 @@ import { connectToDatabase as connectDB } from '@/lib/db';
 import AdmitCard from '@/lib/models/AdmitCard';
 import mongoose from 'mongoose';
 import { log } from 'console';
+import { requireAdmin } from '@/lib/admin-guard';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,9 +46,11 @@ export async function GET(
 }
 
 export async function DELETE(
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
+  const denied = requireAdmin(request);
+  if (denied) return denied;
   try {
     await connectDB();
 
@@ -82,6 +85,8 @@ export async function DELETE(
 }
 
 export async function PUT(request: Request, context: { params: Promise<{ id: string }> }) {
+  const denied = requireAdmin(request);
+  if (denied) return denied;
   try {
     const body = await request.json();
     await connectDB();

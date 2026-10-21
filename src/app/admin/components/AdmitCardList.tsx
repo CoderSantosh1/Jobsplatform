@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import AdmitCardForm from './AdmitCardForm';
 import AdmitCard from '@/lib/models/AdmitCard';
+import { adminFetch } from '@/lib/admin-fetch';
 
 interface AdmitCard  {
   _id: string;
@@ -29,7 +30,7 @@ export default function AdmitCardList() {
 
   const fetchAdmitCards = async () => {
     try {
-      const response = await fetch('/api/admit-cards');
+      const response = await adminFetch('/api/admit-cards');
       if (response.ok) {
         const data = await response.json();
         setAdmitCards(data.data);
@@ -51,7 +52,7 @@ export default function AdmitCardList() {
     if (!editingCard) return;
 
     try {
-      const response = await fetch(`/api/admit-cards/${editingCard._id}`, {
+      const response = await adminFetch(`/api/admit-cards/${editingCard._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -79,7 +80,7 @@ export default function AdmitCardList() {
     if (!confirm('Are you sure you want to delete this admit card?')) return;
     
     try {
-      const response = await fetch(`/api/admit-cards/${admitCardId}`, {
+      const response = await adminFetch(`/api/admit-cards/${admitCardId}`, {
         method: 'DELETE',
       });
       

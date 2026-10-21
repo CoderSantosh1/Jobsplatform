@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import AdmissionForm from './AdmissionForm'; // Assuming AdmissionForm exists and is correctly typed
+import { adminFetch } from '@/lib/admin-fetch';
 
 // Define the structure of an Admission, mirroring AdmitCard for now
 // TODO: Adjust this interface based on the actual Admission data structure
@@ -46,7 +47,7 @@ export default function AdmissionList() {
   const fetchAdmissions = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/admissions'); // Ensure this API endpoint exists
+      const response = await adminFetch('/api/admissions'); // Ensure this API endpoint exists
       if (response.ok) {
         const data = await response.json();
         setAdmissions(data.data || []); // Adjust based on actual API response structure
@@ -70,7 +71,7 @@ export default function AdmissionList() {
     if (!editingAdmission) return;
 
     try {
-      const response = await fetch(`/api/admissions/${editingAdmission._id}`, { // Ensure this API endpoint exists
+      const response = await adminFetch(`/api/admissions/${editingAdmission._id}`, { // Ensure this API endpoint exists
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -97,7 +98,7 @@ export default function AdmissionList() {
     if (!confirm('Are you sure you want to delete this admission?')) return;
 
     try {
-      const response = await fetch(`/api/admissions/${admissionId}`, { // Ensure this API endpoint exists
+      const response = await adminFetch(`/api/admissions/${admissionId}`, { // Ensure this API endpoint exists
         method: 'DELETE',
       });
 

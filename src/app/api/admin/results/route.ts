@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/db';
 import Result from '@/lib/models/Result';
+import { requireAdmin } from '@/lib/admin-guard';
 
 interface ValidationError {
   name: string;
@@ -26,6 +27,8 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const denied = requireAdmin(request);
+  if (denied) return denied;
   try {
     const body = await request.json();
     await connectToDatabase();
@@ -82,6 +85,8 @@ export async function POST(request: Request) {
 }
 
 export async function PUT(request: Request) {
+  const denied = requireAdmin(request);
+  if (denied) return denied;
   try {
     const url = new URL(request.url);
     const resultId = url.pathname.split('/').pop();
@@ -112,6 +117,8 @@ export async function PUT(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const denied = requireAdmin(request);
+  if (denied) return denied;
   try {
     const url = new URL(request.url);
     const resultId = url.pathname.split('/').pop();

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { adminFetch } from '@/lib/admin-fetch';
 
 interface Subcategory {
   name: string;
@@ -31,7 +32,7 @@ const CategoryManager: React.FC = () => {
 
   const fetchCategories = async () => {
     setLoading(true);
-    const res = await fetch('/api/quiz-categories');
+    const res = await adminFetch('/api/quiz-categories');
     const data = await res.json();
     setCategories(data);
     setLoading(false);
@@ -52,7 +53,7 @@ const CategoryManager: React.FC = () => {
       alert('Please upload a valid icon.');
       return;
     }
-    await fetch('/api/quiz-categories', {
+    await adminFetch('/api/quiz-categories', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: newCategory.trim(), icon: newCategoryIcon.trim() }),
@@ -72,7 +73,7 @@ const CategoryManager: React.FC = () => {
       alert('Please select and upload an icon for the subcategory.');
       return;
     }
-    await fetch('/api/quiz-categories', {
+    await adminFetch('/api/quiz-categories', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: catName, subcategory: sub, subcategoryIcon: subIcon }),
@@ -86,7 +87,7 @@ const CategoryManager: React.FC = () => {
   // Edit category
   const handleEditCategory = async () => {
     if (!editCategory || !editCategory.value.trim()) return;
-    await fetch('/api/quiz-categories', {
+    await adminFetch('/api/quiz-categories', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ oldName: categories.find(c => c._id === editCategory.id)?.name, newName: editCategory.value.trim() }),
@@ -100,7 +101,7 @@ const CategoryManager: React.FC = () => {
     if (!editSubcategory || !editSubcategory.name.trim()) return;
     const cat = categories.find(c => c._id === editSubcategory.catId);
     if (!cat) return;
-    await fetch('/api/quiz-categories', {
+    await adminFetch('/api/quiz-categories', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ oldName: cat.name, oldSubcategory: editSubcategory.oldName, newSubcategory: editSubcategory.name.trim() }),
@@ -111,7 +112,7 @@ const CategoryManager: React.FC = () => {
 
   // Delete category
   const handleDeleteCategory = async (catName: string) => {
-    await fetch('/api/quiz-categories', {
+    await adminFetch('/api/quiz-categories', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: catName }),
@@ -121,7 +122,7 @@ const CategoryManager: React.FC = () => {
 
   // Delete subcategory
   const handleDeleteSubcategory = async (catName: string, sub: string) => {
-    await fetch('/api/quiz-categories', {
+    await adminFetch('/api/quiz-categories', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: catName, subcategory: sub }),
@@ -138,7 +139,7 @@ const CategoryManager: React.FC = () => {
       // Upload file
       const formData = new FormData();
       formData.append('file', file);
-      const res = await fetch('/api/quiz-categories/upload-icon', {
+      const res = await adminFetch('/api/quiz-categories/upload-icon', {
         method: 'POST',
         body: formData,
       });
@@ -158,7 +159,7 @@ const CategoryManager: React.FC = () => {
       // Upload file
       const formData = new FormData();
       formData.append('file', file);
-      const res = await fetch('/api/quiz-categories/upload-icon', {
+      const res = await adminFetch('/api/quiz-categories/upload-icon', {
         method: 'POST',
         body: formData,
       });
@@ -251,7 +252,7 @@ const CategoryManager: React.FC = () => {
                                 placeholder="Icon URL or emoji"
                               />
                               <button className="text-green-600" onClick={async () => {
-                                await fetch('/api/quiz-categories', {
+                                await adminFetch('/api/quiz-categories', {
                                   method: 'PUT',
                                   headers: { 'Content-Type': 'application/json' },
                                   body: JSON.stringify({
@@ -274,7 +275,7 @@ const CategoryManager: React.FC = () => {
                               <span>{typeof sub.name === 'string' ? sub.name : '[Invalid name]'}</span>
                               <button className="text-blue-600 ml-2" onClick={() => setEditSubcategory({ catId: cat._id, oldName: sub.name, name: sub.name, icon: sub.icon || '' })}>Edit</button>
                               <button className="text-red-600 ml-1" onClick={async () => {
-                                await fetch('/api/quiz-categories', {
+                                await adminFetch('/api/quiz-categories', {
                                   method: 'DELETE',
                                   headers: { 'Content-Type': 'application/json' },
                                   body: JSON.stringify({ name: cat.name, subcategory: sub.name }),
