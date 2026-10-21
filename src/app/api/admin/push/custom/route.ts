@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/db';
 import { verifyAdminAuthorization } from '@/lib/admin-auth';
-import { isFirebaseAdminConfigured } from '@/lib/firebase-admin';
+import { isFirebaseAdminConfigured, missingFirebaseAdminEnv } from '@/lib/firebase-admin';
 import { sendPushToAll } from '@/lib/push-send';
 import { parseCustomPushInput } from '@/lib/push';
 import PushSubscription from '@/lib/models/PushSubscription';
@@ -28,7 +28,7 @@ export async function GET(request: Request) {
     ]);
     return NextResponse.json({
       success: true,
-      data: { subscribers, configured: isFirebaseAdminConfigured(), history },
+      data: { subscribers, configured: isFirebaseAdminConfigured(), missingEnv: missingFirebaseAdminEnv(), history },
     });
   } catch (error) {
     console.error('Error loading push notifications:', error);

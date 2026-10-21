@@ -4,8 +4,20 @@ import { getMessaging, type Messaging } from "firebase-admin/messaging";
 
 const APP_NAME = "srn-push";
 
+/** Names (never values) of the server-only Firebase variables that are not set. */
+export function missingFirebaseAdminEnv(): string[] {
+  const env = {
+    FIREBASE_PROJECT_ID: process.env.FIREBASE_PROJECT_ID,
+    FIREBASE_CLIENT_EMAIL: process.env.FIREBASE_CLIENT_EMAIL,
+    FIREBASE_PRIVATE_KEY: process.env.FIREBASE_PRIVATE_KEY,
+  };
+  return Object.entries(env)
+    .filter(([, value]) => !value?.trim())
+    .map(([name]) => name);
+}
+
 export function isFirebaseAdminConfigured(): boolean {
-  return !!(process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PRIVATE_KEY);
+  return missingFirebaseAdminEnv().length === 0;
 }
 
 export function getAdminMessaging(): Messaging {

@@ -10,8 +10,22 @@ export const firebaseWebConfig = {
 
 export const firebaseVapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY ?? "";
 
+/** Names of public Firebase variables that were empty when this bundle was built (they are inlined at build time). */
+export function missingPushPublicEnv(): string[] {
+  const env = {
+    NEXT_PUBLIC_FIREBASE_API_KEY: firebaseWebConfig.apiKey,
+    NEXT_PUBLIC_FIREBASE_PROJECT_ID: firebaseWebConfig.projectId,
+    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: firebaseWebConfig.messagingSenderId,
+    NEXT_PUBLIC_FIREBASE_APP_ID: firebaseWebConfig.appId,
+    NEXT_PUBLIC_FIREBASE_VAPID_KEY: firebaseVapidKey,
+  };
+  return Object.entries(env)
+    .filter(([, value]) => !value)
+    .map(([name]) => name);
+}
+
 export function isPushConfigured(): boolean {
-  return Object.values(firebaseWebConfig).every(Boolean) && !!firebaseVapidKey;
+  return missingPushPublicEnv().length === 0;
 }
 
 export function isPushSupportedBrowser(): boolean {
