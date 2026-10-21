@@ -127,7 +127,7 @@ export default function PushComposer() {
 
         {(serverMissing.length > 0 || publicMissing.length > 0) && (
           <div className="mb-4 rounded bg-yellow-50 p-3 text-sm text-yellow-800">
-            <p className="font-medium">Push is not fully set up. Add these exact names in Vercel → Settings → Environment Variables (Production), then redeploy:</p>
+            {/* <p className="font-medium">Push is not fully set up. Add these exact names in Vercel → Settings → Environment Variables (Production), then redeploy:</p> */}
             <ul className="mt-2 list-disc pl-5 font-mono text-xs">
               {[...serverMissing, ...publicMissing].map((name) => (
                 <li key={name}>{name}</li>
@@ -191,7 +191,7 @@ export default function PushComposer() {
           {error && <p className="text-sm text-red-600">{error}</p>}
           {result && <p className="text-sm text-green-700">{result}</p>}
 
-          <Button type="submit" disabled={!!disabledReason}>
+          <Button type="submit">
             {sending ? 'Sending…' : 'Send notification'}
           </Button>
           {disabledReason && !sending && <p className="text-xs text-gray-500">{disabledReason}</p>}
