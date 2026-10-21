@@ -21,7 +21,7 @@ Provider: Firebase Cloud Messaging (FCM) Web Push, using Firebase Installation I
 | Mongo collections | `PushSubscription` (FID only), `PushNotificationLog` (send history) |
 
 Visitor flow:
-1. On a public page, after about 8 seconds, browsers that support push and haven't decided yet see a small card. Nothing is requested on page load.
+1. On a public page, after about 3 seconds, browsers that support push and haven't decided yet see a small card. Nothing is requested on page load.
 2. **Enable notifications** calls `Notification.requestPermission()` from that click. **Not now** or the close button hides the card for 30 days. If the visitor blocks notifications, the card tells them how to change it in browser settings and does not ask again.
 3. When permission is granted, the service worker is registered at scope `/firebase-cloud-messaging-push-scope`, so it never controls page loads. The FID is then stored through `/api/push/subscribe`. On later visits the FID is sent again only if it changed, or once a day.
 

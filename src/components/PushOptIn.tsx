@@ -13,7 +13,7 @@ import {
 } from "@/lib/push-prompt";
 
 // Wait a little after load so the prompt never competes with the page content.
-const SHOW_DELAY_MS = 8000;
+const SHOW_DELAY_MS = 3000;
 
 type Status = "hidden" | "prompt" | "working" | "done" | "error";
 

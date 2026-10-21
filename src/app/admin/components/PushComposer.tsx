@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { PUSH_BODY_MAX, PUSH_SITE_URL, PUSH_TITLE_MAX } from '@/lib/push';
-import { missingPushPublicEnv } from '@/lib/push-config';
 
 interface HistoryItem {
   _id: string;
@@ -21,7 +20,6 @@ interface HistoryItem {
 interface Overview {
   subscribers: number;
   configured: boolean;
-  missingEnv?: string[];
   history: HistoryItem[];
 }
 
@@ -61,24 +59,6 @@ export default function PushComposer() {
       : link.trim()
     : `${PUSH_SITE_URL}/`;
 
-  const serverMissing = overview?.missingEnv ?? (overview && !overview.configured ? ['FIREBASE_* server variables'] : []);
-  const publicMissing = missingPushPublicEnv();
-
-  // Shown under the button so it is clear why it cannot be clicked.
-  const disabledReason = sending
-    ? 'Sending…'
-    : !overview
-      ? error
-        ? 'Could not load push status (see the error above). Try logging in again.'
-        : 'Loading push status…'
-      : !overview.configured
-        ? `Sending is disabled until the server Firebase variables are set: ${serverMissing.join(', ')}.`
-        : !title.trim()
-          ? 'Enter a title.'
-          : !body.trim()
-            ? 'Enter a message.'
-            : '';
-
   const send = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -87,8 +67,7 @@ export default function PushComposer() {
       setError('Title and message are required.');
       return;
     }
-    const count = overview?.subscribers ?? 0;
-    if (!confirm(`Send "${title.trim()}" to ${count} subscriber(s) now? This cannot be undone.`)) return;
+    if (!confirm(`Send "${title.trim()}" now?`)) return;
 
     setSending(true);
     try {
@@ -119,27 +98,7 @@ export default function PushComposer() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
       <div className="bg-white rounded-lg shadow-lg p-6">
-        <h2 className="text-2xl font-semibold mb-2">Send Push Notification</h2>
-        <p className="text-sm text-gray-600 mb-6">
-          Write a message and send it to everyone who enabled exam alerts.
-          {overview && <> Subscribers: <strong>{overview.subscribers}</strong></>}
-        </p>
-
-        {(serverMissing.length > 0 || publicMissing.length > 0) && (
-          <div className="mb-4 rounded bg-yellow-50 p-3 text-sm text-yellow-800">
-            <p className="font-medium">Push is not fully set up. Add these exact names in Vercel → Settings → Environment Variables (Production), then redeploy:</p>
-            <ul className="mt-2 list-disc pl-5 font-mono text-xs">
-              {[...serverMissing, ...publicMissing].map((name) => (
-                <li key={name}>{name}</li>
-              ))}
-            </ul>
-            {publicMissing.length > 0 && (
-              <p className="mt-2 text-xs">
-                NEXT_PUBLIC_* values are built into the site, so visitors cannot subscribe until a new deployment runs after adding them.
-              </p>
-            )}
-          </div>
-        )}
+        <h2 className="text-2xl font-semibold mb-6">Send Push Notification</h2>
 
         <form onSubmit={send} className="space-y-4">
           <label className="block text-sm font-medium">
@@ -191,10 +150,9 @@ export default function PushComposer() {
           {error && <p className="text-sm text-red-600">{error}</p>}
           {result && <p className="text-sm text-green-700">{result}</p>}
 
-          <Button type="submit" disabled={!!disabledReason}>
+          <Button type="submit" disabled={sending}>
             {sending ? 'Sending…' : 'Send notification'}
           </Button>
-          {disabledReason && !sending && <p className="text-xs text-gray-500">{disabledReason}</p>}
         </form>
       </div>
 
