@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { PUSH_BODY_MAX, PUSH_TITLE_MAX, type PushContentType } from '@/lib/push';
+import NotificationPreview from './NotificationPreview';
 
 interface Preview {
   title: string;
@@ -160,12 +161,7 @@ export default function SendPushButton({ type, id, status }: SendPushButtonProps
                   />
                 </label>
 
-                <div className="rounded border bg-gray-50 p-3">
-                  <p className="text-xs uppercase text-gray-500">Preview</p>
-                  <p className="mt-1 font-semibold">{title || '—'}</p>
-                  <p className="text-sm text-gray-700">{body || '—'}</p>
-                  <p className="mt-2 break-all text-xs text-blue-700">Opens: {preview.url}</p>
-                </div>
+                <NotificationPreview title={title} body={body} url={preview.url} />
 
                 <p className="text-sm text-gray-600">Subscribers: {preview.subscribers}</p>
 

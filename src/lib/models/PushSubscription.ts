@@ -14,6 +14,11 @@ const pushSubscriptionSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
+    // Delivery history for the admin subscriber list (filled in by sendPushToAll).
+    receivedCount: { type: Number, default: 0 },
+    lastReceivedAt: { type: Date },
+    lastFailedAt: { type: Date },
+    lastError: { type: String },
   },
   {
     timestamps: true,

@@ -27,8 +27,8 @@ export async function GET(request: Request) {
       PushSubscription.estimatedDocumentCount(),
       PushNotificationLog.find({})
         .sort({ createdAt: -1 })
-        .limit(20)
-        .select('contentType title body url status successCount failureCount subscriberCount createdAt')
+        .limit(50)
+        .select('contentType title body url status sentBy successCount failureCount removedCount subscriberCount createdAt')
         .lean(),
     ]);
     return NextResponse.json({

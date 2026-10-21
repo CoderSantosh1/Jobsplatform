@@ -212,3 +212,37 @@ export function chunk<T>(items: T[], size: number): T[][] {
   for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size));
   return out;
 }
+
+/** Short label for a subscribed browser in the admin list; the full Firebase Installation ID is never shown. */
+export function maskFid(fid: string): string {
+  return fid.length <= 6 ? "••••" : `••••${fid.slice(-6)}`;
+}
+
+/** Last delivery outcome for one subscriber, as shown in the admin list. */
+export function subscriberDeliveryStatus(s: {
+  lastReceivedAt?: string | Date | null;
+  lastFailedAt?: string | Date | null;
+}): "received" | "failed" | "none" {
+  const ok = s.lastReceivedAt ? new Date(s.lastReceivedAt).getTime() : 0;
+  const bad = s.lastFailedAt ? new Date(s.lastFailedAt).getTime() : 0;
+  if (!ok && !bad) return "none";
+  return bad > ok ? "failed" : "received";
+}
+
+/** Splits one FCM batch result into FIDs that got the message, FIDs to delete, and other failures with their error code. */
+export function splitSendResults(
+  fids: string[],
+  responses: { success: boolean; error?: { code?: string } }[]
+): { received: string[]; stale: string[]; failed: { fid: string; code: string }[] } {
+  const received: string[] = [];
+  const stale: string[] = [];
+  const failed: { fid: string; code: string }[] = [];
+  responses.forEach((r, i) => {
+    const fid = fids[i];
+    if (fid === undefined) return;
+    if (r.success) received.push(fid);
+    else if (isStaleSubscriptionError(r.error?.code)) stale.push(fid);
+    else failed.push({ fid, code: r.error?.code || "unknown" });
+  });
+  return { received, stale, failed };
+}
