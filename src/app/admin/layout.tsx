@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import AdminLayoutClient from "./AdminLayoutClient";
+import { HIDE_ADS_CSS } from "@/lib/ads";
 
 export const metadata: Metadata = {
   title: "Admin Dashboard - Job Management & Content Administration | Sarkari Results Now",
@@ -37,7 +38,13 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <AdminLayoutClient>{children}</AdminLayoutClient>;
+  return (
+    <>
+      {/* No ads in the admin dashboard, even if AdSense was loaded on a public page first */}
+      <style>{HIDE_ADS_CSS}</style>
+      <AdminLayoutClient>{children}</AdminLayoutClient>
+    </>
+  );
 }
 
 export const dynamic = "force-dynamic";

@@ -8,6 +8,7 @@ import { SpeedInsights } from "@vercel/speed-insights/react";
 import { Analytics } from "@vercel/analytics/react";
 import { DEFAULT_OG_IMAGE, SITE_NAME, SITE_SHORT, SITE_URL } from "@/lib/seo";
 import JsonLd from "@/components/seo/JsonLd";
+import AdSenseScript from "@/components/AdSenseScript";
 
 const SITE_SCHEMA = [
   {
@@ -82,13 +83,8 @@ export default function RootLayout({
       </head>
 
       <body className={`${inter.className} antialiased`} suppressHydrationWarning>
-        <Script
-          id="google-adsense"
-          async
-          strategy="afterInteractive"
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6447497690677792"
-          crossOrigin="anonymous"
-        />
+        {/* AdSense loads on public pages only (not /admin) */}
+        <AdSenseScript />
         <Script
           id="google-analytics"
           async
