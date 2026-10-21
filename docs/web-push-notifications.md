@@ -25,7 +25,13 @@ Visitor flow:
 2. **Enable notifications** calls `Notification.requestPermission()` from that click. **Not now** or the close button hides the card for 30 days. If the visitor blocks notifications, the card tells them how to change it in browser settings and does not ask again.
 3. When permission is granted, the service worker is registered at scope `/firebase-cloud-messaging-push-scope`, so it never controls page loads. The FID is then stored through `/api/push/subscribe`. On later visits the FID is sent again only if it changed, or once a day.
 
-Admin flow:
+Admin flow: write your own message at any time:
+1. In `/admin`, open the **Notifications** tab.
+2. Fill in a title, a message and an optional link. The link must be a page on this site, such as `/jobs` or a full `https://www.sarkariresultsnow.com/...` URL; leave it empty to open the homepage.
+3. Check the preview, click **Send notification** and confirm. The right-hand side lists the last 20 notifications sent, both custom and per-item, with delivery counts.
+4. This uses `GET` / `POST /api/admin/push/custom` (admin only). Each custom message gets its own tag, so two announcements never replace each other on a device.
+
+Admin flow: send for one item:
 1. In `/admin`, each published item in the Jobs, Results, Admit Cards, Answer Keys, Admissions, News and Quizzes lists has a **Send push** button.
 2. The dialog shows the default title and message (both editable), the destination URL, the subscriber count and when the item was last sent.
 3. The admin confirms before anything is sent. If the item was already sent, the admin must tick **Send again** first.

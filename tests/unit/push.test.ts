@@ -4,6 +4,8 @@ import assert from "node:assert/strict";
 import jwt from "jsonwebtoken";
 import {
   chunk,
+  customPushDestinationUrl,
+  parseCustomPushInput,
   defaultPushMessage,
   isStaleSubscriptionError,
   isValidFid,
@@ -142,4 +144,31 @@ test("rate limiter allows `limit` hits per window per key", () => {
   assert.equal(allow("ip", 20), false);
   assert.equal(allow("other", 20), true);
   assert.equal(allow("ip", 1000), true);
+});
+
+test("customPushDestinationUrl allows any page on this site and nothing else", () => {
+  assert.equal(customPushDestinationUrl(""), "https://www.sarkariresultsnow.com/");
+  assert.equal(customPushDestinationUrl("/jobs"), "https://www.sarkariresultsnow.com/jobs");
+  assert.equal(customPushDestinationUrl("/test-series/ssc?x=1"), "https://www.sarkariresultsnow.com/test-series/ssc?x=1");
+  assert.equal(customPushDestinationUrl("https://www.sarkariresultsnow.com/results/abc"), "https://www.sarkariresultsnow.com/results/abc");
+  assert.equal(customPushDestinationUrl("https://sarkariresultsnow.com/jobs"), "https://www.sarkariresultsnow.com/jobs");
+  assert.equal(customPushDestinationUrl("http://www.sarkariresultsnow.com/jobs"), null);
+  assert.equal(customPushDestinationUrl("https://evil.com/jobs"), null);
+  assert.equal(customPushDestinationUrl("https://www.sarkariresultsnow.com.evil.com/"), null);
+  assert.equal(customPushDestinationUrl("//evil.com"), null);
+  assert.equal(customPushDestinationUrl("/\\evil.com"), null);
+  assert.equal(customPushDestinationUrl("javascript:alert(1)"), null);
+  assert.equal(customPushDestinationUrl("/admin"), null);
+  assert.equal(customPushDestinationUrl("/api/push/subscribe"), null);
+});
+
+test("parseCustomPushInput requires title and message and sanitizes them", () => {
+  const ok = parseCustomPushInput({ title: " <b>SSC CGL</b> out ", body: "Apply now", url: "/jobs" });
+  assert.deepEqual(ok, { ok: true, value: { title: "SSC CGL out", body: "Apply now", url: "https://www.sarkariresultsnow.com/jobs" } });
+  assert.equal(parseCustomPushInput({ title: "Hi", body: "There" }).ok, true);
+  assert.equal(parseCustomPushInput({ title: "", body: "x" }).ok, false);
+  assert.equal(parseCustomPushInput({ title: "x", body: "<p></p>" }).ok, false);
+  assert.equal(parseCustomPushInput({ title: "x", body: "y", url: "https://evil.com" }).ok, false);
+  assert.equal(parseCustomPushInput({ title: "x", body: "y", url: 5 }).ok, false);
+  assert.equal(parseCustomPushInput(null).ok, false);
 });

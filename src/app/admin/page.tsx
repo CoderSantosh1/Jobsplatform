@@ -17,6 +17,7 @@ import JobForm from "./components/JobForm";
 import QuizForm from "./components/QuizForm";
 import QuizList from "./components/QuizList";
 import CategoryManager from "./components/CategoryManager";
+import PushComposer from "./components/PushComposer";
 import { off } from "process";
 
 interface NewsFormData {
@@ -90,7 +91,8 @@ type TabType =
   | "answer-keys"
   | "admissions"
   | "quizzes"
-  | "categories";
+  | "categories"
+  | "notifications";
 
 export default function AdminDashboard() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -441,6 +443,7 @@ export default function AdminDashboard() {
     { id: "admissions" as TabType, label: "Admissions" },
     { id: "quizzes" as TabType, label: "Quizzes" },
     { id: "categories" as TabType, label: "Categories" },
+    { id: "notifications" as TabType, label: "Notifications" },
   ];
 
   return (
@@ -1109,6 +1112,7 @@ export default function AdminDashboard() {
           </div>
         </>
       )}
+      {activeTab === "notifications" && <PushComposer />}
       {activeTab === "categories" && (
         <div className="bg-white rounded-lg shadow-lg p-6">
           <CategoryManager />

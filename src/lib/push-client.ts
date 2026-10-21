@@ -78,7 +78,7 @@ export function startPushMessaging(): Promise<string> {
         .showNotification(title, {
           body: payload.notification?.body,
           icon: payload.notification?.icon || "/logo.png",
-          tag: payload.data?.type && payload.data?.id ? `${payload.data.type}-${payload.data.id}` : undefined,
+          tag: payload.data?.tag || undefined,
           data: { url },
         })
         .catch((error) => console.error("Could not show notification", error));

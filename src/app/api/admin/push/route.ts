@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import type { Model } from 'mongoose';
 import { connectToDatabase } from '@/lib/db';
 import { verifyAdminAuthorization } from '@/lib/admin-auth';
-import { getAdminMessaging, isFirebaseAdminConfigured } from '@/lib/firebase-admin';
+import { isFirebaseAdminConfigured } from '@/lib/firebase-admin';
+import { sendPushToAll } from '@/lib/push-send';
 import { PUBLIC_FILTER } from '@/lib/content';
 import Job from '@/lib/models/Job';
 import Result from '@/lib/models/Result';
@@ -14,11 +15,8 @@ import Quiz from '@/lib/models/Quiz';
 import PushSubscription from '@/lib/models/PushSubscription';
 import PushNotificationLog from '@/lib/models/PushNotificationLog';
 import {
-  chunk,
   defaultPushMessage,
-  isStaleSubscriptionError,
   parsePushSendInput,
-  PUSH_SITE_URL,
   pushContentPath,
   pushDestinationUrl,
   type PushContentType,
@@ -43,8 +41,6 @@ const PUBLIC: Record<PushContentType, Record<string, unknown>> = {
   ...PUBLIC_FILTER,
   quizzes: { status: 'published' },
 };
-
-const FCM_BATCH = 500;
 
 /** Loads a published item and builds its notification. The destination URL is always derived server-side. */
 async function loadNotification(type: PushContentType, id: string, overrides: { title?: string; body?: string }) {
@@ -108,9 +104,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, error: 'Push notifications are not configured on the server' }, { status: 503 });
   }
 
-  let logId: unknown;
-  let successCount = 0;
-  let failureCount = 0;
   try {
     await connectToDatabase();
     const notification = await loadNotification(type, id, parsed.value);
@@ -133,62 +126,11 @@ export async function POST(request: Request) {
       ...notification,
       sentBy: auth.email,
     });
-    logId = log._id;
 
-    const fids = (await PushSubscription.find({}, { fid: 1, _id: 0 }).lean<{ fid: string }[]>()).map((s) => s.fid);
-    const messaging = getAdminMessaging();
-    const stale: string[] = [];
-
-    for (const batch of chunk(fids, FCM_BATCH)) {
-      const response = await messaging.sendEachForMulticast({
-        fids: batch,
-        webpush: {
-          headers: { TTL: String(24 * 60 * 60), Urgency: 'high' },
-          notification: {
-            title: notification.title,
-            body: notification.body,
-            icon: `${PUSH_SITE_URL}/logo.png`,
-            tag: `${type}-${id}`,
-          },
-          fcmOptions: { link: notification.url },
-          data: { url: notification.url, type, id },
-        },
-      });
-      successCount += response.successCount;
-      failureCount += response.failureCount;
-      response.responses.forEach((r, i) => {
-        if (!r.success && isStaleSubscriptionError(r.error?.code)) stale.push(batch[i]);
-      });
-    }
-
-    if (stale.length) await PushSubscription.deleteMany({ fid: { $in: stale } });
-
-    await PushNotificationLog.updateOne(
-      { _id: logId },
-      {
-        $set: {
-          status: 'sent',
-          subscriberCount: fids.length,
-          successCount,
-          failureCount,
-          removedCount: stale.length,
-        },
-      }
-    );
-
-    return NextResponse.json({
-      success: true,
-      data: { subscribers: fids.length, successCount, failureCount, removedCount: stale.length },
-    });
+    const data = await sendPushToAll(log._id, { ...notification, tag: `${type}-${id}`, data: { type, id } });
+    return NextResponse.json({ success: true, data });
   } catch (error) {
     console.error('Error sending push notification:', error);
-    // If some batches already went out, keep the item marked as sent so it is not re-sent without a warning.
-    if (logId) {
-      await PushNotificationLog.updateOne(
-        { _id: logId },
-        { $set: { status: successCount > 0 ? 'sent' : 'failed', successCount, failureCount } }
-      ).catch(() => {});
-    }
     return NextResponse.json({ success: false, error: 'Failed to send notification' }, { status: 500 });
   }
 }

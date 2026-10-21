@@ -142,6 +142,55 @@ export function parsePushSendInput(raw: unknown): { ok: true; value: PushSendInp
   return { ok: true, value };
 }
 
+/**
+ * Destination for an admin-written message: any page on this site, given as a path ("/jobs") or a full
+ * https://www.sarkariresultsnow.com/... URL. Empty means the homepage. Anything pointing elsewhere is null.
+ */
+export function customPushDestinationUrl(input: string, siteUrl = PUSH_SITE_URL): string | null {
+  const value = typeof input === "string" ? input.trim() : "";
+  if (!value) return new URL("/", siteUrl).toString();
+  if (value.includes("\\") || /\s/.test(value)) return null;
+
+  const site = new URL(siteUrl);
+  let url: URL;
+  try {
+    if (value.startsWith("/")) {
+      if (value.startsWith("//")) return null;
+      url = new URL(value, siteUrl);
+    } else {
+      url = new URL(value);
+      // Accept the bare domain too; it redirects to www anyway.
+      if (url.protocol === "https:" && url.hostname === site.hostname.replace(/^www\./, "")) url.hostname = site.hostname;
+    }
+  } catch {
+    return null;
+  }
+  if (url.origin !== site.origin || url.protocol !== "https:" || url.username || url.password) return null;
+  if (url.pathname.startsWith("/admin") || url.pathname.startsWith("/api")) return null;
+  return url.toString();
+}
+
+export type CustomPushInput = { title: string; body: string; url: string };
+
+/** Validates a message the admin wrote from scratch: title and body are required, the link must stay on this site. */
+export function parseCustomPushInput(raw: unknown): { ok: true; value: CustomPushInput } | { ok: false; error: string } {
+  if (!raw || typeof raw !== "object") return { ok: false, error: "Invalid request body" };
+  const input = raw as Record<string, unknown>;
+  if (typeof input.title !== "string" || typeof input.body !== "string") {
+    return { ok: false, error: "Title and message are required" };
+  }
+  const title = sanitizePushText(input.title, PUSH_TITLE_MAX);
+  const body = sanitizePushText(input.body, PUSH_BODY_MAX);
+  if (!title) return { ok: false, error: "Title is required" };
+  if (!body) return { ok: false, error: "Message is required" };
+  if (input.url !== undefined && input.url !== null && typeof input.url !== "string") {
+    return { ok: false, error: "Link must be text" };
+  }
+  const url = customPushDestinationUrl((input.url as string | undefined) ?? "");
+  if (!url) return { ok: false, error: "Link must be a page on sarkariresultsnow.com" };
+  return { ok: true, value: { title, body, url } };
+}
+
 /** Firebase Installation IDs are short URL-safe strings; anything else is rejected before touching the database. */
 export function isValidFid(value: unknown): value is string {
   return typeof value === "string" && /^[A-Za-z0-9_-]{16,64}$/.test(value);
