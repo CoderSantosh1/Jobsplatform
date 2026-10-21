@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Montserrat } from "next/font/google";
-import Script from "next/script";
 import { ThemeProvider } from "@/components/theme-provider";
 import CleanURL from "@/components/CleanURL";
 import PushOptIn from "@/components/PushOptIn";
@@ -10,6 +9,7 @@ import { Analytics } from "@vercel/analytics/react";
 import { DEFAULT_OG_IMAGE, SITE_NAME, SITE_SHORT, SITE_URL } from "@/lib/seo";
 import JsonLd from "@/components/seo/JsonLd";
 import AdSenseScript from "@/components/AdSenseScript";
+import GoogleAnalytics from "@/components/GoogleAnalytics";
 
 const SITE_SCHEMA = [
   {
@@ -86,20 +86,8 @@ export default function RootLayout({
       <body className={`${inter.className} antialiased`} suppressHydrationWarning>
         {/* AdSense loads on public pages only (not /admin) */}
         <AdSenseScript />
-        <Script
-          id="google-analytics"
-          async
-          strategy="afterInteractive"
-          src="https://www.googletagmanager.com/gtag/js?id=G-8GZPT68Z06"
-        />
-        <Script id="google-analytics-config" strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-8GZPT68Z06');
-          `}
-        </Script>
+        {/* Google Analytics on public pages only (admin visits are not counted) */}
+        <GoogleAnalytics />
         <ThemeProvider
           attribute="class"
           defaultTheme="light"

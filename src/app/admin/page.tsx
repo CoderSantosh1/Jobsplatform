@@ -18,7 +18,6 @@ import QuizForm from "./components/QuizForm";
 import QuizList from "./components/QuizList";
 import CategoryManager from "./components/CategoryManager";
 import PushComposer from "./components/PushComposer";
-import PushSubscribers from "./components/PushSubscribers";
 import { off } from "process";
 import { adminFetch } from "@/lib/admin-fetch";
 
@@ -1114,12 +1113,7 @@ export default function AdminDashboard() {
           </div>
         </>
       )}
-      {activeTab === "notifications" && (
-        <>
-          <PushComposer />
-          <PushSubscribers />
-        </>
-      )}
+      {activeTab === "notifications" && <PushComposer />}
       {activeTab === "categories" && (
         <div className="bg-white rounded-lg shadow-lg p-6">
           <CategoryManager />

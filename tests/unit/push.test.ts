@@ -172,37 +172,3 @@ test("parseCustomPushInput requires title and message and sanitizes them", () =>
   assert.equal(parseCustomPushInput({ title: "x", body: "y", url: 5 }).ok, false);
   assert.equal(parseCustomPushInput(null).ok, false);
 });
-
-test("splitSendResults separates received, expired and failed subscribers", async () => {
-  const { splitSendResults } = await import("../../src/lib/push.ts");
-  const out = splitSendResults(
-    ["a", "b", "c", "d"],
-    [
-      { success: true },
-      { success: false, error: { code: "messaging/registration-token-not-registered" } },
-      { success: false, error: { code: "messaging/internal-error" } },
-      { success: false },
-    ]
-  );
-  assert.deepEqual(out.received, ["a"]);
-  assert.deepEqual(out.stale, ["b"]);
-  assert.deepEqual(out.failed, [
-    { fid: "c", code: "messaging/internal-error" },
-    { fid: "d", code: "unknown" },
-  ]);
-});
-
-test("maskFid never shows the full browser ID", async () => {
-  const { maskFid } = await import("../../src/lib/push.ts");
-  assert.equal(maskFid("cAbCdEfGhIjKlMnOpQrStU"), "••••pQrStU");
-  assert.equal(maskFid("abc"), "••••");
-  assert.ok(!maskFid("cAbCdEfGhIjKlMnOpQrStU").includes("cAbCdE"));
-});
-
-test("subscriberDeliveryStatus reports the latest outcome", async () => {
-  const { subscriberDeliveryStatus } = await import("../../src/lib/push.ts");
-  assert.equal(subscriberDeliveryStatus({}), "none");
-  assert.equal(subscriberDeliveryStatus({ lastReceivedAt: "2026-10-21T10:00:00Z" }), "received");
-  assert.equal(subscriberDeliveryStatus({ lastReceivedAt: "2026-10-21T10:00:00Z", lastFailedAt: "2026-10-21T11:00:00Z" }), "failed");
-  assert.equal(subscriberDeliveryStatus({ lastReceivedAt: "2026-10-22T10:00:00Z", lastFailedAt: "2026-10-21T11:00:00Z" }), "received");
-});

@@ -2,29 +2,7 @@
 import { getAdminMessaging } from '@/lib/firebase-admin';
 import PushSubscription from '@/lib/models/PushSubscription';
 import PushNotificationLog from '@/lib/models/PushNotificationLog';
-import { chunk, PUSH_SITE_URL, splitSendResults } from '@/lib/push';
-
-/** Best-effort: remembers per subscriber whether this notification arrived, for the admin subscriber list. */
-async function recordDelivery(received: string[], failed: { fid: string; code: string }[]) {
-  const now = new Date();
-  try {
-    if (received.length) {
-      await PushSubscription.updateMany(
-        { fid: { $in: received } },
-        { $set: { lastReceivedAt: now }, $inc: { receivedCount: 1 } }
-      );
-    }
-    if (failed.length) {
-      await PushSubscription.bulkWrite(
-        failed.map(({ fid, code }) => ({
-          updateOne: { filter: { fid }, update: { $set: { lastFailedAt: now, lastError: code } } },
-        }))
-      );
-    }
-  } catch (error) {
-    console.error('Could not record per-subscriber push delivery:', error);
-  }
-}
+import { chunk, isStaleSubscriptionError, PUSH_SITE_URL } from '@/lib/push';
 
 const FCM_BATCH = 500;
 
@@ -62,9 +40,9 @@ export async function sendPushToAll(
       });
       successCount += response.successCount;
       failureCount += response.failureCount;
-      const outcome = splitSendResults(batch, response.responses);
-      stale.push(...outcome.stale);
-      await recordDelivery(outcome.received, outcome.failed);
+      response.responses.forEach((r, i) => {
+        if (!r.success && isStaleSubscriptionError(r.error?.code)) stale.push(batch[i]);
+      });
     }
 
     if (stale.length) await PushSubscription.deleteMany({ fid: { $in: stale } });

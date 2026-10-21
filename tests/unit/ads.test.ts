@@ -21,3 +21,9 @@ test("admin CSS hides manual, auto and anchor ad units", () => {
   }
   assert.ok(HIDE_ADS_CSS.endsWith("{display:none!important}"));
 });
+
+test("Google Analytics opt-out key follows Google's ga-disable-<ID> format", async () => {
+  const { GA_DISABLE_KEY, GA_MEASUREMENT_ID } = await import("../../src/lib/ads.ts");
+  assert.match(GA_MEASUREMENT_ID, /^G-[A-Z0-9]+$/);
+  assert.equal(GA_DISABLE_KEY, `ga-disable-${GA_MEASUREMENT_ID}`);
+});
