@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { idFromParam } from '@/lib/slug';
 import { connectToDatabase as connectDB } from '@/lib/db';
 import Job from '@/lib/models/Job';
+import { requireAdmin } from '@/lib/admin-guard';
 
 export const dynamic = 'force-dynamic';
 
@@ -54,6 +55,8 @@ export async function PUT(
   request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
+  const denied = requireAdmin(request);
+  if (denied) return denied;
   try {
     await connectDB();
 
@@ -89,9 +92,11 @@ export async function PUT(
 }
 
 export async function DELETE(
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
+  const denied = requireAdmin(request);
+  if (denied) return denied;
   try {
     await connectDB();
 

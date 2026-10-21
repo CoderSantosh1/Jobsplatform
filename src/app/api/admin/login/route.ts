@@ -22,7 +22,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ token });
   }
 
-  console.log(`ADMIN_EMAIL: ${ADMIN_EMAIL}, ADMIN_PASSWORD: ${ADMIN_PASSWORD}`);
   return NextResponse.json(
     { message: 'Invalid credentials' },
     { status: 401 }

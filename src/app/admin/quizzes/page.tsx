@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import SearchBar from "@/components/ui/SearchBar";
+import { adminFetch } from "@/lib/admin-fetch";
 
 interface Quiz {
   _id: string;
@@ -36,7 +37,7 @@ export default function QuizList() {
   const fetchQuizzes = async () => {
     setLoading(true);
     try {
-      const response = await fetch("/api/quizzes");
+      const response = await adminFetch("/api/quizzes");
       if (!response.ok) {
         throw new Error("Failed to fetch quizzes");
       }
@@ -59,7 +60,7 @@ export default function QuizList() {
     }
 
     try {
-      const response = await fetch(`/api/quizzes/${id}`, {
+      const response = await adminFetch(`/api/quizzes/${id}`, {
         method: "DELETE",
       });
 

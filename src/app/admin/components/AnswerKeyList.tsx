@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import SendPushButton from './SendPushButton';
 import Link from 'next/link';
 import AnswerKeyForm from './AnswerKeyForm';
+import { adminFetch } from '@/lib/admin-fetch';
 
 interface AnswerKey {
   _id: string;
@@ -30,7 +31,7 @@ export default function AnswerKeyList() {
   const fetchAnswerKeys = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/answer-keys');
+      const response = await adminFetch('/api/answer-keys');
       const data = await response.json();
       setAnswerKeys(response.ok ? data.data || [] : []);
       if (!response.ok) {
@@ -57,7 +58,7 @@ export default function AnswerKeyList() {
     };
 
     try {
-      const response = await fetch(`/api/answer-keys/${editingAnswerKey._id}`, {
+      const response = await adminFetch(`/api/answer-keys/${editingAnswerKey._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -87,7 +88,7 @@ export default function AnswerKeyList() {
     if (!confirm('Are you sure you want to delete this answer key?')) return;
 
     try {
-      const response = await fetch(`/api/answer-keys/${answerKeyId}`, {
+      const response = await adminFetch(`/api/answer-keys/${answerKeyId}`, {
         method: 'DELETE',
       });
 

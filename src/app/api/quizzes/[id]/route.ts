@@ -3,6 +3,7 @@ import connectDB from "@/lib/mongodb";
 import Quiz from "@/lib/models/Quiz";
 import Question from "@/lib/models/Question";
 import QuizAttempt from "@/lib/models/QuizAttempt";
+import { requireAdmin } from '@/lib/admin-guard';
 
 export async function GET(req: any, ctx: any) {
   try {
@@ -29,6 +30,8 @@ export async function GET(req: any, ctx: any) {
 }
 
 export async function PUT(req: any, ctx: any) {
+  const denied = requireAdmin(req);
+  if (denied) return denied;
   try {
     const { id } = await ctx.params;
 
@@ -95,6 +98,8 @@ export async function PUT(req: any, ctx: any) {
 }
 
 export async function DELETE(req: any, ctx: any) {
+  const denied = requireAdmin(req);
+  if (denied) return denied;
   try {
     const { id } = await ctx.params;
 

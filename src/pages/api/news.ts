@@ -4,6 +4,7 @@ import path from 'path';
 import dbConnect from '@/lib/db';
 import News from '@/lib/models/News';
 import type { NextApiRequest, NextApiResponse } from 'next';
+import { verifyAdminAuthorization } from '@/lib/admin-auth';
 
 export const config = {
   api: {
@@ -13,6 +14,11 @@ export const config = {
 
 export default async function handler(req: any, res: any) {
   if (req.method === 'POST') {
+    const auth = verifyAdminAuthorization(req.headers.authorization ?? null);
+    if (!auth.ok) {
+      return res.status(auth.status).json({ success: false, error: auth.error });
+    }
+
     const form = new IncomingForm({
       keepExtensions: true,
       multiples: false,

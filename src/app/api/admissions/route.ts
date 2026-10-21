@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase as connectDB } from '@/lib/db';
 import Admission from '@/lib/models/Admission'; // Assuming Admission model exists
+import { requireAdmin } from '@/lib/admin-guard';
 
 export async function GET() {
   try {
@@ -19,6 +20,8 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const denied = requireAdmin(request);
+  if (denied) return denied;
   try {
     await connectDB();
     console.log('POST /api/admissions hit');

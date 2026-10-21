@@ -19,6 +19,7 @@ import QuizList from "./components/QuizList";
 import CategoryManager from "./components/CategoryManager";
 import PushComposer from "./components/PushComposer";
 import { off } from "process";
+import { adminFetch } from "@/lib/admin-fetch";
 
 interface NewsFormData {
   title: string;
@@ -236,7 +237,7 @@ export default function AdminDashboard() {
     };
 
     try {
-      const response = await fetch("/api/jobs", {
+      const response = await adminFetch("/api/jobs", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -262,7 +263,7 @@ export default function AdminDashboard() {
   const handleAdmitCardSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch("/api/admit-cards", {
+      const response = await adminFetch("/api/admit-cards", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -305,7 +306,7 @@ export default function AdminDashboard() {
         formData.append("image", newsFormData.image);
       }
 
-      const response = await fetch("/api/news", {
+      const response = await adminFetch("/api/news", {
         method: "POST",
         body: formData,
       });
@@ -335,7 +336,7 @@ export default function AdminDashboard() {
   const handleResultSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch("/api/results", {
+      const response = await adminFetch("/api/results", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -377,7 +378,7 @@ export default function AdminDashboard() {
   const handleCreateAnswerKey = async (data: any) => {
     // 'data' comes from AnswerKeyForm
     try {
-      const response = await fetch("/api/answer-keys", {
+      const response = await adminFetch("/api/answer-keys", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -405,7 +406,7 @@ export default function AdminDashboard() {
 
   const handleAdmissionSubmit = async (data: AdmissionFormDataType) => {
     try {
-      const response = await fetch("/api/admissions", {
+      const response = await adminFetch("/api/admissions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

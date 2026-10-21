@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import SendPushButton from './SendPushButton';
 import ResultForm from './ResultForm';
+import { adminFetch } from '@/lib/admin-fetch';
 
 interface Result {
   _id: string;
@@ -53,7 +54,7 @@ export default function ResultList() {
   const fetchResults = async () => {
     try {
       setError(null);
-      const response = await fetch('/api/results?status=all');
+      const response = await adminFetch('/api/results?status=all');
       if (response.ok) {
         const data = await response.json();
         // Sort results in descending order based on createdAt
@@ -95,7 +96,7 @@ export default function ResultList() {
     if (!editingResult) return;
 
     try {
-      const response = await fetch(`/api/results/${editingResult.id}`, {
+      const response = await adminFetch(`/api/results/${editingResult.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -123,7 +124,7 @@ export default function ResultList() {
     if (!confirm('Are you sure you want to delete this result?')) return;
     
     try {
-      const response = await fetch(`/api/results/${resultId}`, {
+      const response = await adminFetch(`/api/results/${resultId}`, {
         method: 'DELETE',
       });
       

@@ -1,8 +1,11 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase as connectDB } from '@/lib/db';
 import Job from '@/lib/models/Job';
+import { requireAdmin } from '@/lib/admin-guard';
 
 export async function POST(request: Request) {
+  const denied = requireAdmin(request);
+  if (denied) return denied;
   try {
     console.log('Starting job creation process...');
     const body = await request.json();

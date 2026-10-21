@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import SendPushButton from './SendPushButton';
 import JobForm from './JobForm';
+import { adminFetch } from '@/lib/admin-fetch';
 
 interface Job {
   _id: string;
@@ -49,7 +50,7 @@ export default function JobList() {
 
   const fetchJobs = async () => {
     try {
-      const response = await fetch('/api/jobs');
+      const response = await adminFetch('/api/jobs');
       if (response.ok) {
         const data = await response.json();
         setJobs(data.data);
@@ -72,7 +73,7 @@ export default function JobList() {
     if (!editingJob) return;
 
     try {
-      const response = await fetch(`/api/jobs/${editingJob._id}`, {
+      const response = await adminFetch(`/api/jobs/${editingJob._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -100,7 +101,7 @@ export default function JobList() {
     if (!confirm('Are you sure you want to delete this job?')) return;
     
     try {
-      const response = await fetch(`/api/jobs/${jobId}`, {
+      const response = await adminFetch(`/api/jobs/${jobId}`, {
         method: 'DELETE',
       });
       

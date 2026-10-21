@@ -4,6 +4,7 @@ import { connectToDatabase as connectDB } from '@/lib/db';
 import Job from '@/lib/models/News';
 import { IncomingForm, File } from 'formidable';
 import { Readable } from 'stream';
+import { requireAdmin } from '@/lib/admin-guard';
 
 export const dynamic = 'force-dynamic';
 
@@ -63,6 +64,8 @@ export async function PUT(
   request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
+  const denied = requireAdmin(request);
+  if (denied) return denied;
   try {
     await connectDB();
     const { id: newsId } = await context.params;
@@ -135,9 +138,11 @@ export async function PUT(
 }
 
 export async function DELETE(
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
+  const denied = requireAdmin(request);
+  if (denied) return denied;
   try {
     await connectDB();
 

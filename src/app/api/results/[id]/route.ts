@@ -3,6 +3,7 @@ import { idFromParam } from '@/lib/slug';
 import { connectToDatabase } from "@/lib/db";
 import Result from "@/lib/models/Result";
 import mongoose from "mongoose";
+import { requireAdmin } from '@/lib/admin-guard';
 
 export const dynamic = "force-dynamic";
 
@@ -68,9 +69,11 @@ export async function GET(
 // DELETE /api/results/:id
 // ---------------------------------------------
 export async function DELETE(
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
+  const denied = requireAdmin(request);
+  if (denied) return denied;
   try {
     await connectToDatabase();
 
@@ -112,6 +115,8 @@ export async function PUT(
   request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
+  const denied = requireAdmin(request);
+  if (denied) return denied;
   try {
     await connectToDatabase();
 

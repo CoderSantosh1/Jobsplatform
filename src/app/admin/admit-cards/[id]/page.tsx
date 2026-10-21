@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { AdmitCard } from '@/types/admit-card';
+import { adminFetch } from '@/lib/admin-fetch';
 
 export default function AdminAdmitCardDetail() {
   const params = useParams();
@@ -26,7 +27,7 @@ export default function AdminAdmitCardDetail() {
           setLoading(false);
           return;
         }
-        const response = await fetch(`/api/admit-cards/${params.id}`);
+        const response = await adminFetch(`/api/admit-cards/${params.id}`);
         if (!response.ok) {
           throw new Error('Failed to fetch admit card');
         }
@@ -46,7 +47,7 @@ export default function AdminAdmitCardDetail() {
 
   const handleDelete = async () => {
     try {
-      const response = await fetch(`/api/admit-cards/${params?.id}`, {
+      const response = await adminFetch(`/api/admit-cards/${params?.id}`, {
         method: 'DELETE',
       });
 

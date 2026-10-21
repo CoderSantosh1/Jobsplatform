@@ -3,6 +3,7 @@ import { idFromParam } from '@/lib/slug';
 import { connectToDatabase as connectDB } from '@/lib/db';
 import Admission from '@/lib/models/Admission'; // Assuming Admission model exists
 import mongoose from 'mongoose';
+import { requireAdmin } from '@/lib/admin-guard';
 
 export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
@@ -41,6 +42,8 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
 
 
 export async function PUT(request: Request, context: { params: Promise<{ id: string }> }) {
+  const denied = requireAdmin(request);
+  if (denied) return denied;
   try {
     const body = await request.json();
     await connectDB();
@@ -75,7 +78,9 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
   }
 }
 
-export async function DELETE(_request: Request, context: { params: Promise<{ id: string }> }) {
+export async function DELETE(request: Request, context: { params: Promise<{ id: string }> }) {
+  const denied = requireAdmin(request);
+  if (denied) return denied;
   try {
     await connectDB();
 

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import Result from "@/lib/models/Result";
+import { requireAdmin } from '@/lib/admin-guard';
 
 // Make route dynamic for Vercel
 export const dynamic = "force-dynamic";
@@ -9,6 +10,8 @@ export const dynamic = "force-dynamic";
 // POST — Create a new result
 // ---------------------------------------------
 export async function POST(request: Request) {
+  const denied = requireAdmin(request);
+  if (denied) return denied;
   try {
     await connectToDatabase();
 

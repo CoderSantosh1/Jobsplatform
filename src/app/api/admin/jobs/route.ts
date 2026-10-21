@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/db';
 import Job from '@/lib/models/Job';
 import mongoose from 'mongoose';
+import { requireAdmin } from '@/lib/admin-guard';
 
 export async function GET() {
   try {
@@ -18,6 +19,8 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const denied = requireAdmin(request);
+  if (denied) return denied;
   try {
     const body = await request.json();
     await connectToDatabase();
@@ -67,6 +70,8 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const denied = requireAdmin(request);
+  if (denied) return denied;
   try {
     const url = new URL(request.url);
     const jobId = url.pathname.split('/').pop();

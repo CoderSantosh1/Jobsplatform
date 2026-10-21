@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/form';
 import { toast } from 'sonner';
 import Papa from 'papaparse';
+import { adminFetch } from '@/lib/admin-fetch';
 
 const quizSchema = z.object({
   title: z.string().min(1, 'Title is required'),
@@ -61,7 +62,7 @@ export default function QuizForm() {
 
   useEffect(() => {
     // Fetch categories from API
-    fetch('/api/quiz-categories')
+    adminFetch('/api/quiz-categories')
       .then(res => res.json())
       .then(data => setCategories(data));
   }, []);
@@ -153,7 +154,7 @@ export default function QuizForm() {
 
   const onSubmit = async (data: QuizFormValues) => {
     try {
-      const response = await fetch('/api/quizzes', {
+      const response = await adminFetch('/api/quizzes', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
