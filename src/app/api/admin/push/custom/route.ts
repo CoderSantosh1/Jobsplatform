@@ -1,7 +1,12 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/db';
 import { verifyAdminAuthorization } from '@/lib/admin-auth';
-import { isFirebaseAdminConfigured, missingFirebaseAdminEnv } from '@/lib/firebase-admin';
+import {
+  firebaseAdminEnvProblems,
+  isFirebaseAdminConfigured,
+  missingFirebaseAdminEnv,
+  pushErrorDetail,
+} from '@/lib/firebase-admin';
 import { sendPushToAll } from '@/lib/push-send';
 import { parseCustomPushInput } from '@/lib/push';
 import PushSubscription from '@/lib/models/PushSubscription';
@@ -28,7 +33,13 @@ export async function GET(request: Request) {
     ]);
     return NextResponse.json({
       success: true,
-      data: { subscribers, configured: isFirebaseAdminConfigured(), missingEnv: missingFirebaseAdminEnv(), history },
+      data: {
+        subscribers,
+        configured: isFirebaseAdminConfigured(),
+        missingEnv: missingFirebaseAdminEnv(),
+        envProblems: firebaseAdminEnvProblems(),
+        history,
+      },
     });
   } catch (error) {
     console.error('Error loading push notifications:', error);
@@ -45,7 +56,16 @@ export async function POST(request: Request) {
   if (!parsed.ok) return NextResponse.json({ success: false, error: parsed.error }, { status: 400 });
 
   if (!isFirebaseAdminConfigured()) {
-    return NextResponse.json({ success: false, error: 'Push notifications are not configured on the server' }, { status: 503 });
+    const envProblems = firebaseAdminEnvProblems();
+    return NextResponse.json(
+      {
+        success: false,
+        error: `Firebase is not configured on the server: ${envProblems.join('; ')}`,
+        missingEnv: missingFirebaseAdminEnv(),
+        envProblems,
+      },
+      { status: 503 }
+    );
   }
 
   try {
@@ -61,6 +81,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, data });
   } catch (error) {
     console.error('Error sending custom push notification:', error);
-    return NextResponse.json({ success: false, error: 'Failed to send notification' }, { status: 500 });
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Failed to send notification',
+        detail: pushErrorDetail(error),
+        envProblems: firebaseAdminEnvProblems(),
+      },
+      { status: 500 }
+    );
   }
 }

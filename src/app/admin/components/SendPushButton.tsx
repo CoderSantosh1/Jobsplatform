@@ -11,6 +11,7 @@ interface Preview {
   subscribers: number;
   lastSentAt: string | null;
   configured: boolean;
+  envProblems?: string[];
 }
 
 interface SendPushButtonProps {
@@ -22,6 +23,11 @@ interface SendPushButtonProps {
 function authHeaders(): HeadersInit {
   const token = localStorage.getItem('adminToken');
   return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+/** Server error plus Firebase's own error detail, so the admin can see what is wrong. */
+function errorText(json: { error?: string; detail?: string }, fallback: string): string {
+  return [json.error || fallback, json.detail].filter(Boolean).join(' — ');
 }
 
 /** "Send push notification" action for one published item: preview, optional edits, explicit confirmation. */
@@ -85,7 +91,7 @@ export default function SendPushButton({ type, id, status }: SendPushButtonProps
         setPreview({ ...preview, lastSentAt: json.lastSentAt ?? preview.lastSentAt });
         throw new Error('Already sent for this item. Tick "Send again" to resend.');
       }
-      if (!res.ok) throw new Error(json.error || 'Failed to send notification');
+      if (!res.ok) throw new Error(errorText(json, 'Failed to send notification'));
       const { successCount, failureCount, removedCount } = json.data;
       setResult(
         `Sent to ${successCount} browser(s).` +
@@ -101,7 +107,8 @@ export default function SendPushButton({ type, id, status }: SendPushButtonProps
     }
   };
 
-  const blocked = !preview || !preview.configured || !title.trim() || !body.trim() || (!!preview.lastSentAt && !resend);
+  // Not blocked on `configured`: sending anyway returns the server's exact configuration error.
+  const blocked = !preview || !title.trim() || !body.trim() || (!!preview.lastSentAt && !resend);
 
   return (
     <>
@@ -118,10 +125,17 @@ export default function SendPushButton({ type, id, status }: SendPushButtonProps
 
             {preview && (
               <div className="mt-4 space-y-4">
-                {!preview.configured && (
-                  <p className="rounded bg-yellow-50 p-2 text-sm text-yellow-800">
-                    Firebase is not configured on the server. Add the FIREBASE_* environment variables first.
-                  </p>
+                {(!preview.configured || !!preview.envProblems?.length) && (
+                  <div className="rounded bg-yellow-50 p-2 text-sm text-yellow-800">
+                    <p>Firebase server setup looks incomplete:</p>
+                    <ul className="ml-4 list-disc">
+                      {(preview.envProblems?.length ? preview.envProblems : ['FIREBASE_* environment variables are missing']).map(
+                        (problem) => (
+                          <li key={problem}>{problem}</li>
+                        )
+                      )}
+                    </ul>
+                  </div>
                 )}
 
                 <label className="block text-sm font-medium">

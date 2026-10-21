@@ -2,7 +2,12 @@ import { NextResponse } from 'next/server';
 import type { Model } from 'mongoose';
 import { connectToDatabase } from '@/lib/db';
 import { verifyAdminAuthorization } from '@/lib/admin-auth';
-import { isFirebaseAdminConfigured } from '@/lib/firebase-admin';
+import {
+  firebaseAdminEnvProblems,
+  isFirebaseAdminConfigured,
+  missingFirebaseAdminEnv,
+  pushErrorDetail,
+} from '@/lib/firebase-admin';
 import { sendPushToAll } from '@/lib/push-send';
 import { PUBLIC_FILTER } from '@/lib/content';
 import Job from '@/lib/models/Job';
@@ -83,6 +88,8 @@ export async function GET(request: Request) {
         subscribers,
         lastSentAt: last?.createdAt ?? null,
         configured: isFirebaseAdminConfigured(),
+        missingEnv: missingFirebaseAdminEnv(),
+        envProblems: firebaseAdminEnvProblems(),
       },
     });
   } catch (error) {
@@ -101,7 +108,16 @@ export async function POST(request: Request) {
   const { type, id, resend } = parsed.value;
 
   if (!isFirebaseAdminConfigured()) {
-    return NextResponse.json({ success: false, error: 'Push notifications are not configured on the server' }, { status: 503 });
+    const envProblems = firebaseAdminEnvProblems();
+    return NextResponse.json(
+      {
+        success: false,
+        error: `Firebase is not configured on the server: ${envProblems.join('; ')}`,
+        missingEnv: missingFirebaseAdminEnv(),
+        envProblems,
+      },
+      { status: 503 }
+    );
   }
 
   try {
@@ -131,6 +147,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, data });
   } catch (error) {
     console.error('Error sending push notification:', error);
-    return NextResponse.json({ success: false, error: 'Failed to send notification' }, { status: 500 });
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Failed to send notification',
+        detail: pushErrorDetail(error),
+        envProblems: firebaseAdminEnvProblems(),
+      },
+      { status: 500 }
+    );
   }
 }

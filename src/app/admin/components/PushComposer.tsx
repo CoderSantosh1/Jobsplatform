@@ -20,6 +20,7 @@ interface HistoryItem {
 interface Overview {
   subscribers: number;
   configured: boolean;
+  envProblems?: string[];
   history: HistoryItem[];
 }
 
@@ -77,7 +78,7 @@ export default function PushComposer() {
         body: JSON.stringify({ title, body, url: link }),
       });
       const json = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(json.error || 'Failed to send notification');
+      if (!res.ok) throw new Error([json.error || 'Failed to send notification', json.detail].filter(Boolean).join(' — '));
       const { successCount, failureCount, removedCount } = json.data;
       setResult(
         `Sent to ${successCount} browser(s).` +
@@ -99,6 +100,17 @@ export default function PushComposer() {
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
       <div className="bg-white rounded-lg shadow-lg p-6">
         <h2 className="text-2xl font-semibold mb-6">Send Push Notification</h2>
+
+        {!!overview?.envProblems?.length && (
+          <div className="mb-4 rounded bg-yellow-50 p-2 text-sm text-yellow-800">
+            <p>Firebase server setup looks incomplete:</p>
+            <ul className="ml-4 list-disc">
+              {overview.envProblems.map((problem) => (
+                <li key={problem}>{problem}</li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         <form onSubmit={send} className="space-y-4">
           <label className="block text-sm font-medium">
