@@ -34,6 +34,7 @@ const SITE_SCHEMA = [
 const inter = Montserrat({
   subsets: ["latin"],
   display: "swap",
+  variable: "--font-montserrat",
 });
 
 export const metadata: Metadata = {
@@ -72,18 +73,10 @@ export default function RootLayout({
           name="google-site-verification"
           content="YRllvaBEISVbmMxHK3hy4i3K6fVmcIqebYsdEh0iT7E"
         />
-        {/* 🔹 Preload critical fonts for better LCP */}
-        <link
-          rel="preload"
-          href="https://fonts.gstatic.com/s/montserrat/v25/JTUHjIg1_i6t8kCHKm4532VJOt5-QNFgpCtZ6Ew-Y3tcoqK5.woff2"
-          as="font"
-          type="font/woff2"
-          crossOrigin="anonymous"
-        />
         <JsonLd data={SITE_SCHEMA} />
       </head>
 
-      <body className={`${inter.className} antialiased`} suppressHydrationWarning>
+      <body className={`${inter.className} ${inter.variable} antialiased`} suppressHydrationWarning>
         {/* AdSense loads on public pages only (not /admin) */}
         <AdSenseScript />
         {/* Google Analytics on public pages only (admin visits are not counted) */}

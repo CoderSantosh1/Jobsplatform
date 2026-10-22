@@ -13,7 +13,8 @@ export default function AdSenseScript() {
     <Script
       id="google-adsense"
       async
-      strategy="afterInteractive"
+      // Ads are not needed for first paint; loading them after the page keeps LCP and blocking time low.
+      strategy="lazyOnload"
       src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6447497690677792"
       crossOrigin="anonymous"
     />

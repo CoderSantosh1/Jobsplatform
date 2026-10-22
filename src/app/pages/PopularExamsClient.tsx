@@ -3,6 +3,7 @@
 import React, { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { testSeriesPath } from "@/lib/slug";
+import { cloudinaryThumb } from "@/lib/cloudinary";
 
 export interface Subcategory {
   _id?: string;
@@ -32,8 +33,8 @@ const ChevronRight = () => (
 );
 
 function Img({ src, alt, className }: { src?: string; alt: string; className?: string }) {
-  const url = !src ? DEFAULT_ICON : src.startsWith("http") || src.startsWith("/") ? src : `/${src}`;
-  return <img src={url} alt={alt} className={className} loading="lazy" width="36" height="36" />;
+  const url = !src ? DEFAULT_ICON : src.startsWith("http") || src.startsWith("/") ? cloudinaryThumb(src, 36) : `/${src}`;
+  return <img src={url} alt={alt} className={className} loading="lazy" decoding="async" width="36" height="36" />;
 }
 
 export default function PopularExamsClient({ categories }: { categories: Category[] }) {

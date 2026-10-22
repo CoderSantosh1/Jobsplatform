@@ -37,7 +37,7 @@ const QUICK_LINKS = [
   { href: "/results", label: "Results", hint: "Exam results & merit lists", cls: "bg-green-700 hover:bg-green-800" },
   { href: "/admit-cards", label: "Admit Cards", hint: "Download hall tickets", cls: "bg-blue-700 hover:bg-blue-800" },
   { href: "/answer-keys", label: "Answer Keys", hint: "Check your answers", cls: "bg-purple-700 hover:bg-purple-800" },
-  { href: "/quizzes", label: "Free Mock Tests", hint: "Practice with timed tests", cls: "bg-amber-600 hover:bg-amber-700" },
+  { href: "/quizzes", label: "Free Mock Tests", hint: "Practice with timed tests", cls: "bg-amber-700 hover:bg-amber-800" },
 ];
 
 interface ResultItem {
@@ -194,7 +194,7 @@ export default async function Home() {
                   className={`rounded-lg px-3 py-3 text-center text-white shadow transition ${l.cls} last:col-span-2 sm:last:col-span-1`}
                 >
                   <span className="block text-base font-bold sm:text-lg">{l.label}</span>
-                  <span className="block text-xs opacity-90">{l.hint}</span>
+                  <span className="block text-xs">{l.hint}</span>
                 </Link>
               ))}
             </nav>
