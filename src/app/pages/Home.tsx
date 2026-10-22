@@ -281,21 +281,21 @@ export default async function Home() {
                               <td className="text-center">
                                 {results.length > 10 && (
                                   <Link href="/results" className="text-blue-600 font-semibold hover:underline">
-                                    See More
+                                    View All Exam Results
                                   </Link>
                                 )}
                               </td>
                               <td className="p-2 border-x text-center align-top break-words whitespace-pre-wrap">
                                 {jobs.length > 10 && (
                                   <Link href="/jobs" className="text-blue-600 font-semibold hover:underline">
-                                    See More
+                                    View All Government Jobs
                                   </Link>
                                 )}
                               </td>
                               <td className="text-center">
                                 {news.length > 10 && (
                                   <Link href="/news" className="text-blue-600 font-semibold hover:underline">
-                                    See More
+                                    View Latest Exam News
                                   </Link>
                                 )}
                               </td>
@@ -355,21 +355,21 @@ export default async function Home() {
                               <td className="text-center">
                                 {admitCards.length > 10 && (
                                   <Link href="/admit-cards" className="text-blue-600 font-semibold hover:underline">
-                                    See More
+                                    View All Admit Cards
                                   </Link>
                                 )}
                               </td>
                               <td className="p-2 border-x text-center align-top break-words whitespace-pre-wrap">
                                 {answerKeys.length > 10 && (
                                   <Link href="/answer-keys" className="text-blue-600 font-semibold hover:underline">
-                                    See More
+                                    View All Answer Keys
                                   </Link>
                                 )}
                               </td>
                               <td className="p-2 text-center align-top break-words whitespace-pre-wrap">
                                 {admissions.length > 10 && (
                                   <Link href="/admissions" className="text-blue-600 font-semibold hover:underline">
-                                    See More
+                                    View All Admission Updates
                                   </Link>
                                 )}
                               </td>
