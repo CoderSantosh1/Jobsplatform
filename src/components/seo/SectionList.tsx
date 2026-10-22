@@ -74,7 +74,7 @@ export default async function SectionList({
                       {r.title}
                     </Link>
                     {section === "jobs" && isPastDeadline(parseDate(r.lastDateApplyOnline) ?? parseDate(r.applicationDeadline)) && (
-                      <span className="ml-2 text-xs font-semibold text-gray-500">(Closed)</span>
+                      <span className="ml-2 inline-block rounded bg-red-600 px-1.5 py-0.5 text-[11px] font-bold uppercase text-white">Expired</span>
                     )}
                   </td>
                 </tr>

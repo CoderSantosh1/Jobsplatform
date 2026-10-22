@@ -134,6 +134,27 @@ const jobSchema = new mongoose.Schema({
     type: String,
     required: false,
   },
+  // Source and verification details shown on the job page.
+  officialNotificationLink: {
+    type: String,
+    required: false,
+  },
+  officialWebsite: {
+    type: String,
+    required: false,
+  },
+  selectionProcess: {
+    type: String,
+    required: false,
+  },
+  syllabus: {
+    type: String,
+    required: false,
+  },
+  lastVerifiedAt: {
+    type: Date,
+    required: false,
+  },
 });
 
 // Add pre-save middleware for age validation

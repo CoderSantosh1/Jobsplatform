@@ -66,9 +66,9 @@ export default function PopularExamsClient({ categories }: { categories: Categor
 
   return (
     <section className="relative px-4 w-full max-w-screen overflow-x-hidden">
-      <h2 className="text-2xl font-bold mb-2 text-[#1a124d]">Popular Exams</h2>
+      <h2 className="text-2xl font-bold mb-2 text-[#1a124d]">Free Mock Tests for Popular Govt Exams</h2>
       <p className="text-[#1a124d] text-sm sm:text-base mb-4">
-        Get exam-ready with concepts, questions and study notes as per the latest pattern
+        Pick your exam and practise with free timed mock tests based on the latest exam pattern
       </p>
 
       <div className="relative flex items-center">

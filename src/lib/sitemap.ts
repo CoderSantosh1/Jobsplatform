@@ -9,6 +9,7 @@ import News from "@/lib/models/News";
 import Quiz from "@/lib/models/Quiz";
 import { EXAMS } from "@/lib/exams";
 import { getExamContent } from "@/lib/exam-content";
+import { getExamPrep } from "@/lib/exam-prep";
 import { uniqueByTitle } from "@/lib/dedupe";
 import { LEGAL_LAST_UPDATED } from "@/lib/legal";
 import { slugify, detailPath, type Section } from "@/lib/slug";
@@ -90,10 +91,11 @@ async function pagesEntries(): Promise<UrlEntry[]> {
   const dates = await Promise.all(sections.map(sectionLatest));
   const bySection = Object.fromEntries(sections.map((s, i) => [s, dates[i]])) as Record<Section, Date | undefined>;
   const quizzes = await quizLatest();
-  // Exam pages with nothing to show are noindex, so they must not be submitted either.
-  const exams = (await Promise.all(EXAMS.map(async (e) => ((await getExamContent(e)).hasContent ? e : null)))).filter(
-    (e): e is (typeof EXAMS)[number] => e !== null,
-  );
+  // Exam pages with nothing to show are noindex, so they must not be submitted either. Pages with a practice set,
+  // syllabus and exam pattern (EXAM_PREP) always have their own content.
+  const exams = (
+    await Promise.all(EXAMS.map(async (e) => (getExamPrep(e.slug) || (await getExamContent(e)).hasContent ? e : null)))
+  ).filter((e): e is (typeof EXAMS)[number] => e !== null);
   const legal = new Date(LEGAL_LAST_UPDATED);
 
   return [

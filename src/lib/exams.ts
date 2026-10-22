@@ -130,6 +130,14 @@ export const EXAMS: Exam[] = [
     about:
       "Bihar Police Constable recruitment is conducted by CSBC Bihar through a written exam followed by a physical efficiency test.",
   },
+  {
+    slug: "bihar-stet",
+    name: "Bihar STET",
+    search: "STET",
+    body: "Bihar School Examination Board (BSEB)",
+    about:
+      "Bihar STET (Secondary Teacher Eligibility Test) is conducted by BSEB to certify candidates as eligible to teach Classes 9–10 (Paper 1) and Classes 11–12 (Paper 2) in Bihar government schools.",
+  },
 ];
 
 export function getExam(slug: string) {

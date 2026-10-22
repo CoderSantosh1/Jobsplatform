@@ -18,6 +18,9 @@ import AnswerKey from "@/lib/models/AnswerKey";
 import Admission from "@/lib/models/Admission";
 import QuizCategory from "@/lib/models/QuizCategory";
 import { detailPath } from "@/lib/slug";
+import { PUBLIC_FILTER } from "@/lib/content";
+import { pickHomeCategories } from "@/lib/home-categories";
+import { isPastDeadline, parseDate } from "@/lib/seo";
 
 
 interface JobItem {
@@ -25,7 +28,17 @@ interface JobItem {
   title: string;
   organization: string;
   createdAt?: string;
+  lastDateApplyOnline?: string;
+  applicationDeadline?: string;
 }
+
+const QUICK_LINKS = [
+  { href: "/jobs", label: "Latest Jobs", hint: "Govt job notifications", cls: "bg-red-600 hover:bg-red-700" },
+  { href: "/results", label: "Results", hint: "Exam results & merit lists", cls: "bg-green-700 hover:bg-green-800" },
+  { href: "/admit-cards", label: "Admit Cards", hint: "Download hall tickets", cls: "bg-blue-700 hover:bg-blue-800" },
+  { href: "/answer-keys", label: "Answer Keys", hint: "Check your answers", cls: "bg-purple-700 hover:bg-purple-800" },
+  { href: "/quizzes", label: "Free Mock Tests", hint: "Practice with timed tests", cls: "bg-amber-600 hover:bg-amber-700" },
+];
 
 interface ResultItem {
   _id: string;
@@ -76,12 +89,12 @@ async function getHomeData() {
 
   const [jobs, results, admitCards, news, answerKeys, admissions, categories] =
     await Promise.all([
-      Job.find().sort({ createdAt: -1 }).select("_id title organization").limit(11).lean(),
-      Result.find().sort({ resultDate: -1 }).select("_id title organization").limit(11).lean(),
-      AdmitCard.find().sort({ applicationDeadline: -1 }).select("_id title organization").limit(11).lean(),
-      News.find().sort({ postedDate: -1 }).select("_id title organization").limit(11).lean(),
-      AnswerKey.find().sort({ postedDate: -1 }).select("_id title organization").limit(11).lean(),
-      Admission.find().sort({ postedDate: -1 }).select("_id title organization").limit(11).lean(),
+      Job.find(PUBLIC_FILTER.jobs).sort({ createdAt: -1 }).select("_id title organization lastDateApplyOnline applicationDeadline").limit(11).lean(),
+      Result.find(PUBLIC_FILTER.results).sort({ resultDate: -1 }).select("_id title organization").limit(11).lean(),
+      AdmitCard.find(PUBLIC_FILTER["admit-cards"]).sort({ applicationDeadline: -1 }).select("_id title organization").limit(11).lean(),
+      News.find(PUBLIC_FILTER.news).sort({ postedDate: -1 }).select("_id title organization").limit(11).lean(),
+      AnswerKey.find(PUBLIC_FILTER["answer-keys"]).sort({ postedDate: -1 }).select("_id title organization").limit(11).lean(),
+      Admission.find(PUBLIC_FILTER.admissions).sort({ postedDate: -1 }).select("_id title organization").limit(11).lean(),
       QuizCategory.find().lean(),
     ]);
 
@@ -92,7 +105,7 @@ async function getHomeData() {
     news: toPlain(news) as unknown as NewsItem[],
     answerKeys: toPlain(answerKeys) as unknown as AnswerKeyItem[],
     admissions: toPlain(admissions) as unknown as AdmissionItem[],
-    categories: toPlain(categories) as unknown as Category[],
+    categories: pickHomeCategories(toPlain(categories) as unknown as Category[]),
   };
 }
 
@@ -173,6 +186,18 @@ export default async function Home() {
             <h1 className="text-xl md:text-2xl font-bold text-center text-gray-900">
               Sarkari Result 2026 – Latest Govt Jobs, Results, Admit Cards &amp; Free Mock Tests
             </h1>
+            <nav aria-label="Main sections" className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+              {QUICK_LINKS.map((l) => (
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  className={`rounded-lg px-3 py-3 text-center text-white shadow transition ${l.cls} last:col-span-2 sm:last:col-span-1`}
+                >
+                  <span className="block text-base font-bold sm:text-lg">{l.label}</span>
+                  <span className="block text-xs opacity-90">{l.hint}</span>
+                </Link>
+              ))}
+            </nav>
             <div className="bg-[#fFfFff] min-h-screen">
               <main className="flex flex-col items-center justify-center bg-[#fFfFf] w-full max-w-7xl mx-auto px-2 sm:px-4">
                 <div className="w-full space-y-6 py-4">
@@ -228,9 +253,14 @@ export default async function Home() {
                               </td>
                               <td className="p-2 border-x text-left align-top break-words whitespace-pre-wrap">
                                 {jobs[index] ? (
-                                  <Link href={detailPath('jobs', jobs[index])} className="text-[#014F59] hover:underline hover:text-blue-800">
-                                    {jobs[index].title}
-                                  </Link>
+                                  <>
+                                    <Link href={detailPath('jobs', jobs[index])} className="text-[#014F59] hover:underline hover:text-blue-800">
+                                      {jobs[index].title}
+                                    </Link>
+                                    {isPastDeadline(parseDate(jobs[index].lastDateApplyOnline) ?? parseDate(jobs[index].applicationDeadline)) && (
+                                      <span className="ml-1 inline-block rounded bg-red-600 px-1.5 text-[11px] font-bold uppercase text-white">Expired</span>
+                                    )}
+                                  </>
                                 ) : (
                                   "-"
                                 )}

@@ -30,6 +30,11 @@ interface JobFormData {
   applicationFeeGeneral?: string;
   applicationFeeSCST?: string;
   paymentMethod?: string;
+  officialNotificationLink?: string;
+  officialWebsite?: string;
+  selectionProcess?: string;
+  syllabus?: string;
+  lastVerifiedAt?: string;
 }
 
 interface JobFormProps {
@@ -64,6 +69,12 @@ export default function JobForm({ initialData, onSubmit, onCancel }: JobFormProp
     applicationFeeGeneral: initialData?.applicationFeeGeneral || '',
     applicationFeeSCST: initialData?.applicationFeeSCST || '',
     paymentMethod: initialData?.paymentMethod || '',
+    officialNotificationLink: initialData?.officialNotificationLink || '',
+    officialWebsite: initialData?.officialWebsite || '',
+    selectionProcess: initialData?.selectionProcess || '',
+    syllabus: initialData?.syllabus || '',
+    // <input type="date"> needs YYYY-MM-DD; stored values come back as ISO timestamps.
+    lastVerifiedAt: initialData?.lastVerifiedAt ? String(initialData.lastVerifiedAt).slice(0, 10) : '',
   });
 
   const [errors, setErrors] = useState<Partial<JobFormData>>({});
@@ -353,6 +364,39 @@ export default function JobForm({ initialData, onSubmit, onCancel }: JobFormProp
         </div>
         </>
         {/* Fields formerly conditional, now always shown */}
+
+        <div className="space-y-4 rounded border border-blue-200 bg-blue-50/40 p-3">
+          <p className="text-sm font-semibold text-gray-800">Official source &amp; details (shown on the job page)</p>
+          <div>
+            <label htmlFor="officialNotificationLink" className="block text-sm font-medium text-gray-700">Official notification (PDF) link</label>
+            <Input id="officialNotificationLink" name="officialNotificationLink" value={formData.officialNotificationLink} onChange={handleChange} placeholder="https://.../notification.pdf" />
+          </div>
+          <div>
+            <label htmlFor="officialWebsite" className="block text-sm font-medium text-gray-700">Official website (source)</label>
+            <Input id="officialWebsite" name="officialWebsite" value={formData.officialWebsite} onChange={handleChange} placeholder="https://ssc.gov.in" />
+          </div>
+          <div>
+            <label htmlFor="selectionProcess" className="block text-sm font-medium text-gray-700">Selection process (one stage per line)</label>
+            <textarea id="selectionProcess" name="selectionProcess" value={formData.selectionProcess} onChange={handleChange} rows={3} className="mt-1 p-2 border rounded-md w-full" placeholder={"Computer Based Test\nPhysical Efficiency Test\nDocument Verification"} />
+          </div>
+          <div>
+            <label htmlFor="syllabus" className="block text-sm font-medium text-gray-700">Syllabus / exam pattern (one subject per line)</label>
+            <textarea id="syllabus" name="syllabus" value={formData.syllabus} onChange={handleChange} rows={4} className="mt-1 p-2 border rounded-md w-full" placeholder={"General Intelligence & Reasoning\nGeneral Awareness\nQuantitative Aptitude\nEnglish"} />
+          </div>
+          <div>
+            <label htmlFor="lastVerifiedAt" className="block text-sm font-medium text-gray-700">Last verified with the official notification on</label>
+            <div className="mt-1 flex gap-2">
+              <Input id="lastVerifiedAt" name="lastVerifiedAt" type="date" value={formData.lastVerifiedAt} onChange={handleChange} />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setFormData((prev) => ({ ...prev, lastVerifiedAt: new Date().toISOString().slice(0, 10) }))}
+              >
+                Today
+              </Button>
+            </div>
+          </div>
+        </div>
 
         <div className="flex justify-end space-x-2 pt-4">
           <Button type="button" variant="outline" onClick={onCancel}>

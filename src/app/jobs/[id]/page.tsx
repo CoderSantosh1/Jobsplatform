@@ -8,7 +8,7 @@ import PostFooter from "@/components/seo/PostFooter";
 import { getDetail, getLatest, getRelated } from "@/lib/content";
 import { detailMetadata } from "@/lib/seo-server";
 import { detailSegment } from "@/lib/slug";
-import { SITE_NAME, SITE_URL, clip, displayDate, isBlank, isPastDeadline, parseDate } from "@/lib/seo";
+import { SITE_NAME, SITE_URL, clip, displayDate, formatDate, isBlank, isPastDeadline, parseDate } from "@/lib/seo";
 
 // Pages are built on first request and refreshed every 5 minutes.
 export const revalidate = 300;
@@ -32,6 +32,11 @@ function Row({ label, value, highlight }: { label: string; value?: string | null
   );
 }
 
+/** Non-empty lines of a multi-line admin field (selection process, syllabus). */
+function lines(value?: string | null): string[] {
+  return isBlank(value) ? [] : String(value).split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+}
+
 function withRupee(fee?: string) {
   if (isBlank(fee)) return undefined;
   const text = String(fee).trim();
@@ -53,6 +58,11 @@ export default async function JobDetailPage({ params }: Props) {
   const requirements: string[] = (Array.isArray(job.requirements) ? job.requirements : [job.requirements]).filter(
     (r: unknown) => !isBlank(r),
   );
+  const selectionSteps = lines(job.selectionProcess);
+  const syllabusItems = lines(job.syllabus);
+  const officialSite = isBlank(job.officialWebsite) ? job.applyJob : job.officialWebsite;
+  const notificationLink = isBlank(job.officialNotificationLink) ? undefined : job.officialNotificationLink;
+  const verifiedOn = job.lastVerifiedAt ? formatDate(job.lastVerifiedAt) : null;
   const feeGeneral = withRupee(job.applicationFeeGeneral);
   const feeReserved = withRupee(job.applicationFeeSCST);
   const ageRange =
@@ -106,6 +116,23 @@ export default async function JobDetailPage({ params }: Props) {
           {!expired && <JsonLd data={jobPosting} />}
 
           <h1 className="text-2xl md:text-3xl font-bold text-red-800">{job.title}</h1>
+          <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
+            {expired ? (
+              <span className="rounded bg-red-600 px-2 py-0.5 font-bold uppercase tracking-wide text-white">Expired · Application closed</span>
+            ) : (
+              <span className="rounded bg-green-600 px-2 py-0.5 font-bold uppercase tracking-wide text-white">Apply online open</span>
+            )}
+            {verifiedOn && (
+              <span className="rounded border border-green-600 px-2 py-0.5 text-green-800">
+                Last verified with official notification: <time dateTime={new Date(job.lastVerifiedAt).toISOString()}>{verifiedOn}</time>
+              </span>
+            )}
+            {officialSite && (
+              <a href={officialSite} target="_blank" rel="noopener noreferrer nofollow" className="text-blue-700 hover:underline">
+                Official source
+              </a>
+            )}
+          </div>
           <p className="mt-1 text-gray-700">
             {job.organization}
             {!isBlank(job.location) && ` · ${job.location}`}
@@ -171,6 +198,32 @@ export default async function JobDetailPage({ params }: Props) {
             </section>
           </div>
 
+          {(selectionSteps.length > 0 || syllabusItems.length > 0) && (
+            <div className="mt-5 grid gap-4 md:grid-cols-2">
+              {selectionSteps.length > 0 && (
+                <section className="border border-blue-700 p-4">
+                  <h2 className="font-bold text-red-900 mb-2">Selection Process</h2>
+                  <ol className="list-decimal pl-5 text-sm space-y-1">
+                    {selectionSteps.map((step) => (
+                      <li key={step}>{step}</li>
+                    ))}
+                  </ol>
+                </section>
+              )}
+              {syllabusItems.length > 0 && (
+                <section className="border border-blue-700 p-4">
+                  <h2 className="font-bold text-red-900 mb-2">Syllabus &amp; Exam Pattern</h2>
+                  <ul className="list-disc pl-5 text-sm space-y-1">
+                    {syllabusItems.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                  <p className="mt-2 text-xs text-gray-600">Check the full syllabus in the official notification.</p>
+                </section>
+              )}
+            </div>
+          )}
+
           <section className="mt-5">
             <h2 className="text-lg font-bold text-red-800 mb-2">How to Apply for {clip(job.title, 80)}</h2>
             <ol className="list-decimal pl-6 space-y-1 text-gray-800">
@@ -182,21 +235,33 @@ export default async function JobDetailPage({ params }: Props) {
             </ol>
           </section>
 
-          {job.applyJob && (
+          {(job.applyJob || notificationLink || officialSite) && (
             <section className="mt-5 border border-gray-300 rounded">
               <h2 className="text-center text-xl font-bold text-green-700 py-3 border-b">Important Links</h2>
-              <div className={linkRow}>
-                <span className="font-semibold text-fuchsia-700">Apply Online</span>
-                <a href={job.applyJob} target="_blank" rel="noopener noreferrer nofollow" className="text-blue-700 font-semibold hover:underline">
-                  {expired ? "Application closed" : `Apply for ${clip(job.title, 40)}`}
-                </a>
-              </div>
-              <div className={linkRow}>
-                <span className="font-semibold text-fuchsia-700">Official Notification / Website</span>
-                <a href={job.applyJob} target="_blank" rel="noopener noreferrer nofollow" className="text-blue-700 font-semibold hover:underline">
-                  {job.organization} official website
-                </a>
-              </div>
+              {job.applyJob && (
+                <div className={linkRow}>
+                  <span className="font-semibold text-fuchsia-700">Apply Online</span>
+                  <a href={job.applyJob} target="_blank" rel="noopener noreferrer nofollow" className="text-blue-700 font-semibold hover:underline">
+                    {expired ? "Application closed" : `Apply for ${clip(job.title, 40)}`}
+                  </a>
+                </div>
+              )}
+              {notificationLink && (
+                <div className={linkRow}>
+                  <span className="font-semibold text-fuchsia-700">Official Notification (PDF)</span>
+                  <a href={notificationLink} target="_blank" rel="noopener noreferrer nofollow" className="text-blue-700 font-semibold hover:underline">
+                    Download notification
+                  </a>
+                </div>
+              )}
+              {officialSite && (
+                <div className={linkRow}>
+                  <span className="font-semibold text-fuchsia-700">{notificationLink ? "Official Website" : "Official Notification / Website"}</span>
+                  <a href={officialSite} target="_blank" rel="noopener noreferrer nofollow" className="text-blue-700 font-semibold hover:underline">
+                    {job.organization} official website
+                  </a>
+                </div>
+              )}
             </section>
           )}
 
@@ -216,7 +281,7 @@ export default async function JobDetailPage({ params }: Props) {
 
           <PostFooter
             updatedAt={job.updatedAt ?? job.createdAt}
-            officialUrl={job.applyJob}
+            officialUrl={officialSite}
             related={related}
             latest={latest}
             latestTitle="More Latest Jobs"
