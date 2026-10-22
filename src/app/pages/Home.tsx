@@ -116,45 +116,46 @@ export default async function Home() {
   const marqueeItems = [
     ...results.slice(0, 5).map((item) => ({
       id: item._id,
-      text: item.organization,
+      text: item.title,
       href: detailPath("results", item),
     })),
     ...jobs.slice(0, 5).map((item) => ({
       id: item._id,
-      text: item.organization,
+      text: item.title,
       href: detailPath("jobs", item),
     })),
     ...admitCards.slice(0, 5).map((item) => ({
       id: item._id,
-      text: item.organization,
+      text: item.title,
       href: detailPath("admit-cards", item),
     })),
   ];
 
+  // 700 shades keep at least 4.5:1 contrast on white (the 500 shades failed the accessibility check).
   const baseColors = [
-    "text-red-500",
-    "text-green-500",
-    "text-blue-500",
-    "text-yellow-500",
-    "text-purple-500",
-    "text-pink-500",
-    "text-orange-500",
-    "text-teal-500",
-    "text-indigo-500",
-    "text-rose-500",
+    "text-red-700",
+    "text-green-700",
+    "text-blue-700",
+    "text-yellow-800",
+    "text-purple-700",
+    "text-pink-700",
+    "text-orange-700",
+    "text-teal-700",
+    "text-indigo-700",
+    "text-rose-700",
   ];
 
   const hoverColors = [
-    "hover:text-blue-500",
-    "hover:text-pink-500",
-    "hover:text-orange-500",
-    "hover:text-purple-500",
-    "hover:text-green-500",
-    "hover:text-red-500",
-    "hover:text-yellow-500",
-    "hover:text-rose-500",
-    "hover:text-teal-500",
-    "hover:text-indigo-500",
+    "hover:text-blue-800",
+    "hover:text-pink-800",
+    "hover:text-orange-800",
+    "hover:text-purple-800",
+    "hover:text-green-800",
+    "hover:text-red-800",
+    "hover:text-yellow-900",
+    "hover:text-rose-800",
+    "hover:text-teal-800",
+    "hover:text-indigo-800",
   ];
 
   return (

@@ -8,10 +8,10 @@ function iconsocialmedia() {
         href="https://chat.whatsapp.com/BA5S3uiul7iHKwi4jIeuuf"
         target="_blank"
         rel="noopener noreferrer"
-        className="relative overflow-hidden px-5 py-2 bg-green-500 text-white font-semibold rounded-full
+        className="relative overflow-hidden px-5 py-2 bg-green-800 text-white font-semibold rounded-full
                shadow-md flex items-center gap-2 transition duration-300
-               hover:scale-110 hover:bg-green-600 hover:shadow-xl focus:outline-none
-               focus-visible:ring-2 focus-visible:ring-green-300 animate-glow"
+               hover:scale-110 hover:bg-green-900 hover:shadow-xl focus:outline-none
+               focus-visible:ring-2 focus-visible:ring-green-300"
       >
         {/* ripple rings */}
         <span className="pointer-events-none absolute inset-0 flex items-center justify-center">
@@ -36,10 +36,10 @@ function iconsocialmedia() {
         href="https://t.me/sarkariresultsnow"
         target="_blank"
         rel="noopener noreferrer"
-        className="relative overflow-hidden px-5 py-2 bg-blue-500 text-white font-semibold rounded-full
+        className="relative overflow-hidden px-5 py-2 bg-blue-800 text-white font-semibold rounded-full
                shadow-md flex items-center gap-2 transition duration-300
-               hover:scale-110 hover:bg-blue-600 hover:shadow-xl focus:outline-none
-               focus-visible:ring-2 focus-visible:ring-blue-300 animate-glow"
+               hover:scale-110 hover:bg-blue-900 hover:shadow-xl focus:outline-none
+               focus-visible:ring-2 focus-visible:ring-blue-300"
       >
         {/* comet sweep */}
         <span
@@ -56,7 +56,7 @@ function iconsocialmedia() {
           viewBox="0 0 24 24"
           className="w-5 h-5 relative"
         >
-          <path d="M12 0C5.373 0 0 5.373 0 12c0 5.29 3.438 9.747 8.205 11.385.6.111.82-.26.82-.577v-2.23c-3.338.726-4.033-1.416-4.033-1.416-.546-1.389-1.334-1.759-1.334-1.759-1.091-.745.083-.729.083-.729 1.205.084 1.838 1.237 1.838 1.237 1.07 1.836 2.809 1.306 3.495.999.108-.774.419-1.305.762-1.605-2.665-.303-5.466-1.332-5.466-5.931 0-1.312.469-2.381 1.237-3.221-.124-.304-.536-1.524.116-3.176 0 0 1.008-.322 3.301 1.23A11.52 11.52 0 0 1 12 6.844c1.02.004 2.046.138 3.003.404 2.291-1.552 3.298-1.23 3.298-1.23.653 1.652.241 2.872.118 3.176.77.84 1.236 1.909 1.236 3.221 0 4.61-2.805 5.625-5.478 5.922.43.37.823 1.102.823 2.222v3.293c0 .32.217.694.826.576C20.565 21.744 24 17.288 24 12c0-6.627-5.373-12-12-12z" />
+          <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
         </svg>
         <span className="relative font-[600] text-[14px]">Join Telegram</span>
       </a>

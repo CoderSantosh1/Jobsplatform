@@ -32,9 +32,10 @@ const ChevronRight = () => (
   </svg>
 );
 
-function Img({ src, alt, className }: { src?: string; alt: string; className?: string }) {
+/** Decorative exam icon: the exam name is printed next to it, so an alt text would be read twice. */
+function Img({ src, className }: { src?: string; className?: string }) {
   const url = !src ? DEFAULT_ICON : src.startsWith("http") || src.startsWith("/") ? cloudinaryThumb(src, 36) : `/${src}`;
-  return <img src={url} alt={alt} className={className} loading="lazy" decoding="async" width="36" height="36" />;
+  return <img src={url} alt="" className={className} loading="lazy" decoding="async" width="36" height="36" />;
 }
 
 export default function PopularExamsClient({ categories }: { categories: Category[] }) {
@@ -124,7 +125,7 @@ export default function PopularExamsClient({ categories }: { categories: Categor
             className="group flex items-center justify-between rounded-xl border bg-white px-4 py-4 shadow-sm hover:shadow transition"
           >
             <div className="flex items-center gap-3">
-              <Img src={exam.icon} alt={exam.name} className="w-9 h-9 rounded object-contain bg-white" />
+              <Img src={exam.icon} className="w-9 h-9 rounded object-contain bg-white" />
               <span className="font-semibold text-gray-900">{exam.name}</span>
             </div>
             <ChevronRight />

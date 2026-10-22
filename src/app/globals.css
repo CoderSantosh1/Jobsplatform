@@ -93,26 +93,11 @@
     animation: comet 2.2s linear infinite;
   }
 
-  /* Soft breathing glow for both on idle */
-  @keyframes glow {
-    0%,
-    100% {
-      box-shadow: 0 0 0px rgba(0, 0, 0, 0.12), 0 8px 20px rgba(0, 0, 0, 0.15);
-    }
-    50% {
-      box-shadow: 0 0 0px rgba(0, 0, 0, 0.12), 0 12px 28px rgba(0, 0, 0, 0.22);
-    }
-  }
-  .animate-glow {
-    animation: glow 2.4s ease-in-out infinite;
-  }
-
   /* Respect reduced motion */
   @media (prefers-reduced-motion: reduce) {
     .animate-ripple,
     .animate-ripple-delay,
-    .animate-comet,
-    .animate-glow {
+    .animate-comet {
       animation: none !important;
     }
   }

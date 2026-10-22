@@ -9,7 +9,7 @@ export default function Footer() {
         {/* Footer Navigation */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-8 mb-6">
           <div >
-            <h3 className="text-lg font-bold text-red-600 mb-3 ">Quick Links</h3>
+            <h3 className="text-lg font-bold text-red-700 mb-3 ">Quick Links</h3>
             <ul className="space-y-2">
               <li>
                 <Link href="/" className="text-blue-600 hover:text-blue-800">
@@ -43,7 +43,7 @@ export default function Footer() {
             </ul>
           </div>
           <div>
-            <h3 className="text-lg font-bold text-red-600 mb-3">Resources</h3>
+            <h3 className="text-lg font-bold text-red-700 mb-3">Resources</h3>
             <ul className="space-y-2">
               <li>
                 <Link
@@ -80,7 +80,7 @@ export default function Footer() {
             </ul>
           </div>
           <div className="">
-            <h3 className="md:text-[20px] text-[12px] font-bold text-red-600 mb-3 ">
+            <h3 className="md:text-[20px] text-[12px] font-bold text-red-700 mb-3 ">
               Contact Information
             </h3>
             <p className="text-gray-700 mb-2 hover:text-blue-900  ">
@@ -137,7 +137,7 @@ export default function Footer() {
 
         {/* Popular exam landing pages */}
         <div className="border-t border-gray-200 pt-4 mb-4">
-          <h3 className="text-lg font-bold text-red-600 mb-2 text-center">Popular Exams</h3>
+          <h3 className="text-lg font-bold text-red-700 mb-2 text-center">Popular Exams</h3>
           <ul className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-sm">
             {EXAMS.map((e) => (
               <li key={e.slug}>
@@ -167,7 +167,7 @@ export default function Footer() {
             <Link href="/terms" className="text-blue-600 hover:text-blue-800">Terms &amp; Conditions</Link>
             <Link href="/contact" className="text-blue-600 hover:text-blue-800">Contact Us</Link>
           </nav>
-          <p className="text-xl font-bold text-red-600 mb-1">
+          <p className="text-xl font-bold text-red-700 mb-1">
             SarkariResultsNow.com
           </p>
           <p className="text-sm text-gray-600 mt-2">
