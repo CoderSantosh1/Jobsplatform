@@ -1,54 +1,30 @@
 "use client"
 
 import type React from "react"
-import { useEffect, useState, useRef } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import Link from "next/link"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { toast } from "sonner"
 import {
-  User,
-  Trophy,
-  Target,
-  Clock,
-  Calendar,
-  Award,
-  BookOpen,
-  CheckCircle2,
-  XCircle,
-  BarChart3,
-  Zap,
-  Brain,
-  Star,
   ArrowRight,
+  Award,
+  BarChart3,
+  BookOpen,
+  Calendar,
+  CheckCircle2,
+  Eye,
+  ListChecks,
   LogOut,
-  RefreshCw,
+  Phone,
+  RotateCcw,
+  Target,
+  Trophy,
+  User,
 } from "lucide-react"
+import { attemptNumbers, grade, percentOf, type AttemptRow, type summarizeAttempts } from "@/lib/attempt-stats"
+import { quizPath } from "@/lib/slug"
 
-interface Quiz {
-  _id: string
-  title: string
-  description?: string
-  totalMarks: number
-  timeLimit: number
-  questions: Array<{
-    _id: string
-    text: string
-    options: string[]
-    correctAnswer: number
-  }>
-}
-
-interface QuizAttempt {
-  _id: string
-  quizId: Quiz | string
-  userId: string
-  score: number
-  answers: number[]
-  completedAt: string
-  timeSpent?: number
-}
+type Stats = ReturnType<typeof summarizeAttempts>
+type Rank = { position: number; totalUsers: number } | null
 
 interface UserProfile {
   _id: string
@@ -56,116 +32,80 @@ interface UserProfile {
   mobile?: string
   email?: string
   joinedAt?: string
-  totalAttempts?: number
-  averageScore?: number
-  bestScore?: number
-  rank?: number
   profileImage?: string
+}
+
+const EMPTY_STATS: Stats = { testsTaken: 0, uniqueTests: 0, averagePercent: 0, bestPercent: 0, totalCorrect: 0, totalQuestions: 0 }
+
+function barColor(percent: number) {
+  if (percent >= 80) return "bg-green-600"
+  if (percent >= 60) return "bg-amber-500"
+  return "bg-red-500"
+}
+
+function StatCard({ icon: Icon, value, label, hint }: { icon: typeof Trophy; value: React.ReactNode; label: string; hint?: string }) {
+  return (
+    <div className="rounded-xl border border-amber-200 bg-white p-4 shadow-sm">
+      <div className="flex items-center gap-2 text-amber-800">
+        <Icon className="h-4 w-4" aria-hidden="true" />
+        <span className="text-xs font-semibold uppercase tracking-wide">{label}</span>
+      </div>
+      <div className="mt-1 text-2xl font-bold text-gray-900">{value}</div>
+      {hint && <div className="text-xs text-gray-600">{hint}</div>}
+    </div>
+  )
 }
 
 const ProfilePage: React.FC = () => {
   const [user, setUser] = useState<UserProfile | null>(null)
-  const [attempts, setAttempts] = useState<QuizAttempt[]>([])
-  const [quizzes, setQuizzes] = useState<Quiz[]>([])
+  const [checkedLogin, setCheckedLogin] = useState(false)
+  const [attempts, setAttempts] = useState<AttemptRow[]>([])
+  const [stats, setStats] = useState<Stats>(EMPTY_STATS)
+  const [rank, setRank] = useState<Rank>(null)
   const [loading, setLoading] = useState(true)
-  const [refreshing, setRefreshing] = useState(false)
+  const [error, setError] = useState("")
   const [uploading, setUploading] = useState(false)
   const [profileImage, setProfileImage] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [showHistory, setShowHistory] = useState(false)
 
-  // Fetch user from localStorage (or replace with your auth context/API)
-  const fetchUser = async () => {
+  useEffect(() => {
     try {
-      const userData = localStorage.getItem("user")
-      if (userData) {
-        const parsedUser = JSON.parse(userData)
-        setUser({
-          ...parsedUser,
-          joinedAt: parsedUser.joinedAt || new Date().toISOString(),
-          totalAttempts: 0,
-          averageScore: 0,
-          bestScore: 0,
-          rank: 0,
-        })
-      } else {
-        toast.error("Please log in to view your profile")
-        return
+      const data = localStorage.getItem("user")
+      if (data) {
+        const parsed = JSON.parse(data)
+        setUser({ ...parsed, joinedAt: parsed.joinedAt || parsed.createdAt })
+        setProfileImage(parsed.profileImage || localStorage.getItem("profileImage"))
       }
-    } catch (error) {
-      console.error("Error fetching user:", error)
-      toast.error("Failed to load user profile")
+    } catch {
+      // Bad or blocked storage: treat as logged out.
+    } finally {
+      setCheckedLogin(true)
     }
-  }
+  }, [])
 
-  // Fetch all quizzes and user's attempts
-  const fetchData = async (userId: string) => {
+  // Test attempts are saved with the mobile number as the user id (see the quiz page's submit).
+  const historyId = user?.mobile || user?._id
+
+  const fetchHistory = useCallback(async (id: string) => {
     setLoading(true)
+    setError("")
     try {
-      // Fetch all quizzes
-      const quizRes = await fetch("/api/quizzes")
-      const quizJson = await quizRes.json()
-      const allQuizzes = quizJson.data || []
-      setQuizzes(allQuizzes)
-
-      // Fetch user's attempts
-      const attemptRes = await fetch(`/api/quiz-attempts?userId=${userId}`)
-      if (attemptRes.ok) {
-        const attemptJson = await attemptRes.json()
-        const userAttempts = Array.isArray(attemptJson) ? attemptJson : attemptJson.data || []
-        setAttempts(userAttempts)
-
-        // Calculate enhanced user stats
-        if (userAttempts.length > 0) {
-          const totalScore = userAttempts.reduce((sum: number, attempt: QuizAttempt) => sum + attempt.score, 0)
-          const averageScore = totalScore / userAttempts.length
-          const bestScore = Math.max(...userAttempts.map((attempt: QuizAttempt) => attempt.score))
-
-          setUser((prev) => ({
-            ...prev!,
-            totalAttempts: userAttempts.length,
-            averageScore: Math.round(averageScore * 100) / 100,
-            bestScore,
-            rank: Math.floor(Math.random() * 100) + 1, // Mock rank calculation
-          }))
-        }
-      } else {
-        setAttempts([])
-      }
-    } catch (error) {
-      console.error("Error fetching data:", error)
-      toast.error("Failed to load profile data")
+      const res = await fetch(`/api/quiz-attempts?userId=${encodeURIComponent(id)}`, { cache: "no-store" })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(json.error || "Could not load your test history")
+      setAttempts(json.data.attempts)
+      setStats(json.data.stats)
+      setRank(json.data.rank)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not load your test history")
     } finally {
       setLoading(false)
     }
-  }
-
-  useEffect(() => {
-    fetchUser()
   }, [])
 
   useEffect(() => {
-    if (user && user._id) {
-      fetchData(user._id)
-    }
-  }, [user?._id])
-
-  useEffect(() => {
-    if (user && user.profileImage) {
-      setProfileImage(user.profileImage)
-    } else {
-      const stored = localStorage.getItem('profileImage')
-      if (stored) setProfileImage(stored)
-    }
-  }, [user])
-
-  const handleRefresh = async () => {
-    setRefreshing(true)
-    if (user && user._id) {
-      await fetchData(user._id)
-    }
-    setRefreshing(false)
-  }
+    if (historyId) fetchHistory(historyId)
+  }, [historyId, fetchHistory])
 
   const handleLogout = () => {
     localStorage.removeItem("user")
@@ -173,466 +113,241 @@ const ProfilePage: React.FC = () => {
     window.location.href = "/quizzes"
   }
 
-  const getScoreColor = (score: number) => {
-    if (score >= 80) return "from-green-100 to-green-200 border-green-300"
-    if (score >= 60) return "from-amber-100 to-orange-100 border-amber-300"
-    return "from-red-100 to-red-200 border-red-300"
-  }
-
-  const getPerformanceGrade = (score: number) => {
-    if (score >= 90) return { grade: "A+", label: "EXCELLENT" }
-    if (score >= 80) return { grade: "A", label: "VERY GOOD" }
-    if (score >= 70) return { grade: "B", label: "GOOD" }
-    if (score >= 60) return { grade: "C", label: "AVERAGE" }
-    return { grade: "D", label: "NEEDS IMPROVEMENT" }
-  }
-
-  // Handle avatar click/upload
-  const handleAvatarClick = () => {
-    fileInputRef.current?.click()
-  }
-
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file || !user) return
     setUploading(true)
     const formData = new FormData()
-    formData.append('file', file)
-    formData.append('userId', user._id)
+    formData.append("file", file)
+    formData.append("userId", user._id)
     try {
-      const res = await fetch('/api/profile-image', { method: 'POST', body: formData })
+      const res = await fetch("/api/profile-image", { method: "POST", body: formData })
       const data = await res.json()
       if (data.success && data.imageUrl) {
         setProfileImage(data.imageUrl)
-        localStorage.setItem('profileImage', data.imageUrl)
-        setUser((prev) => prev ? { ...prev, profileImage: data.imageUrl } : prev)
-        toast.success('Profile image updated!')
+        localStorage.setItem("profileImage", data.imageUrl)
+        setUser((prev) => (prev ? { ...prev, profileImage: data.imageUrl } : prev))
+        toast.success("Profile image updated!")
       } else {
-        toast.error('Failed to upload image')
+        toast.error("Failed to upload image")
       }
-    } catch (err) {
-      toast.error('Failed to upload image')
+    } catch {
+      toast.error("Failed to upload image")
     } finally {
       setUploading(false)
     }
   }
 
+  if (!checkedLogin) return <div className="min-h-screen bg-amber-50" />
+
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-black flex items-center justify-center">
-        <Card
-          className="border-0 bg-black/80 backdrop-blur-sm shadow-2xl p-8 text-center max-w-md"
-          style={{
-            clipPath: "polygon(0% 0%, 95% 0%, 100% 5%, 100% 100%, 5% 100%, 0% 95%)",
-            background: "linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(26,10,46,0.9) 50%, rgba(0,0,0,0.9) 100%)",
-          }}
-        >
-          <div className="w-16 h-16 mx-auto mb-6 bg-gradient-to-br from-red-400 to-pink-600 rounded-lg flex items-center justify-center">
-            <User className="w-8 h-8 text-white animate-pulse" />
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 p-4">
+        <div className="w-full max-w-md rounded-2xl border border-amber-200 bg-white p-8 text-center shadow-lg">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-amber-100 text-amber-800">
+            <User className="h-7 w-7" aria-hidden="true" />
           </div>
-          <h1 className="text-3xl font-black mb-4 bg-gradient-to-r from-red-400 to-pink-400 bg-clip-text text-transparent">
-            Access Denied
-          </h1>
-          <p className="text-gray-300 mb-6">Please log in to access your neural profile</p>
-          <Button
-            onClick={() => (window.location.href = "/quizzes")}
-            className="bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-500 hover:to-blue-600 text-black font-bold px-8 py-3"
+          <h1 className="text-2xl font-bold text-gray-900">Log in to see your profile</h1>
+          <p className="mt-2 text-gray-700">Your test history, scores and rank appear here after you log in and take a mock test.</p>
+          <Link
+            href="/quizzes"
+            className="mt-6 inline-flex items-center gap-2 rounded-lg bg-amber-700 px-6 py-2.5 font-semibold text-white hover:bg-amber-800"
           >
-            Return to Hub
-          </Button>
-        </Card>
+            Go to Free Mock Tests <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          </Link>
+        </div>
       </div>
     )
   }
 
+  const numbers = attemptNumbers(attempts)
+  const avgGrade = grade(stats.averagePercent)
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 p-4">
-      <div className="container mx-auto max-w-7xl">
-
-        {/* Main Profile Container */}
-        <div className="bg-white/95 backdrop-blur-sm border-2 border-amber-200 shadow-2xl mb-8 rounded-xl overflow-hidden">
-
-          {/* Textbook-style header with binding */}
-          <div className="h-2 bg-gradient-to-r from-amber-600 via-orange-600 to-amber-800"></div>
-
-          {/* Profile Header */}
-          <CardHeader className="bg-gradient-to-br from-amber-50 to-orange-50 p-6">
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-              <div className="flex items-center gap-6">
-                {/* Avatar */}
-                <div className="relative">
-                  <input
-                    ref={fileInputRef}
-                    id="profile-image-input"
-                    type="file"
-                    accept="image/*"
-                    style={{ display: 'none' }}
-                    onChange={handleImageChange}
-                  />
-                  <div
-                    className="w-20 h-20 bg-gradient-to-br from-amber-600 to-orange-600 rounded-full flex items-center justify-center shadow-lg cursor-pointer overflow-hidden border-4 border-white"
-                    onClick={handleAvatarClick}
-                    title="Click to change profile image"
-                    tabIndex={0}
-                    role="button"
-                    aria-label="Change profile image"
-                    onKeyPress={e => { if (e.key === 'Enter' || e.key === ' ') handleAvatarClick() }}
-                  >
-                    {uploading ? (
-                      <div className="w-8 h-8 flex items-center justify-center animate-spin">
-                        <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>
-                      </div>
-                    ) : profileImage ? (
-                      <img src={profileImage} alt="Profile" className="w-full h-full object-cover rounded-full" />
-                    ) : (
-                      <User className="w-10 h-10 text-white" />
-                    )}
-                  </div>
-                </div>
-
-                {/* User Info */}
-                <div>
-                  <CardTitle className="text-3xl font-bold mb-2 text-amber-900">
-                    {user.name}
-                  </CardTitle>
-                  <div className="space-y-1">
-                    {user.mobile && (
-                      <p className="text-amber-700 font-medium flex items-center gap-2">
-                        <User className="w-4 h-4" />
-                        {user.mobile}
-                      </p>
-                    )}
-                    {user.email && (
-                      <p className="text-amber-700 font-medium flex items-center gap-2">
-                        <User className="w-4 h-4" />
-                        {user.email}
-                      </p>
-                    )}
-                    <p className="text-amber-600 text-sm flex items-center gap-2">
-                      <Calendar className="w-4 h-4" />
-                      Joined: {new Date(user.joinedAt || "").toLocaleDateString()}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Quick Stats */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="text-center p-4 bg-gradient-to-br from-amber-100 to-orange-100 rounded-lg border-2 border-amber-200 shadow-md">
-                  <div className="text-2xl font-bold text-amber-800">{user.totalAttempts || 0}</div>
-                  <div className="text-sm font-semibold text-amber-700 uppercase tracking-wide">Tests Taken</div>
-                </div>
-                <div className="text-center p-4 bg-gradient-to-br from-orange-100 to-amber-100 rounded-lg border-2 border-orange-200 shadow-md">
-                  <div className="text-2xl font-bold text-orange-800">#{user.rank || "N/A"}</div>
-                  <div className="text-sm font-semibold text-orange-700 uppercase tracking-wide">Rank</div>
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 px-4 py-6">
+      <div className="mx-auto max-w-5xl space-y-6">
+        {/* Profile header */}
+        <section className="overflow-hidden rounded-2xl border border-amber-200 bg-white shadow-sm">
+          <div className="h-1.5 bg-gradient-to-r from-amber-600 via-orange-600 to-amber-800" />
+          <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-4">
+              <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                aria-label="Change profile image"
+                title="Change profile image"
+                className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-amber-600 to-orange-600 text-white shadow"
+              >
+                {uploading ? (
+                  <span className="h-6 w-6 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                ) : profileImage ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={profileImage} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  <User className="h-8 w-8" aria-hidden="true" />
+                )}
+              </button>
+              <div className="min-w-0">
+                <h1 className="truncate text-2xl font-bold text-gray-900">{user.name}</h1>
+                <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-700">
+                  {user.mobile && (
+                    <span className="inline-flex items-center gap-1">
+                      <Phone className="h-3.5 w-3.5" aria-hidden="true" />
+                      {user.mobile}
+                    </span>
+                  )}
+                  {user.joinedAt && (
+                    <span className="inline-flex items-center gap-1">
+                      <Calendar className="h-3.5 w-3.5" aria-hidden="true" />
+                      Joined {new Date(user.joinedAt).toLocaleDateString("en-IN")}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
-          </CardHeader>
-
-          <CardContent className="p-6">
-            {loading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="relative">
-                  <div className="w-16 h-16 border-4 border-cyan-400/30 rounded-full animate-spin">
-                    <div
-                      className="absolute inset-2 border-4 border-magenta-400/50 rounded-full animate-spin"
-                      style={{ animationDirection: "reverse" }}
-                    >
-                      <div className="absolute inset-2 border-4 border-lime-400/70 rounded-full animate-spin">
-                        <div className="absolute inset-2 bg-gradient-to-br from-cyan-400 to-magenta-400 rounded-full animate-pulse" />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="absolute inset-0 bg-cyan-400/20 rounded-full blur-xl animate-pulse" />
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-8">
-                {/* Performance Overview */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {/* Average Score */}
-                  <Card className="bg-white border-2 border-amber-200 shadow-lg rounded-xl hover:shadow-xl transition-shadow duration-300">
-                    <CardContent className="p-6">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-gradient-to-br from-amber-100 to-orange-100 rounded-lg flex items-center justify-center border-2 border-amber-300">
-                          <BarChart3 className="w-6 h-6 text-amber-600" />
-                        </div>
-                        <div>
-                          <div className="text-2xl font-bold text-amber-800">
-                            {user.averageScore?.toFixed(1) || "0.0"}%
-                          </div>
-                          <div className="text-sm font-semibold text-amber-700 uppercase tracking-wide">Average Score</div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Best Score */}
-                  <Card className="bg-white border-2 border-green-200 shadow-lg rounded-xl hover:shadow-xl transition-shadow duration-300">
-                    <CardContent className="p-6">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-emerald-100 rounded-lg flex items-center justify-center border-2 border-green-300">
-                          <Trophy className="w-6 h-6 text-green-600" />
-                        </div>
-                        <div>
-                          <div className="text-2xl font-bold text-green-800">{user.bestScore || 0}%</div>
-                          <div className="text-sm font-semibold text-green-700 uppercase tracking-wide">Best Score</div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Performance Grade */}
-                  <Card className="bg-white border-2 border-blue-200 shadow-lg rounded-xl hover:shadow-xl transition-shadow duration-300">
-                    <CardContent className="p-6">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-lg flex items-center justify-center border-2 border-blue-300">
-                          <Award className="w-6 h-6 text-blue-600" />
-                        </div>
-                        <div>
-                          <div className="text-2xl font-bold text-blue-800">
-                            {getPerformanceGrade(user.averageScore || 0).grade}
-                          </div>
-                          <div className="text-sm font-semibold text-blue-700 uppercase tracking-wide">
-                            {getPerformanceGrade(user.averageScore || 0).label}
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-                <div className="flex items-center gap-3">
-            {/* <Button
-              onClick={handleRefresh}
-              disabled={refreshing}
-              className="border-2 border-yellow-400 text-yellow-400 bg-transparent hover:bg-yellow-400/10 font-bold px-4 py-3"
-            >
-              <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? "animate-spin" : ""}`} />
-              Refresh profile
-            </Button> */}
-            <Button
+            <button
+              type="button"
               onClick={handleLogout}
-              className="border-2 border-red-400 text-red-400 bg-transparent hover:bg-red-400/10 font-bold px-4 py-3"
+              className="inline-flex items-center gap-2 self-start rounded-lg border border-red-300 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50 sm:self-auto"
             >
-              <LogOut className="w-4 h-4 mr-2" />
+              <LogOut className="h-4 w-4" aria-hidden="true" />
               Logout
-            </Button>
+            </button>
+          </div>
+        </section>
+
+        {/* Stats */}
+        <section aria-label="Your stats" className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <StatCard icon={ListChecks} label="Tests taken" value={loading ? "…" : stats.testsTaken} hint={`${stats.uniqueTests} different tests`} />
+          <StatCard
+            icon={BarChart3}
+            label="Average score"
+            value={loading ? "…" : `${stats.averagePercent}%`}
+            hint={stats.testsTaken ? `Grade ${avgGrade.grade} · ${avgGrade.label}` : undefined}
+          />
+          <StatCard
+            icon={Trophy}
+            label="Best score"
+            value={loading ? "…" : `${stats.bestPercent}%`}
+            hint={stats.totalQuestions ? `${stats.totalCorrect}/${stats.totalQuestions} correct overall` : undefined}
+          />
+          <StatCard
+            icon={Award}
+            label="Rank"
+            value={loading ? "…" : rank ? `#${rank.position}` : "—"}
+            hint={rank ? `of ${rank.totalUsers} students` : "Take a test to get ranked"}
+          />
+        </section>
+
+        {/* History */}
+        <section className="rounded-2xl border border-amber-200 bg-white p-5 shadow-sm">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-xl font-bold text-gray-900">Your Test History</h2>
+            <Link href="/quizzes" className="inline-flex items-center gap-1 text-sm font-semibold text-amber-800 hover:underline">
+              Browse all free mock tests <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </Link>
+          </div>
+
+          {loading ? (
+            <ul className="space-y-3" aria-busy="true">
+              {[0, 1, 2].map((i) => (
+                <li key={i} className="h-20 animate-pulse rounded-xl bg-amber-50" />
+              ))}
+            </ul>
+          ) : error ? (
+            <div className="rounded-xl bg-red-50 p-4 text-sm text-red-800">
+              {error}{" "}
+              <button type="button" onClick={() => historyId && fetchHistory(historyId)} className="font-semibold underline">
+                Try again
+              </button>
+            </div>
+          ) : attempts.length === 0 ? (
+            <div className="py-10 text-center">
+              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 text-amber-800">
+                <Target className="h-6 w-6" aria-hidden="true" />
               </div>
-                {/* Test Results Section */}
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-2xl font-bold text-amber-900">Your Test Results</h2>
-                    <Button
-                      onClick={() => setShowHistory((prev) => !prev)}
-                      className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-semibold px-6 py-2 rounded-lg shadow-md hover:shadow-lg transition-all duration-300"
-                    >
-                      {showHistory ? "Hide History" : "Show History"}
-                    </Button>
-                  </div>
-                  
-
-                  {showHistory && (
-                    attempts.length === 0 ? (
-                      <Card className="border-0 bg-gradient-to-br from-gray-500/20 to-gray-600/20 backdrop-blur-sm shadow-xl">
-                        <CardContent className="p-8 text-center">
-                          <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-gray-400 to-gray-600 rounded-lg flex items-center justify-center">
-                            <Target className="w-8 h-8 text-white" />
-                          </div>
-                          <h3 className="text-xl font-bold text-gray-400 mb-2">No Test Results Found</h3>
-                          <p className="text-gray-500 mb-6">Start taking tests to see your results here</p>
-                          <Link href="/quizzes">
-                            <Button className="bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-500 hover:to-blue-600 text-black font-bold px-8 py-3">
-                              <Zap className="w-4 h-4 mr-2" />
-                              Start Testing
-                            </Button>
-                          </Link>
-                        </CardContent>
-                      </Card>
-                    ) : (
-                      <div className="space-y-4">
-                        {attempts.map((attempt, index) => {
-                          const quiz = typeof attempt.quizId === "object" ? attempt.quizId : null
-                          const quizTitle = quiz?.title || `Quiz ${attempt.quizId}`
-                          const score = attempt.score
-                          const isRecent = index < 3
-
-                          return (
-                            <Card
-                              key={attempt._id}
-                              className="border-0 bg-gradient-to-br from-black/60 to-purple-900/30 backdrop-blur-sm shadow-xl"
-                            >
-                              <CardContent className="p-6">
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-4">
-                                    <div
-                                      className={`w-12 h-12 rounded-lg flex items-center justify-center font-black text-white ${
-                                        score >= 80
-                                          ? "bg-gradient-to-br from-lime-400 to-emerald-500"
-                                          : score >= 60
-                                            ? "bg-gradient-to-br from-yellow-400 to-orange-500"
-                                            : "bg-gradient-to-br from-red-400 to-pink-500"
-                                      }`}
-                                      style={{
-                                        clipPath:
-                                          index % 2 === 0
-                                            ? "polygon(0% 0%, 100% 0%, 100% 75%, 75% 100%, 0% 100%)"
-                                            : "polygon(25% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 25%)",
-                                      }}
-                                    >
-                                      {score}%
-                                    </div>
-                                    <div>
-                                      <h3 className="font-bold text-white text-lg">{quizTitle}</h3>
-                                      <div className="flex items-center gap-4 text-sm text-gray-400">
-                                        <span className="flex items-center gap-1">
-                                          <Calendar className="w-4 h-4" />
-                                          {new Date(attempt.completedAt).toLocaleDateString()}
-                                        </span>
-                                        <span className="flex items-center gap-1">
-                                          <Clock className="w-4 h-4" />
-                                          {new Date(attempt.completedAt).toLocaleTimeString()}
-                                        </span>
-                                      </div>
-                                    </div>
-                                  </div>
-
-                                  <div className="flex items-center gap-3">
-                                    {isRecent && (
-                                      <Badge className="bg-gradient-to-r from-cyan-400 to-blue-500 text-black font-bold">
-                                        Recent
-                                      </Badge>
-                                    )}
-                                    <Badge className={`font-bold text-black bg-gradient-to-r ${getScoreColor(score)}`}>
-                                      {getPerformanceGrade(score).grade}
-                                    </Badge>
-                                    {score >= 80 ? (
-                                      <CheckCircle2 className="w-6 h-6 text-lime-400" />
-                                    ) : (
-                                      <XCircle className="w-6 h-6 text-red-400" />
-                                    )}
-                                  </div>
-                                </div>
-                              </CardContent>
-                            </Card>
-                          )
-                        })}
-                      </div>
-                    )
-                  )}
-                </div>
-
-                {/* Available Tests Section */}
-                <div className="space-y-6">
-                  <h2 className="text-2xl font-black text-center mb-6 flex items-center justify-center gap-3">
-                    <BookOpen className="w-8 h-8 text-cyan-400 animate-pulse" />
-                    <span className="bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
-                      Available All Tests 
-                    </span>
-                  </h2>
-
-                  {quizzes.length === 0 ? (
-                    <Card className="bg-white border-2 border-amber-200 shadow-lg rounded-xl">
-                      <CardContent className="p-8 text-center">
-                        <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-amber-100 to-orange-100 rounded-lg flex items-center justify-center border-2 border-amber-300">
-                          <BookOpen className="w-8 h-8 text-amber-600" />
+              <h3 className="text-lg font-bold text-gray-900">No tests taken yet</h3>
+              <p className="mt-1 text-gray-700">Take your first free mock test; your score and progress will appear here.</p>
+              <Link
+                href="/quizzes"
+                className="mt-4 inline-flex items-center gap-2 rounded-lg bg-amber-700 px-5 py-2 font-semibold text-white hover:bg-amber-800"
+              >
+                <BookOpen className="h-4 w-4" aria-hidden="true" />
+                Start a mock test
+              </Link>
+            </div>
+          ) : (
+            <ul className="space-y-3">
+              {attempts.map((a) => {
+                const percent = percentOf(a.score, a.total)
+                const g = grade(percent)
+                const title = a.quiz?.title ?? "Deleted test"
+                const when = new Date(a.completedAt)
+                return (
+                  <li key={a._id} className="rounded-xl border border-amber-100 p-4 transition hover:border-amber-300">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="font-semibold text-gray-900">{title}</h3>
+                          {numbers[a._id] > 1 && (
+                            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-900">
+                              Attempt {numbers[a._id]}
+                            </span>
+                          )}
                         </div>
-                        <h3 className="text-xl font-bold text-amber-900 mb-2">No Tests Available</h3>
-                        <p className="text-amber-700">Check back later for new tests</p>
-                      </CardContent>
-                    </Card>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {quizzes.slice(0, 6).map((quiz, index) => {
-                        const userAttempt = attempts.find(
-                          (attempt) =>
-                            (typeof attempt.quizId === "object" ? attempt.quizId._id : attempt.quizId) === quiz._id,
-                        )
-                        const hasAttempted = !!userAttempt
-
-                        return (
-                          <Card
-                            key={quiz._id}
-                            className="border-0 bg-gradient-to-br from-black/60 to-purple-900/30 backdrop-blur-sm shadow-xl hover:scale-105 transition-transform duration-300 group"
+                        <p className="mt-0.5 text-xs text-gray-600">
+                          {[a.quiz?.subcategory || a.quiz?.category, `${when.toLocaleDateString("en-IN")}, ${when.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}`]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </p>
+                        <div className="mt-2 flex items-center gap-3">
+                          <div className="h-2 w-40 max-w-full overflow-hidden rounded-full bg-gray-200" aria-hidden="true">
+                            <div className={`h-full ${barColor(percent)}`} style={{ width: `${percent}%` }} />
+                          </div>
+                          <span className="text-sm font-semibold text-gray-900">
+                            {a.score}/{a.total} correct · {percent}%
+                          </span>
+                          <span className="rounded bg-gray-100 px-1.5 text-xs font-bold text-gray-800" title={g.label}>
+                            {g.grade}
+                          </span>
+                        </div>
+                      </div>
+                      {a.quiz && (
+                        <div className="flex shrink-0 gap-2">
+                          <Link
+                            href={`/quizzes/${a.quizId}/results?attemptId=${a._id}`}
+                            className="inline-flex items-center gap-1 rounded-lg border border-amber-300 px-3 py-1.5 text-sm font-semibold text-amber-900 hover:bg-amber-50"
                           >
-                            <CardContent className="p-6">
-                              <div className="space-y-4">
-                                <div className="flex items-center justify-between">
-                                  <div
-                                    className="w-10 h-10 bg-gradient-to-br from-cyan-400 to-magenta-500 rounded-lg flex items-center justify-center"
-                                    style={{
-                                      clipPath:
-                                        index % 3 === 0
-                                          ? "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)"
-                                          : index % 3 === 1
-                                            ? "polygon(25% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 25%)"
-                                            : "polygon(0% 0%, 100% 0%, 100% 75%, 75% 100%, 0% 100%)",
-                                    }}
-                                  >
-                                    <Brain className="w-5 h-5 text-white" />
-                                  </div>
-                                  {hasAttempted && (
-                                    <Badge className="bg-gradient-to-r from-lime-400 to-emerald-500 text-black font-bold">
-                                      Completed
-                                    </Badge>
-                                  )}
-                                </div>
-
-                                <div>
-                                  <h3 className="font-bold text-white text-lg line-clamp-2">{quiz.title}</h3>
-                                  {quiz.description && (
-                                    <p className="text-gray-400 text-sm mt-1 line-clamp-2">{quiz.description}</p>
-                                  )}
-                                </div>
-
-                                <div className="grid grid-cols-3 gap-2 text-center">
-                                  <div className="p-2 bg-cyan-500/20 rounded border border-cyan-400/30">
-                                    <div className="text-sm font-bold text-cyan-400">{quiz.questions?.length || 0}</div>
-                                    <div className="text-xs text-cyan-300">Questions</div>
-                                  </div>
-                                  <div className="p-2 bg-yellow-500/20 rounded border border-yellow-400/30">
-                                    <div className="text-sm font-bold text-yellow-400">{quiz.totalMarks || 0}</div>
-                                    <div className="text-xs text-yellow-300">Marks</div>
-                                  </div>
-                                  <div className="p-2 bg-purple-500/20 rounded border border-purple-400/30">
-                                    <div className="text-sm font-bold text-purple-400">{quiz.timeLimit || 0}</div>
-                                    <div className="text-xs text-purple-300">Minutes</div>
-                                  </div>
-                                </div>
-
-                                <Link href={`/quizzes/${quiz._id}`} className="block">
-                                  <Button className="w-full bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-500 hover:to-blue-600 text-black font-bold py-3 group-hover:shadow-lg group-hover:shadow-cyan-400/30 transition-all duration-300">
-                                    {hasAttempted ? "Retake Test" : "Start Test"}
-                                    <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-300" />
-                                  </Button>
-                                </Link>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        )
-                      })}
+                            <Eye className="h-4 w-4" aria-hidden="true" />
+                            View result
+                          </Link>
+                          <Link
+                            href={quizPath(a.quiz)}
+                            className="inline-flex items-center gap-1 rounded-lg bg-amber-700 px-3 py-1.5 text-sm font-semibold text-white hover:bg-amber-800"
+                          >
+                            <RotateCcw className="h-4 w-4" aria-hidden="true" />
+                            Start again
+                          </Link>
+                        </div>
+                      )}
                     </div>
-                  )}
+                  </li>
+                )
+              })}
+            </ul>
+          )}
 
-                  {quizzes.length > 6 && (
-                    <div className="text-center">
-                      <Link href="/quizzes">
-                        <Button className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-semibold px-8 py-3 rounded-lg shadow-md hover:shadow-lg transition-all duration-300">
-                          View All Tests
-                          <ArrowRight className="w-4 h-4 ml-2" />
-                        </Button>
-                      </Link>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </div>
+          {!loading && attempts.length > 0 && (
+            <p className="mt-4 flex items-center gap-1 text-xs text-gray-600">
+              <CheckCircle2 className="h-3.5 w-3.5 text-green-700" aria-hidden="true" />
+              Rank is based on total correct answers across all tests.
+            </p>
+          )}
+        </section>
       </div>
     </div>
   )
 }
 
 export default ProfilePage
-
