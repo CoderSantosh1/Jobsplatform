@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { RelatedLink } from "@/lib/content";
+import type { TestLink } from "@/lib/exam-links";
 import { SECTION_LABEL } from "@/lib/content";
 import { formatDate } from "@/lib/seo";
 
@@ -14,12 +15,15 @@ export default function PostFooter({
   updatedAt,
   officialUrl,
   related = [],
+  testLinks = [],
   latest = [],
   latestTitle,
 }: {
   updatedAt?: string | Date;
   officialUrl?: string;
   related?: RelatedLink[];
+  /** Free test pages for the post's exam, listed first under Related Updates. */
+  testLinks?: TestLink[];
   latest?: RelatedLink[];
   latestTitle?: string;
 }) {
@@ -61,10 +65,18 @@ export default function PostFooter({
         </div>
       </div>
 
-      {related.length > 0 && (
+      {(related.length > 0 || testLinks.length > 0) && (
         <section>
           <h2 className="text-lg font-bold text-red-800 mb-2">Related Updates</h2>
           <ul className="list-disc pl-6 space-y-1">
+            {testLinks.map((t) => (
+              <li key={t.href}>
+                <Link href={t.href} className="font-semibold text-blue-700 hover:underline">
+                  {t.title}
+                </Link>{" "}
+                <span className="text-xs text-gray-500">(Free Mock Test)</span>
+              </li>
+            ))}
             {related.map((r) => (
               <li key={r.href}>
                 <Link href={r.href} className="text-blue-700 hover:underline">

@@ -6,6 +6,7 @@ import Breadcrumbs from "@/components/seo/Breadcrumbs";
 import JsonLd from "@/components/seo/JsonLd";
 import PostFooter from "@/components/seo/PostFooter";
 import { getDetail, getLatest, getRelated } from "@/lib/content";
+import { getTestLinks } from "@/lib/quizzes";
 import { detailMetadata } from "@/lib/seo-server";
 import { detailSegment } from "@/lib/slug";
 import { SITE_NAME, SITE_URL, clip, displayDate, isBlank } from "@/lib/seo";
@@ -30,7 +31,11 @@ export default async function ResultDetailPage({ params }: Props) {
   const segment = detailSegment(result);
   if (decodeURIComponent(id) !== segment) permanentRedirect(`/results/${segment}`);
 
-  const [related, latest] = await Promise.all([getRelated("results", result), getLatest("results", result._id)]);
+  const [related, latest, testLinks] = await Promise.all([
+    getRelated("results", result),
+    getLatest("results", result._id),
+    getTestLinks(result.title),
+  ]);
 
   const downloadLinks = [result.downloadLink, result.downloadLink1, result.downloadLink2, result.downloadLink3]
     .filter((l): l is string => typeof l === "string" && !isBlank(l))
@@ -134,6 +139,7 @@ export default async function ResultDetailPage({ params }: Props) {
             updatedAt={result.updatedAt ?? result.createdAt}
             officialUrl={official}
             related={related}
+            testLinks={testLinks}
             latest={latest}
             latestTitle="More Latest Results"
           />

@@ -5,6 +5,7 @@ import Breadcrumbs from "./Breadcrumbs";
 import JsonLd from "./JsonLd";
 import PostFooter from "./PostFooter";
 import { SECTION_LABEL, getDetail, getLatest, getRelated, type Doc } from "@/lib/content";
+import { getTestLinks } from "@/lib/quizzes";
 import { detailSegment, type Section } from "@/lib/slug";
 import { SITE_NAME, SITE_URL, clip, displayDate, isBlank } from "@/lib/seo";
 
@@ -83,7 +84,11 @@ export default async function SimpleDetail({ section, param }: { section: Simple
   if (decodeURIComponent(param) !== segment) permanentRedirect(`/${section}/${segment}`);
 
   const cfg = CONFIG[section];
-  const [related, latest] = await Promise.all([getRelated(section, doc), getLatest(section, doc._id)]);
+  const [related, latest, testLinks] = await Promise.all([
+    getRelated(section, doc),
+    getLatest(section, doc._id),
+    getTestLinks(doc.title),
+  ]);
   const link = cfg.link(doc);
   const hasLink = !isBlank(link);
   const body = cfg.body(doc);
@@ -168,6 +173,7 @@ export default async function SimpleDetail({ section, param }: { section: Simple
             updatedAt={doc.updatedAt ?? doc.postedDate ?? doc.createdAt}
             officialUrl={hasLink ? link : undefined}
             related={related}
+            testLinks={testLinks}
             latest={latest}
             latestTitle={`More ${SECTION_LABEL[section]}`}
           />

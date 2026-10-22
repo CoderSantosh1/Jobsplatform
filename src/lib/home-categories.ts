@@ -21,6 +21,11 @@ export const HOME_EXAM_CATEGORIES = [
 ];
 
 const normalize = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, "");
+const HOME_KEYS = new Set(HOME_EXAM_CATEGORIES.map(normalize));
+
+export function isHomeExamCategory(name: string): boolean {
+  return HOME_KEYS.has(normalize(name));
+}
 
 /** Keeps the government-exam categories (in HOME_EXAM_CATEGORIES order) that have at least one exam. */
 export function pickHomeCategories<T extends { name: string; subcategories?: unknown[] }>(categories: T[]): T[] {

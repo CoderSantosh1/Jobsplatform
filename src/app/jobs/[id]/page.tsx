@@ -6,6 +6,7 @@ import Breadcrumbs from "@/components/seo/Breadcrumbs";
 import JsonLd from "@/components/seo/JsonLd";
 import PostFooter from "@/components/seo/PostFooter";
 import { getDetail, getLatest, getRelated } from "@/lib/content";
+import { getTestLinks } from "@/lib/quizzes";
 import { detailMetadata } from "@/lib/seo-server";
 import { detailSegment } from "@/lib/slug";
 import { SITE_NAME, SITE_URL, clip, displayDate, formatDate, isBlank, isPastDeadline, parseDate } from "@/lib/seo";
@@ -50,7 +51,11 @@ export default async function JobDetailPage({ params }: Props) {
   const segment = detailSegment(job);
   if (decodeURIComponent(id) !== segment) permanentRedirect(`/jobs/${segment}`);
 
-  const [related, latest] = await Promise.all([getRelated("jobs", job), getLatest("jobs", job._id)]);
+  const [related, latest, testLinks] = await Promise.all([
+    getRelated("jobs", job),
+    getLatest("jobs", job._id),
+    getTestLinks(job.title),
+  ]);
 
   const lastDate = displayDate(job.lastDateApplyOnline) || displayDate(job.applicationDeadline);
   const deadline = parseDate(job.lastDateApplyOnline) ?? parseDate(job.applicationDeadline);
@@ -283,6 +288,7 @@ export default async function JobDetailPage({ params }: Props) {
             updatedAt={job.updatedAt ?? job.createdAt}
             officialUrl={officialSite}
             related={related}
+            testLinks={testLinks}
             latest={latest}
             latestTitle="More Latest Jobs"
           />

@@ -4,6 +4,8 @@ import Quiz from "@/lib/models/Quiz";
 import Question from "@/lib/models/Question";
 import QuizCategory from "@/lib/models/QuizCategory";
 import { slugify } from "@/lib/slug";
+import { EXAMS } from "@/lib/exams";
+import { findTestLinks, type TestLink } from "@/lib/exam-links";
 
 export type QuizSummary = {
   _id: string;
@@ -73,6 +75,16 @@ export const getCategoryGroups = cache(async (): Promise<CategoryGroup[]> => {
   list.forEach((g) => g.subcategories.sort((a, b) => b.count - a.count));
   return list.sort((a, b) => b.count - a.count);
 });
+
+/** Free test pages for the exam a post is about (shown under "Related Updates"). Never breaks the page. */
+export async function getTestLinks(title: string): Promise<TestLink[]> {
+  try {
+    return findTestLinks(title, EXAMS, await getCategoryGroups());
+  } catch (error) {
+    console.error("Could not load test links:", error);
+    return [];
+  }
+}
 
 export async function findCategory(categorySlug: string, subSlug?: string) {
   const groups = await getCategoryGroups();

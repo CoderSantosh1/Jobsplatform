@@ -5,6 +5,8 @@ export type Exam = {
   slug: string;
   name: string;
   search: string;
+  /** Stricter words for linking a post to this exam's page, when `search` alone is too broad (e.g. "Group D"). */
+  linkSearch?: string;
   body: string;
   about: string;
 };
@@ -94,6 +96,7 @@ export const EXAMS: Exam[] = [
     slug: "rrb-group-d",
     name: "RRB Group D",
     search: "Group D",
+    linkSearch: "RRB Group D",
     body: "Railway Recruitment Boards / Cells (RRB/RRC)",
     about:
       "The Railway Group D (Level 1) exam recruits 10th-pass or ITI candidates for posts such as Track Maintainer and Assistant in various Indian Railways departments.",
@@ -118,6 +121,7 @@ export const EXAMS: Exam[] = [
     slug: "up-police-constable",
     name: "UP Police Constable",
     search: "UP Police",
+    linkSearch: "UP Police Constable",
     body: "Uttar Pradesh Police Recruitment and Promotion Board (UPPRPB)",
     about:
       "UP Police Constable recruitment is conducted by UPPRPB for constable posts in Uttar Pradesh Police through a written exam, document verification and physical tests.",
@@ -126,6 +130,7 @@ export const EXAMS: Exam[] = [
     slug: "bihar-police-constable",
     name: "Bihar Police Constable",
     search: "Bihar Police",
+    linkSearch: "Bihar Police Constable",
     body: "Central Selection Board of Constable (CSBC), Bihar",
     about:
       "Bihar Police Constable recruitment is conducted by CSBC Bihar through a written exam followed by a physical efficiency test.",
