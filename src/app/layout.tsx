@@ -5,7 +5,7 @@ import CleanURL from "@/components/CleanURL";
 import PushOptIn from "@/components/PushOptIn";
 import "./globals.css";
 import { SpeedInsights } from "@vercel/speed-insights/react";
-import { Analytics } from "@vercel/analytics/react";
+import { Analytics } from "@vercel/analytics/next";
 import { DEFAULT_OG_IMAGE, SITE_NAME, SITE_SHORT, SITE_URL } from "@/lib/seo";
 import JsonLd from "@/components/seo/JsonLd";
 import AdSenseScript from "@/components/AdSenseScript";
