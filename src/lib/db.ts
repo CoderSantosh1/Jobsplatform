@@ -42,9 +42,10 @@ export default async function connectDB() {
       bufferCommands: true,
       serverSelectionTimeoutMS: 10000,
       socketTimeoutMS: 45000,
-      maxPoolSize: 10,
+      // The free Atlas M0 tier allows 500 connections in total, shared by every instance.
+      maxPoolSize: 5,
       minPoolSize: 0,
-      maxIdleTimeMS: 60000,
+      maxIdleTimeMS: 10000,
       connectTimeoutMS: 10000,
       heartbeatFrequencyMS: 10000,
       autoIndex: true
