@@ -138,7 +138,20 @@ async function checkIndexablePage(path, { expectCanonical, titleMatchesH1 = fals
 // ---------- tests ----------
 
 before(async () => {
-  const { res } = await get("/robots.txt");
+  let res;
+  try {
+    ({ res } = await get("/robots.txt", { tries: 1 }));
+  } catch {
+    // One clear message instead of the same connection error under every test.
+    console.error(
+      `\nNo site is running at ${BASE}.\n` +
+        (BASE.includes("localhost")
+          ? "Start it first in another terminal:  pnpm build  then  pnpm start\n" +
+            "Or check the live site instead:      pnpm test:seo:live\n"
+          : "Check the URL and your internet connection.\n"),
+    );
+    process.exit(1);
+  }
   assert.equal(res.status, 200, `Site not reachable at ${BASE}`);
 });
 
