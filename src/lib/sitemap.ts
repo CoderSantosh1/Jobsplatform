@@ -115,23 +115,28 @@ async function testSeriesEntries(): Promise<UrlEntry[]> {
 
   const categories = new Map<string, Date | undefined>();
   const subCounts = new Map<string, number>();
-  const entries: UrlEntry[] = [];
+  const singleExam = new Map<string, UrlEntry>();
   for (const r of rows) {
     const c = r._id.c?.trim();
     if (!c) continue;
     const cSlug = slugify(c) || "all";
     categories.set(cSlug, latest([categories.get(cSlug), r.last]));
-    if (r._id.s?.trim()) subCounts.set(cSlug, (subCounts.get(cSlug) ?? 0) + 1);
     const s = r._id.s?.trim();
-    if (s) entries.push({ loc: `${SITE_URL}/test-series/${cSlug}/${slugify(s) || "all"}`, lastmod: r.last });
+    if (s) {
+      subCounts.set(cSlug, (subCounts.get(cSlug) ?? 0) + 1);
+      singleExam.set(cSlug, { loc: `${SITE_URL}/test-series/${cSlug}/${slugify(s) || "all"}`, lastmod: r.last });
+    }
   }
-  // Single-exam categories redirect to their exam page, so only list categories with 0 or 2+ exams.
-  const categoryEntries = [...categories]
-    .filter(([slug]) => (subCounts.get(slug) ?? 0) !== 1)
-    .map(([slug, last]) => ({ loc: `${SITE_URL}/test-series/${slug}`, lastmod: last }));
+  // Only category pages are submitted. The ~500 per-exam pages share one template (a list of numbered mock
+  // tests), and submitting them all made Google park the whole site under "Discovered - currently not indexed".
+  // They stay indexable and are found through the links on their category page.
+  // A single-exam category redirects to its exam page, so that exam page is listed instead.
+  const entries = [...categories].map(([slug, last]) =>
+    subCounts.get(slug) === 1 ? singleExam.get(slug)! : { loc: `${SITE_URL}/test-series/${slug}`, lastmod: last },
+  );
   // Two Hindi-only names can both slug to "all"; keep one URL each.
   const seen = new Set<string>();
-  return [...categoryEntries, ...entries].filter((e) => !seen.has(e.loc) && seen.add(e.loc));
+  return entries.filter((e) => !seen.has(e.loc) && seen.add(e.loc));
 }
 
 export async function getSitemapEntries(name: SitemapName): Promise<UrlEntry[]> {

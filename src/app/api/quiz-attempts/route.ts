@@ -4,12 +4,29 @@ import Quiz from "@/lib/models/Quiz";
 import QuizAttempt from "@/lib/models/QuizAttempt";
 import mongoose from "mongoose";
 import { rankFromTotals, summarizeAttempts, type AttemptRow } from "@/lib/attempt-stats";
+import { clientIp, createRateLimiter } from "@/lib/rate-limit";
+import { isMobileNumber, isObjectIdString, isValidAnswerList } from "@/lib/upload-rules";
+
+// Public endpoint (students log in with their mobile number only), so it is rate limited and validated.
+const allow = createRateLimiter({ limit: 20, windowMs: 60_000 });
 
 export async function POST(request: Request) {
+  if (!allow(clientIp(request.headers))) {
+    return NextResponse.json({ error: "Too many submissions. Please wait a minute." }, { status: 429 });
+  }
   try {
+    const body = await request.json().catch(() => null);
+    const { quizId, userId, answers } = (body ?? {}) as { quizId?: unknown; userId?: unknown; answers?: unknown };
+    if (!isObjectIdString(quizId) || !isMobileNumber(userId)) {
+      return NextResponse.json({ error: "Invalid quiz or user" }, { status: 400 });
+    }
+
     await connectDB();
-    const body = await request.json();
-    const { quizId, userId, answers } = body;
+    // Only registered students can be scored and ranked (attempts are stored under the mobile number).
+    const user = await mongoose.connection.db?.collection("users").findOne({ mobile: userId }, { projection: { _id: 1 } });
+    if (!user) {
+      return NextResponse.json({ error: "Please register before submitting a test" }, { status: 401 });
+    }
 
     // Fetch the quiz to get the correct answers
     const quiz = await Quiz.findById(quizId).populate("questions");
@@ -19,17 +36,18 @@ export async function POST(request: Request) {
         { status: 404 }
       );
     }
+    if (!isValidAnswerList(answers, quiz.questions.length)) {
+      return NextResponse.json({ error: "Invalid answers" }, { status: 400 });
+    }
 
     // Calculate score
     let score = 0;
-    quiz.questions.forEach((question: any, index: number) => {
-      if (answers[index] === question.correctAnswer) {
+    quiz.questions.forEach((question: { correctAnswer: unknown }, index: number) => {
+      if (answers[index] === Number(question.correctAnswer)) {
         score++;
       }
     });
 
-    // Create quiz attempt
-    console.log("Creating quiz attempt with:", { quizId, userId, answers: answers.length, score });
     const attempt = await QuizAttempt.create({
       quizId,
       userId,
@@ -37,7 +55,6 @@ export async function POST(request: Request) {
       score,
     });
 
-    console.log("Created attempt:", attempt._id);
     return NextResponse.json(attempt);
   } catch (error) {
     console.error("Error submitting quiz attempt:", error);

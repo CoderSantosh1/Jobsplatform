@@ -17,7 +17,6 @@ export async function GET(
 ) {
   try {
     const { id } = await getParams(params);
-    console.log("Fetching quiz attempt with ID:", id);
 
     await connectDB();
     const attempt = await QuizAttempt.findById(id).populate({
@@ -27,8 +26,6 @@ export async function GET(
       }
     });
 
-    console.log("Found attempt:", attempt ? "YES" : "NO");
-    console.log("Attempt data:", attempt);
 
     if (!attempt) {
       return NextResponse.json(

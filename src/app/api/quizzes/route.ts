@@ -50,7 +50,10 @@ export async function POST(request: Request) {
   }
 }
 
-export async function GET() {
+/** Every quiz with its questions and answers, for the admin dashboard only (it was public and ~12 MB). */
+export async function GET(request: Request) {
+  const denied = requireAdmin(request);
+  if (denied) return denied;
   try {
     await connectDB();
     const quizzes = await Quiz.find().populate('questions');

@@ -1,24 +1,43 @@
 import { NextResponse } from 'next/server';
+import { createHash, timingSafeEqual } from 'crypto';
 import jwt from 'jsonwebtoken';
+import { clientIp, createRateLimiter } from '@/lib/rate-limit';
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 const JWT_SECRET = process.env.JWT_SECRET;
 
-export async function POST(req: Request) {
-  const { email, password } = await req.json();
+// Slows down password guessing: 5 attempts per IP every 15 minutes (per server instance).
+const allow = createRateLimiter({ limit: 5, windowMs: 15 * 60_000 });
 
-  if (!JWT_SECRET) {
+/** Constant-time comparison, so response timing doesn't reveal how much of the value matched. */
+function sameSecret(given: unknown, expected: string | undefined): boolean {
+  if (typeof given !== 'string' || !expected) return false;
+  const a = createHash('sha256').update(given).digest();
+  const b = createHash('sha256').update(expected).digest();
+  return timingSafeEqual(a, b);
+}
+
+export async function POST(req: Request) {
+  if (!allow(clientIp(req.headers))) {
+    return NextResponse.json({ message: 'Too many login attempts. Please try again in 15 minutes.' }, { status: 429 });
+  }
+
+  const { email, password } = (await req.json().catch(() => ({}))) as { email?: unknown; password?: unknown };
+
+  if (!JWT_SECRET || !ADMIN_EMAIL || !ADMIN_PASSWORD) {
     return NextResponse.json(
-      { message: 'Server configuration error: JWT_SECRET is not set' },
+      { message: 'Server configuration error: admin login is not set up' },
       { status: 500 }
     );
   }
 
-  console.log(`Attempting login with email: ${email}`);
-  if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+  // Both checks always run, so timing doesn't reveal whether the email was right.
+  const emailOk = sameSecret(typeof email === 'string' ? email.trim().toLowerCase() : email, ADMIN_EMAIL.trim().toLowerCase());
+  const passwordOk = sameSecret(password, ADMIN_PASSWORD);
+  if (emailOk && passwordOk) {
     // Long-lived so dashboard actions (including push notifications) keep working; log out to end it early.
-    const token = jwt.sign({ email }, JWT_SECRET, { expiresIn: '30d' });
+    const token = jwt.sign({ email: ADMIN_EMAIL }, JWT_SECRET, { expiresIn: '30d' });
     return NextResponse.json({ token });
   }
 

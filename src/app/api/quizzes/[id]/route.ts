@@ -4,6 +4,8 @@ import Quiz from "@/lib/models/Quiz";
 import Question from "@/lib/models/Question";
 import QuizAttempt from "@/lib/models/QuizAttempt";
 import { requireAdmin } from '@/lib/admin-guard';
+import { verifyAdminAuthorization } from '@/lib/admin-auth';
+import { withoutAnswers } from '@/lib/quiz-public';
 
 export async function GET(req: any, ctx: any) {
   try {
@@ -19,7 +21,9 @@ export async function GET(req: any, ctx: any) {
       );
     }
 
-    return NextResponse.json(quiz);
+    // Test-takers get the questions without the correct answers; the admin edit page gets everything.
+    if (verifyAdminAuthorization(req.headers.get("authorization")).ok) return NextResponse.json(quiz);
+    return NextResponse.json(withoutAnswers(quiz.toObject()));
   } catch (error) {
     console.error("Error fetching quiz:", error);
     return NextResponse.json(

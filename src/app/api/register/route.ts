@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import mongoose from "mongoose";
+import { clientIp, createRateLimiter } from "@/lib/rate-limit";
+
+// Slows down scripts that try many mobile numbers to find registered users and their names.
+const allow = createRateLimiter({ limit: 5, windowMs: 60_000 });
 
 // Define User schema
 const UserSchema = new mongoose.Schema({
@@ -11,6 +15,9 @@ const UserSchema = new mongoose.Schema({
 const User = mongoose.models.User || mongoose.model("User", UserSchema);
 
 export async function POST(req: Request) {
+  if (!allow(clientIp(req.headers))) {
+    return NextResponse.json({ error: "Too many attempts. Please wait a minute and try again." }, { status: 429 });
+  }
   await connectToDatabase();
   const { name, mobile } = await req.json();
 

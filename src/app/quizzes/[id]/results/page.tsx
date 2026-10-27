@@ -96,7 +96,8 @@ export default function QuizResults({ params }: { params: Promise<{ id: string }
           console.log("Quiz data received:", !!quizData)
           console.log("Attempt data received:", !!attemptData)
 
-          setQuiz(quizData)
+          // The public quiz has no correct answers; the submitted attempt carries the quiz with its answers.
+          setQuiz(attemptData?.quizId?.questions ? attemptData.quizId : quizData)
           setAttempt(attemptData)
         } catch (error) {
           console.error("Error fetching quiz results:", error)

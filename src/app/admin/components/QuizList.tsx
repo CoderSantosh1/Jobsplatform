@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import SendPushButton from './SendPushButton';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
-import jsPDF from "jspdf";
 import { adminFetch } from '@/lib/admin-fetch';
 
 interface Quiz {

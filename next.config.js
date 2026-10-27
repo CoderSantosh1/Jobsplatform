@@ -30,6 +30,22 @@ const nextConfig = {
       { source: '/search', destination: '/', permanent: true },
     ];
   },
+  // Basic hardening headers for every response. (No Content-Security-Policy: AdSense/Analytics load scripts from
+  // many Google domains, so a CSP would need careful tuning to avoid breaking ads.)
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'Strict-Transport-Security', value: 'max-age=31536000' },
+          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), payment=()' },
+        ],
+      },
+    ];
+  },
   async rewrites() {
     return [{ source: '/favicon.ico', destination: '/icon.png' }];
   },

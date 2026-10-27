@@ -4,6 +4,10 @@ import { NextResponse } from "next/server";
 type Body = { message: string };
 
 export async function POST(req: Request) {
+  // Local-development helper that proxies to services on this machine; off unless explicitly enabled.
+  if (process.env.ENABLE_OLLAMA !== "true") {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
   try {
     const { message } = (await req.json()) as Body;
     if (!message)
