@@ -43,7 +43,7 @@ export default async function Layout({ children, params }: Props & { children: R
               "@type": "BreadcrumbList",
               itemListElement: [
                 { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
-                { "@type": "ListItem", position: 2, name: "Free Mock Tests", item: `${SITE_URL}/quizzes` },
+                { "@type": "ListItem", position: 2, name: "Test Series", item: `${SITE_URL}/test-series` },
                 ...(quiz.category
                   ? [{ "@type": "ListItem", position: 3, name: quiz.category, item: `${SITE_URL}${testSeriesPath(quiz.category)}` }]
                   : []),

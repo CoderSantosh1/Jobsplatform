@@ -10,7 +10,8 @@
     "start": "next start",
     "lint": "next lint",
     "test": "node --test \"tests/unit/**/*.test.ts\"",
-    "test:seo": "node --test --test-concurrency=1 \"tests/seo/**/*.test.mjs\""
+    "test:seo": "node --test --test-concurrency=1 \"tests/seo/**/*.test.mjs\"",
+    "test:seo:live": "node tests/seo/run-live.mjs"
   },
   "dependencies": {
     "@emotion/react": "^11.11.3",

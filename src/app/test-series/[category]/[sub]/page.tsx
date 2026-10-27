@@ -55,7 +55,7 @@ export default async function SubcategoryPage({ params }: Props) {
       <main className="max-w-7xl mx-auto px-4 py-6">
         <Breadcrumbs
           items={[
-            { name: "Free Mock Tests", href: "/quizzes" },
+            { name: "Test Series", href: "/test-series" },
             { name: c.name, href: `/test-series/${c.slug}` },
             { name: s.name, href: path },
           ]}

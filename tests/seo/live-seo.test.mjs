@@ -138,7 +138,20 @@ async function checkIndexablePage(path, { expectCanonical, titleMatchesH1 = fals
 // ---------- tests ----------
 
 before(async () => {
-  const { res } = await get("/robots.txt");
+  let res;
+  try {
+    ({ res } = await get("/robots.txt", { tries: 1 }));
+  } catch {
+    // One clear message instead of the same connection error under every test.
+    console.error(
+      `\nNo site is running at ${BASE}.\n` +
+        (BASE.includes("localhost")
+          ? "Start it first in another terminal:  pnpm build  then  pnpm start\n" +
+            "Or check the live site instead:      pnpm test:seo:live\n"
+          : "Check the URL and your internet connection.\n"),
+    );
+    process.exit(1);
+  }
   assert.equal(res.status, 200, `Site not reachable at ${BASE}`);
 });
 
@@ -187,7 +200,7 @@ test("sitemap.xml is an index of small child sitemaps with real lastmod", async 
 });
 
 test("key pages: title ≤60, one H1, canonical, description, JSON-LD, cacheable", async () => {
-  for (const path of ["/", "/jobs", "/results", "/admit-cards", "/answer-keys", "/quizzes", "/about", "/privacy-policy", "/disclaimer", "/terms"]) {
+  for (const path of ["/", "/jobs", "/results", "/admit-cards", "/answer-keys", "/quizzes", "/test-series", "/about", "/privacy-policy", "/disclaimer", "/terms"]) {
     await checkIndexablePage(path, { expectCanonical: path === "/" ? `${SITE}` : `${SITE}${path}` }).catch((e) => {
       // The home canonical may be "https://www.sarkariresultsnow.com" or ".../"
       if (path === "/" && /canonical should equal/.test(e.message)) return;
@@ -198,12 +211,21 @@ test("key pages: title ≤60, one H1, canonical, description, JSON-LD, cacheable
 
 test("sampled sitemap pages pass the same checks and canonical = sitemap URL", async () => {
   assert.ok(children.size, "sitemap test must run first");
+  // Check every sampled page and report all problems together, not just the first one.
+  const problems = [];
   for (const [child, xml] of children) {
     const urls = locs(xml).slice(0, SAMPLE);
     // Detail and test-series pages put the post/exam name first in both <title> and H1.
     const titleMatchesH1 = !child.endsWith("/pages.xml");
-    for (const u of urls) await checkIndexablePage(u, { expectCanonical: u, titleMatchesH1, minWords: 120 });
+    for (const u of urls) {
+      try {
+        await checkIndexablePage(u, { expectCanonical: u, titleMatchesH1, minWords: 120 });
+      } catch (error) {
+        problems.push(error.message.split("\n")[0]);
+      }
+    }
   }
+  assert.deepEqual(problems, [], `${problems.length} sampled page(s) failed:\n${problems.join("\n")}`);
 });
 
 test("every page in pages.xml is a 200, self-canonical and not noindex (no submitted redirects/noindex)", async () => {
@@ -225,6 +247,18 @@ test("every page in pages.xml is a 200, self-canonical and not noindex (no submi
   }
   // Regression: exam pages once matched no posts because of a broken search regex.
   if (examPages >= 3) assert.ok(examPagesWithUpdates > 0, `none of ${examPages} exam pages lists any job/result updates`);
+});
+
+test("/test-series links every test series in the sitemap (no orphan exam pages)", async () => {
+  const xml = [...children].find(([u]) => u.endsWith("/test-series.xml"))?.[1];
+  assert.ok(xml, "no test-series.xml");
+  const { res, body } = await get("/test-series");
+  assert.equal(res.status, 200, "/test-series status");
+  const linked = new Set([...body.matchAll(/href="(\/test-series\/[^"#?]+)"/g)].map((m) => m[1]));
+  const missing = locs(xml)
+    .map((u) => u.slice(SITE.length))
+    .filter((p) => p !== "/test-series" && !linked.has(p));
+  assert.deepEqual(missing, [], "test-series pages not linked from /test-series");
 });
 
 test("test-series URLs in the sitemap do not redirect", async () => {
