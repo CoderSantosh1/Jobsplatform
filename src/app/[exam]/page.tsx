@@ -11,6 +11,8 @@ import { EXAMS, getExam } from "@/lib/exams";
 import { getExamContent } from "@/lib/exam-content";
 import { getExamPrep, type ExamStage } from "@/lib/exam-prep";
 import { pageMetadata } from "@/lib/seo";
+import { getCategoryGroups } from "@/lib/quizzes";
+import { examTestSeries } from "@/lib/exam-links";
 
 // Only the exams in EXAMS get a page; any other top-level path is a normal 404.
 export const dynamicParams = false;
@@ -91,12 +93,22 @@ function PatternStage({ stage }: { stage: ExamStage }) {
   );
 }
 
+/** The exam's own test-series page, resolved against the quiz data so the link is never broken. */
+async function getExamTestSeries(exam: NonNullable<ReturnType<typeof getExam>>) {
+  try {
+    return examTestSeries(exam, await getCategoryGroups());
+  } catch (error) {
+    console.error("Could not load test series link:", error);
+    return null;
+  }
+}
+
 export default async function ExamPage({ params }: Props) {
   const exam = getExam((await params).exam);
   if (!exam) notFound();
 
   const prep = getExamPrep(exam.slug);
-  const { posts, quizzes } = await getExamContent(exam);
+  const [{ posts, quizzes }, testSeries] = await Promise.all([getExamContent(exam), getExamTestSeries(exam)]);
 
   return (
     <>
@@ -132,6 +144,14 @@ export default async function ExamPage({ params }: Props) {
             Conducting body: {exam.body}. Syllabus, exam pattern, cut-off and important dates change every year;
             always confirm them in the latest official notification linked from the posts below.
           </p>
+          {testSeries && (
+            <p className="mt-2 text-sm">
+              <Link href={testSeries.href} className="font-medium text-blue-700 hover:underline">
+                Practice {exam.name} mock tests
+              </Link>{" "}
+              <span className="text-gray-600">({testSeries.count} free tests in the {testSeries.name} test series)</span>
+            </p>
+          )}
         </section>
 
         {prep && (

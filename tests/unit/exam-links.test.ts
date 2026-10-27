@@ -1,7 +1,7 @@
 // "Related Updates" links from job / result / admit card pages to the exam's free test pages.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { findTestLinks } from "../../src/lib/exam-links.ts";
+import { examTestSeries, findTestLinks } from "../../src/lib/exam-links.ts";
 import { EXAMS } from "../../src/lib/exams.ts";
 
 const sub = (name: string, count = 10) => ({ name, slug: name.toLowerCase().replace(/[^a-z0-9]+/g, "-"), count });
@@ -67,4 +67,24 @@ test("a Sub Inspector post is not sent to the Constable practice page", () => {
     findTestLinks("BPSSC Bihar Police Sub Inspector SI Recruitment 2025", EXAMS, groups).map((l) => l.href),
     ["/test-series/police/bihar-police-si"],
   );
+});
+
+test("examTestSeries links an exam to its mapped test-series page only when it has tests", () => {
+  const exam = { testSeries: { category: "ssc-exams", sub: "ssc-gd-constable" } };
+  assert.deepEqual(examTestSeries(exam, GROUPS), { href: "/test-series/ssc-exams/ssc-gd-constable", name: "SSC GD Constable", count: 40 });
+  assert.equal(examTestSeries({}, GROUPS), null);
+  assert.equal(examTestSeries({ testSeries: { category: "ssc-exams", sub: "ssc-xyz" } }, GROUPS), null);
+  assert.equal(examTestSeries({ testSeries: { category: "nope", sub: "ssc-cgl" } }, GROUPS), null);
+  const empty = [{ name: "SSC Exams", slug: "ssc-exams", subcategories: [{ name: "SSC GD Constable", slug: "ssc-gd-constable", count: 0 }] }];
+  assert.equal(examTestSeries(exam, empty), null);
+});
+
+test("every main exam has a unique, URL-safe test-series mapping", () => {
+  const hrefs = EXAMS.map((e) => {
+    assert.ok(e.testSeries, e.slug + " has no testSeries mapping");
+    assert.match(e.testSeries!.category, /^[a-z0-9-]+$/);
+    assert.match(e.testSeries!.sub, /^[a-z0-9-]+$/);
+    return e.testSeries!.category + "/" + e.testSeries!.sub;
+  });
+  assert.equal(new Set(hrefs).size, hrefs.length);
 });

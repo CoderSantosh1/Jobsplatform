@@ -8,6 +8,7 @@ import Admission from "@/lib/models/Admission";
 import News from "@/lib/models/News";
 import Quiz from "@/lib/models/Quiz";
 import { EXAMS } from "@/lib/exams";
+import { examTestSeries } from "@/lib/exam-links";
 import { getExamContent } from "@/lib/exam-content";
 import { getExamPrep } from "@/lib/exam-prep";
 import { uniqueByTitle } from "@/lib/dedupe";
@@ -110,12 +111,20 @@ async function pagesEntries(): Promise<UrlEntry[]> {
 
 async function testSeriesEntries(): Promise<UrlEntry[]> {
   const rows = (await Quiz.aggregate([
-    { $group: { _id: { c: "$category", s: "$subcategory" }, last: { $max: { $ifNull: ["$updatedAt", "$createdAt"] } } } },
-  ])) as { _id: { c?: string; s?: string }; last?: Date }[];
+    {
+      $group: {
+        _id: { c: "$category", s: "$subcategory" },
+        last: { $max: { $ifNull: ["$updatedAt", "$createdAt"] } },
+        count: { $sum: 1 },
+      },
+    },
+  ])) as { _id: { c?: string; s?: string }; last?: Date; count: number }[];
 
   const categories = new Map<string, Date | undefined>();
   const subCounts = new Map<string, number>();
   const singleExam = new Map<string, UrlEntry>();
+  const groups = new Map<string, { name: string; slug: string; subcategories: { name: string; slug: string; count: number }[] }>();
+  const subLastmod = new Map<string, Date | undefined>();
   for (const r of rows) {
     const c = r._id.c?.trim();
     if (!c) continue;
@@ -123,17 +132,27 @@ async function testSeriesEntries(): Promise<UrlEntry[]> {
     categories.set(cSlug, latest([categories.get(cSlug), r.last]));
     const s = r._id.s?.trim();
     if (s) {
+      const sSlug = slugify(s) || "all";
       subCounts.set(cSlug, (subCounts.get(cSlug) ?? 0) + 1);
-      singleExam.set(cSlug, { loc: `${SITE_URL}/test-series/${cSlug}/${slugify(s) || "all"}`, lastmod: r.last });
+      singleExam.set(cSlug, { loc: `${SITE_URL}/test-series/${cSlug}/${sSlug}`, lastmod: r.last });
+      const group = groups.get(cSlug) ?? { name: c, slug: cSlug, subcategories: [] };
+      group.subcategories.push({ name: s, slug: sSlug, count: r.count });
+      groups.set(cSlug, group);
+      subLastmod.set(`/test-series/${cSlug}/${sSlug}`, r.last);
     }
   }
-  // Only category pages are submitted. The ~500 per-exam pages share one template (a list of numbered mock
-  // tests), and submitting them all made Google park the whole site under "Discovered - currently not indexed".
-  // They stay indexable and are found through the links on their category page.
+  // Category pages are submitted, but not all ~500 per-exam pages: they share one template (a list of numbered
+  // mock tests), and a large number of near-identical URLs may be one factor in Google leaving many of the site's
+  // URLs as "Discovered - currently not indexed". Per-exam pages stay indexable and are linked from their category.
   // A single-exam category redirects to its exam page, so that exam page is listed instead.
   const entries = [...categories].map(([slug, last]) =>
     subCounts.get(slug) === 1 ? singleExam.get(slug)! : { loc: `${SITE_URL}/test-series/${slug}`, lastmod: last },
   );
+  // Plus the per-exam pages of the main exams (EXAMS), when the quiz data still has tests there.
+  for (const exam of EXAMS) {
+    const ts = examTestSeries(exam, [...groups.values()]);
+    if (ts) entries.push({ loc: `${SITE_URL}${ts.href}`, lastmod: subLastmod.get(ts.href) });
+  }
   // Two Hindi-only names can both slug to "all"; keep one URL each.
   const seen = new Set<string>();
   return entries.filter((e) => !seen.has(e.loc) && seen.add(e.loc));

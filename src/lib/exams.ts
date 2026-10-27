@@ -9,11 +9,15 @@ export type Exam = {
   linkSearch?: string;
   body: string;
   about: string;
+  /** This exam's page under /test-series/<category>/<sub> (URL slugs as in the quiz data). Linked and listed in the
+   *  sitemap only while that page has tests. */
+  testSeries?: { category: string; sub: string };
 };
 
 export const EXAMS: Exam[] = [
   {
     slug: "ssc-cgl",
+    testSeries: { category: "ssc-exams", sub: "ssc-cgl" },
     name: "SSC CGL",
     search: "SSC CGL",
     body: "Staff Selection Commission (SSC)",
@@ -22,6 +26,7 @@ export const EXAMS: Exam[] = [
   },
   {
     slug: "ssc-chsl",
+    testSeries: { category: "ssc-exams", sub: "ssc-chsl" },
     name: "SSC CHSL",
     search: "SSC CHSL",
     body: "Staff Selection Commission (SSC)",
@@ -30,6 +35,7 @@ export const EXAMS: Exam[] = [
   },
   {
     slug: "ssc-gd",
+    testSeries: { category: "ssc-exams", sub: "ssc-gd-constable" },
     name: "SSC GD Constable",
     search: "SSC GD",
     body: "Staff Selection Commission (SSC)",
@@ -38,6 +44,7 @@ export const EXAMS: Exam[] = [
   },
   {
     slug: "ssc-mts",
+    testSeries: { category: "ssc-exams", sub: "ssc-mts" },
     name: "SSC MTS",
     search: "SSC MTS",
     body: "Staff Selection Commission (SSC)",
@@ -46,6 +53,7 @@ export const EXAMS: Exam[] = [
   },
   {
     slug: "ssc-cpo",
+    testSeries: { category: "ssc-exams", sub: "ssc-cpo" },
     name: "SSC CPO",
     search: "SSC CPO",
     body: "Staff Selection Commission (SSC)",
@@ -54,6 +62,7 @@ export const EXAMS: Exam[] = [
   },
   {
     slug: "upsc-cse",
+    testSeries: { category: "civil-services-exam", sub: "upsc-civil-services" },
     name: "UPSC Civil Services",
     search: "UPSC Civil",
     body: "Union Public Service Commission (UPSC)",
@@ -62,6 +71,7 @@ export const EXAMS: Exam[] = [
   },
   {
     slug: "ibps-po",
+    testSeries: { category: "banking-exams", sub: "ibps-po" },
     name: "IBPS PO",
     search: "IBPS PO",
     body: "Institute of Banking Personnel Selection (IBPS)",
@@ -70,6 +80,7 @@ export const EXAMS: Exam[] = [
   },
   {
     slug: "ibps-clerk",
+    testSeries: { category: "banking-exams", sub: "ibps-clerk" },
     name: "IBPS Clerk",
     search: "IBPS Clerk",
     body: "Institute of Banking Personnel Selection (IBPS)",
@@ -78,6 +89,7 @@ export const EXAMS: Exam[] = [
   },
   {
     slug: "sbi-po",
+    testSeries: { category: "banking-exams", sub: "sbi-po" },
     name: "SBI PO",
     search: "SBI PO",
     body: "State Bank of India (SBI)",
@@ -86,6 +98,7 @@ export const EXAMS: Exam[] = [
   },
   {
     slug: "rrb-ntpc",
+    testSeries: { category: "railways-exams", sub: "rrb-ntpc" },
     name: "RRB NTPC",
     search: "RRB NTPC",
     body: "Railway Recruitment Boards (RRB)",
@@ -94,6 +107,7 @@ export const EXAMS: Exam[] = [
   },
   {
     slug: "rrb-group-d",
+    testSeries: { category: "railways-exams", sub: "rrb-group-d" },
     name: "RRB Group D",
     search: "Group D",
     linkSearch: "RRB Group D",
@@ -103,6 +117,7 @@ export const EXAMS: Exam[] = [
   },
   {
     slug: "rrb-alp",
+    testSeries: { category: "railways-exams", sub: "rrb-alp" },
     name: "RRB ALP",
     search: "RRB ALP",
     body: "Railway Recruitment Boards (RRB)",
@@ -111,6 +126,7 @@ export const EXAMS: Exam[] = [
   },
   {
     slug: "ctet",
+    testSeries: { category: "teaching-exams", sub: "ctet" },
     name: "CTET",
     search: "CTET",
     body: "Central Board of Secondary Education (CBSE)",
@@ -119,6 +135,7 @@ export const EXAMS: Exam[] = [
   },
   {
     slug: "up-police-constable",
+    testSeries: { category: "police", sub: "up-police-constable" },
     name: "UP Police Constable",
     search: "UP Police",
     linkSearch: "UP Police Constable",
@@ -128,6 +145,7 @@ export const EXAMS: Exam[] = [
   },
   {
     slug: "bihar-police-constable",
+    testSeries: { category: "police", sub: "bihar-police-constable" },
     name: "Bihar Police Constable",
     search: "Bihar Police",
     linkSearch: "Bihar Police Constable",
@@ -137,6 +155,7 @@ export const EXAMS: Exam[] = [
   },
   {
     slug: "bihar-stet",
+    testSeries: { category: "teaching-exams", sub: "bihar-stet" },
     name: "Bihar STET",
     search: "STET",
     body: "Bihar School Examination Board (BSEB)",

@@ -50,3 +50,20 @@ export function findTestLinks(title: string, exams: ExamLike[], groups: GroupLik
   }
   return links;
 }
+
+export type ExamTestSeries = { href: string; name: string; count: number };
+
+/**
+ * The test-series page mapped to an exam (Exam.testSeries), or null when the exam has no mapping or the quiz data
+ * no longer has tests there. Callers render a link / list a sitemap URL only for a non-null result.
+ */
+export function examTestSeries(
+  exam: { testSeries?: { category: string; sub: string } },
+  groups: GroupLike[],
+): ExamTestSeries | null {
+  if (!exam.testSeries) return null;
+  const { category, sub } = exam.testSeries;
+  const s = groups.find((g) => g.slug === category)?.subcategories.find((x) => x.slug === sub);
+  if (!s || s.count <= 0) return null;
+  return { href: `/test-series/${category}/${sub}`, name: s.name, count: s.count };
+}
