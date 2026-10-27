@@ -3,6 +3,7 @@ import { notFound, permanentRedirect } from "next/navigation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Breadcrumbs from "@/components/seo/Breadcrumbs";
+import { faqJsonLd } from "@/lib/faq";
 import JsonLd from "@/components/seo/JsonLd";
 import PostFooter from "@/components/seo/PostFooter";
 import { getDetail, getLatest, getRelated } from "@/lib/content";
@@ -270,6 +271,7 @@ export default async function JobDetailPage({ params }: Props) {
             </section>
           )}
 
+          {faqs.length > 0 && <JsonLd data={faqJsonLd(faqs)!} />}
           {faqs.length > 0 && (
             <section className="mt-5">
               <h2 className="text-lg font-bold text-red-800 mb-2">Frequently Asked Questions</h2>

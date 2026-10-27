@@ -13,6 +13,8 @@ import { getExamPrep, type ExamStage } from "@/lib/exam-prep";
 import { pageMetadata } from "@/lib/seo";
 import { getCategoryGroups } from "@/lib/quizzes";
 import { examTestSeries } from "@/lib/exam-links";
+import { examFaqs, faqJsonLd } from "@/lib/faq";
+import JsonLd from "@/components/seo/JsonLd";
 
 // Only the exams in EXAMS get a page; any other top-level path is a normal 404.
 export const dynamicParams = false;
@@ -109,6 +111,7 @@ export default async function ExamPage({ params }: Props) {
 
   const prep = getExamPrep(exam.slug);
   const [{ posts, quizzes }, testSeries] = await Promise.all([getExamContent(exam), getExamTestSeries(exam)]);
+  const faqs = examFaqs(exam, prep, testSeries);
 
   return (
     <>
@@ -197,6 +200,19 @@ export default async function ExamPage({ params }: Props) {
         <div id="updates" className="scroll-mt-4">
           <ExamUpdates name={exam.name} posts={posts} />
         </div>
+
+        <section id="faq" className="mt-8 scroll-mt-4 bg-white rounded border p-4">
+          <JsonLd data={faqJsonLd(faqs)!} />
+          <h2 className="text-xl font-bold text-red-800 mb-2">{exam.name} – Frequently Asked Questions</h2>
+          <dl className="space-y-3">
+            {faqs.map((f) => (
+              <div key={f.q}>
+                <dt className="font-semibold">{f.q}</dt>
+                <dd className="text-gray-800">{f.a}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
 
         <section className="mt-8">
           <h2 className="text-lg font-bold text-gray-900 mb-2">Other Popular Exams</h2>

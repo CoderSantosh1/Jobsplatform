@@ -3,6 +3,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Breadcrumbs from "./Breadcrumbs";
 import JsonLd from "./JsonLd";
+import { faqJsonLd } from "@/lib/faq";
 import { connectToDatabase } from "@/lib/db";
 import { SECTION_LABEL } from "@/lib/content";
 import Job from "@/lib/models/Job";
@@ -107,6 +108,7 @@ export default async function SectionList({
         </section>
 
         <section className="mt-6 max-w-4xl">
+          {guide.faqs.length > 0 && <JsonLd data={faqJsonLd(guide.faqs)!} />}
           <h2 className="text-xl font-bold text-red-800 mb-2">Frequently Asked Questions</h2>
           <dl className="space-y-3">
             {guide.faqs.map((f) => (
