@@ -92,3 +92,10 @@ export async function sampleQuestions(quizId: string, count = 3) {
     .lean<{ _id: unknown; text: string; options?: string[] }[]>();
   return plain(rows) as { _id: string; text: string; options?: string[] }[];
 }
+
+/** Link for a category: single-exam categories go straight to that exam (the category URL redirects there). */
+export function categoryHref(group: CategoryGroup): string {
+  return group.subcategories.length === 1
+    ? `/test-series/${group.slug}/${group.subcategories[0].slug}`
+    : `/test-series/${group.slug}`;
+}

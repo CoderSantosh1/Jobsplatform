@@ -47,7 +47,7 @@ export default async function CategoryPage({ params }: Props) {
       <Header />
       <QuizUserBar />
       <main className="max-w-7xl mx-auto px-4 py-6">
-        <Breadcrumbs items={[{ name: "Free Mock Tests", href: "/quizzes" }, { name: c.name, href: `/test-series/${c.slug}` }]} />
+        <Breadcrumbs items={[{ name: "Test Series", href: "/test-series" }, { name: c.name, href: `/test-series/${c.slug}` }]} />
         <h1 className="text-2xl md:text-4xl font-bold text-amber-900">{c.name} Test Series 2026 – Free Mock Tests</h1>
         <p className="mt-2 text-amber-900 max-w-4xl">
           {c.count} free {c.name} mock tests are available, grouped by exam below. Each test has a timer, follows the

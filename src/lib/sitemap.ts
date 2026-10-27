@@ -100,6 +100,7 @@ async function pagesEntries(): Promise<UrlEntry[]> {
     { loc: `${SITE_URL}/`, lastmod: latest([...dates, quizzes]) },
     ...sections.map((s) => ({ loc: `${SITE_URL}/${s}`, lastmod: bySection[s] })),
     { loc: `${SITE_URL}/quizzes`, lastmod: quizzes },
+    { loc: `${SITE_URL}/test-series`, lastmod: quizzes },
     // Exam pages aggregate posts from every section; they change whenever a section does.
     ...exams.map((e) => ({ loc: `${SITE_URL}/${e.slug}`, lastmod: latest(dates) })),
     ...["/about", "/privacy-policy", "/disclaimer", "/terms", "/contact"].map((p) => ({ loc: `${SITE_URL}${p}`, lastmod: legal })),

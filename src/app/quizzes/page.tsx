@@ -4,19 +4,19 @@ import Footer from "@/components/Footer";
 import Breadcrumbs from "@/components/seo/Breadcrumbs";
 import { QuizGrid } from "@/components/quiz/QuizCard";
 import { QuizUserBar } from "@/components/quiz/QuizClientBits";
-import { findQuizzes, getCategoryGroups } from "@/lib/quizzes";
+import { categoryHref, findQuizzes, getCategoryGroups } from "@/lib/quizzes";
 import { pageMetadata } from "@/lib/seo";
 
 export const revalidate = 600;
 
 export const metadata = pageMetadata({
-  title: "Free Mock Tests & Test Series 2026 for Govt Exams",
+  title: "Latest Free Mock Tests 2026 for Govt Exams",
   description:
     "Attempt free online mock tests and test series for SSC GD, CGL, Railway, Bank, Police and State exams, with a timer, score and answers.",
   path: "/quizzes",
 });
 
-/** Hub page: categories with counts plus the newest tests. Full lists live on /test-series/... pages. */
+/** Newest mock tests plus quick links to each test series. The full directory is /test-series. */
 export default async function QuizzesPage() {
   const [groups, latest] = await Promise.all([getCategoryGroups(), findQuizzes({}, 24)]);
 
@@ -25,45 +25,33 @@ export default async function QuizzesPage() {
       <Header />
       <QuizUserBar />
       <main className="max-w-7xl mx-auto px-4 py-6">
-        <Breadcrumbs items={[{ name: "Free Mock Tests", href: "/quizzes" }]} />
-        <h1 className="text-2xl md:text-4xl font-bold text-amber-900">Free Mock Tests &amp; Test Series</h1>
+        <Breadcrumbs items={[{ name: "Mock Tests", href: "/quizzes" }]} />
+        <h1 className="text-2xl md:text-4xl font-bold text-amber-900">Latest Free Mock Tests</h1>
         <p className="mt-2 text-amber-900 max-w-4xl">
           Practise with free online mock tests for SSC, Railway, Bank, Police, Defence and State exams. Every test
-          follows the real exam pattern, has a timer and shows your score with answers at the end. Every exam below links to its full
-          test series.
+          follows the real exam pattern, has a timer and shows your score with answers at the end. The newest tests are below;
+          browse every exam in the <Link href="/test-series" className="text-blue-700 underline">full test series list</Link>.
         </p>
 
         <section className="mt-6">
-          <h2 className="text-xl font-bold text-amber-900 mb-3">Choose Your Exam</h2>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <h2 className="text-xl font-bold text-amber-900 mb-3">Test Series by Exam</h2>
+          <ul className="flex flex-wrap gap-2 text-sm">
             {groups.map((g) => (
-              <div key={g.slug} className="bg-white rounded-xl border border-amber-200 p-4">
-                <h3 className="font-bold text-amber-900">
-                  <Link
-                    href={g.subcategories.length === 1 ? `/test-series/${g.slug}/${g.subcategories[0].slug}` : `/test-series/${g.slug}`}
-                    className="hover:underline"
-                  >
-                    {g.name} Test Series
-                  </Link>{" "}
-                  <span className="text-sm font-normal text-gray-500">({g.count} tests)</span>
-                </h3>
-                {g.subcategories.length > 0 && (
-                  <ul className="mt-2 flex flex-wrap gap-2 text-sm">
-                    {g.subcategories.map((s) => (
-                      <li key={s.slug}>
-                        <Link
-                          href={`/test-series/${g.slug}/${s.slug}`}
-                          className="inline-block rounded-full bg-amber-100 text-amber-900 px-3 py-1 hover:bg-amber-200"
-                        >
-                          {s.name} ({s.count})
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
+              <li key={g.slug}>
+                <Link
+                  href={categoryHref(g)}
+                  className="inline-block rounded-full bg-white border border-amber-200 text-amber-900 px-3 py-1 hover:bg-amber-100"
+                >
+                  {g.name} ({g.count})
+                </Link>
+              </li>
             ))}
-          </div>
+          </ul>
+          <p className="mt-3">
+            <Link href="/test-series" className="font-semibold text-blue-700 hover:underline">
+              See all test series and exams →
+            </Link>
+          </p>
         </section>
 
         <section className="mt-8">
