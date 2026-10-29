@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import JsonLd from "@/components/seo/JsonLd";
-import { detailMetadata, getQuizMeta } from "@/lib/seo-server";
+import { detailMetadata, getQuizMeta, quizExists } from "@/lib/seo-server";
 import { SITE_NAME, SITE_URL, clip } from "@/lib/seo";
 import { idFromParam, quizPath, testSeriesPath } from "@/lib/slug";
 
@@ -19,7 +20,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function Layout({ children, params }: Props & { children: React.ReactNode }) {
   const { id } = await params;
-  const quiz = await getQuizMeta(idFromParam(id));
+  const quizId = idFromParam(id);
+  // A deleted or mistyped quiz must answer 404, not a 200 "noindex" page (which Google reports as a soft 404).
+  // If the database is unreachable, quizExists is null and the page renders as before.
+  if ((await quizExists(quizId)) === false) notFound();
+  const quiz = await getQuizMeta(quizId);
   return (
     <>
       {quiz && (

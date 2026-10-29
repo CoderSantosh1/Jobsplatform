@@ -26,6 +26,21 @@ export const getQuizMeta = cache(async (id: string): Promise<AnyDoc | null> => {
   }
 });
 
+/**
+ * Whether a quiz exists: false only when the id is malformed or the database confirms there is no such quiz,
+ * null when the database could not be reached (callers must not treat that as "missing").
+ */
+export const quizExists = cache(async (id: string): Promise<boolean | null> => {
+  if (!/^[a-f0-9]{24}$/i.test(id)) return false;
+  try {
+    await connectToDatabase();
+    return (await Quiz.exists({ _id: id })) !== null;
+  } catch (error) {
+    console.error(`quizExists: failed to check quiz ${id}`, error);
+    return null;
+  }
+});
+
 /** Load one document for metadata; returns null for bad ids or DB errors. */
 async function loadDoc(section: DetailSection, param: string): Promise<AnyDoc | null> {
   if (section === "quizzes") return getQuizMeta(idFromParam(param));
