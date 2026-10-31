@@ -1,31 +1,38 @@
 // Server-side check of Firebase ID tokens. Server only: never import this from a client component.
-// Its own Admin app, separate from the one that sends notifications. Verifying a token needs only the project id.
-import { getApps, initializeApp } from "firebase-admin/app";
-import { getAuth, type DecodedIdToken } from "firebase-admin/auth";
+import jwt from "jsonwebtoken";
 import { connectToDatabase } from "@/lib/db";
 import AuthUser from "@/lib/models/AuthUser";
 import { bearerToken, cleanDisplayName } from "@/lib/auth-rules";
+import { certificateMaxAgeSeconds, verifyFirebaseIdToken, type FirebaseTokenClaims } from "@/lib/firebase-token";
 
-const APP_NAME = "srn-auth";
+const CERTIFICATES_URL = "https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com";
 
-function adminAuth() {
-  const projectId = process.env.FIREBASE_PROJECT_ID || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
-  if (!projectId) throw new Error("Firebase project id is not configured");
-  const app = getApps().find((a) => a.name === APP_NAME) ?? initializeApp({ projectId }, APP_NAME);
-  return getAuth(app);
+let certificates: Record<string, string> = {};
+let certificatesExpireAt = 0;
+
+/** Google's public signing certificates, cached for as long as Google allows. */
+async function getCertificate(kid: string): Promise<string | null> {
+  if (Date.now() >= certificatesExpireAt) {
+    const res = await fetch(CERTIFICATES_URL);
+    if (!res.ok) throw new Error(`Could not fetch Firebase certificates (${res.status})`);
+    certificates = (await res.json()) as Record<string, string>;
+    certificatesExpireAt = Date.now() + certificateMaxAgeSeconds(res.headers.get("cache-control")) * 1000;
+  }
+  return certificates[kid] ?? null;
 }
 
-/** The verified token from a request, or null if it is missing, invalid or expired. */
-export async function verifyFirebaseRequest(authorization: string | null): Promise<DecodedIdToken | null> {
+/** The verified claims from a request, or null if the token is missing, invalid or expired. */
+export async function verifyFirebaseRequest(authorization: string | null): Promise<FirebaseTokenClaims | null> {
   const token = bearerToken(authorization);
   if (!token) return null;
-  try {
-    return await adminAuth().verifyIdToken(token);
-  } catch (error) {
-    const code = (error as { code?: unknown }).code;
-    if (typeof code === "string" && code.startsWith("auth/")) return null;
-    throw error;
+  const projectId = process.env.FIREBASE_PROJECT_ID || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+  if (!projectId) throw new Error("Firebase project id is not configured");
+  // The local Auth Emulator issues unsigned tokens. Never accepted in a production build.
+  if (process.env.FIREBASE_AUTH_EMULATOR_HOST && process.env.NODE_ENV !== "production") {
+    const claims = jwt.decode(token) as (FirebaseTokenClaims & { sub?: string }) | null;
+    return claims?.sub ? { ...claims, uid: claims.sub } : null;
   }
+  return verifyFirebaseIdToken(token, projectId, getCertificate);
 }
 
 export type AuthUserRow = {
@@ -38,7 +45,7 @@ export type AuthUserRow = {
 };
 
 /** Finds or creates the profile for a verified token. The unique firebaseUid means one record per account. */
-export async function upsertAuthUser(decoded: DecodedIdToken, givenName?: unknown): Promise<AuthUserRow> {
+export async function upsertAuthUser(decoded: FirebaseTokenClaims, givenName?: unknown): Promise<AuthUserRow> {
   await connectToDatabase();
   const update = {
     $set: {
