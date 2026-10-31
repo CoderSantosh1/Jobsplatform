@@ -38,6 +38,11 @@ export function isMobileNumber(value: unknown): value is string {
   return typeof value === "string" && /^[6-9]\d{9}$/.test(value);
 }
 
+/** The id a browser generates for one test attempt (a UUID), used to save that attempt only once. */
+export function isClientAttemptId(value: unknown): value is string {
+  return typeof value === "string" && /^[a-zA-Z0-9-]{16,64}$/.test(value);
+}
+
 /** Answers sent with a test attempt: one entry per question, each an option index or -1 for "not answered". */
 export function isValidAnswerList(value: unknown, questionCount: number): value is number[] {
   return (

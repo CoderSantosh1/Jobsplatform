@@ -24,10 +24,27 @@ const quizAttemptSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
+    // Set by the browser for one attempt, so a retry or refresh cannot save it twice.
+    clientAttemptId: {
+      type: String,
+    },
+    // Reported by the browser for information only; never used for scoring.
+    clientStartedAt: {
+      type: Date,
+    },
+    clientSubmittedAt: {
+      type: Date,
+    },
   },
   {
     timestamps: true,
   }
+);
+
+// Partial index: older attempts and tests without this id are not affected.
+quizAttemptSchema.index(
+  { userId: 1, quizId: 1, clientAttemptId: 1 },
+  { unique: true, partialFilterExpression: { clientAttemptId: { $type: 'string' } } }
 );
 
 export default mongoose.models.QuizAttempt || mongoose.model('QuizAttempt', quizAttemptSchema); 

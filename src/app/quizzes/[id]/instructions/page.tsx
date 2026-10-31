@@ -17,6 +17,7 @@ import {
 import { instructions } from "./lang"
 import AuthModal from '@/components/AuthModal'
 import { idFromParam } from "@/lib/slug";
+import { isLoginAfterSubmitQuiz } from "@/lib/quiz-attempt-store";
 
 const statusLegend = {
   en: [
@@ -51,14 +52,23 @@ export default function QuizInstructions({ params }: { params: Promise<{ id: str
 
     // Registration check
     if (typeof window !== 'undefined') {
+      // Tests that ask for login after submitting do not need it here; if the check fails, ask as usual.
+      const askForLoginUnlessNotNeeded = () => {
+        fetch(`/api/quizzes/${resolvedParams.id}`)
+          .then((res) => (res.ok ? res.json() : null))
+          .then((quiz) => {
+            if (!isLoginAfterSubmitQuiz(quiz)) setShowRegister(true);
+          })
+          .catch(() => setShowRegister(true));
+      };
       const userData = localStorage.getItem('user');
       if (!userData) {
-        setShowRegister(true);
+        askForLoginUnlessNotNeeded();
       } else {
         try {
           setUser(JSON.parse(userData));
         } catch {
-          setShowRegister(true);
+          askForLoginUnlessNotNeeded();
         }
       }
     }

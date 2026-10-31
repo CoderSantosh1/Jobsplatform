@@ -1,4 +1,5 @@
 "use client"
+import { logoutUser } from "@/lib/auth-session"
 
 import React, { useEffect, useState } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
@@ -44,8 +45,8 @@ export default function QuizResults({ params }: { params: Promise<{ id: string }
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<User | null>(null)
 
-  const handleLogout = () => {
-    localStorage.removeItem("user")
+  const handleLogout = async () => {
+    await logoutUser()
     window.location.href = "/quizzes"
   }
 

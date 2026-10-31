@@ -10,6 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import Header from "./Header";
 import Footer from "./Footer";
+import FirebaseAuthPanel from "./auth/FirebaseAuthPanel";
+import { isFirebaseAuthConfigured } from "@/lib/auth-session";
 import {
   Phone,
   ArrowRight,
@@ -24,14 +26,21 @@ import {
 
 interface AuthModalProps {
   onSuccess: (user: any) => void;
+  /** Shown above the form, e.g. why login is needed now. */
+  notice?: string;
+  /** When set, shows a Cancel button. */
+  onCancel?: () => void;
 }
 
-export default function AuthModal({ onSuccess }: AuthModalProps) {
+export default function AuthModal({ onSuccess, notice, onCancel }: AuthModalProps) {
   const [isLogin, setIsLogin] = useState(false);
   const [name, setName] = useState("");
   const [mobile, setMobile] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  // Google and email are the main options; the mobile form stays available for existing accounts.
+  const firebaseAvailable = isFirebaseAuthConfigured();
+  const [useMobile, setUseMobile] = useState(!firebaseAvailable);
   // ---------------------------
   // validators & handlers (unchanged)
   // ---------------------------
@@ -137,17 +146,19 @@ export default function AuthModal({ onSuccess }: AuthModalProps) {
                 <CardHeader className="bg-gradient-to-br from-amber-50 to-orange-50 p-6 sm:p-8">
                   <div className="text-center">
                     <div className="w-16 h-16 bg-gradient-to-br from-amber-600 to-orange-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-                      {isLogin ? (
+                      {!useMobile || isLogin ? (
                         <BookOpen className="w-8 h-8 text-white" />
                       ) : (
                         <GraduationCap className="w-8 h-8 text-white" />
                       )}
                     </div>
                     <CardTitle className="text-2xl sm:text-3xl font-bold text-amber-900 mb-2">
-                      {isLogin ? "Welcome Back" : "Join Our Test Series"}
+                      {!useMobile ? "Login or Sign Up" : isLogin ? "Welcome Back" : "Join Our Test Series"}
                     </CardTitle>
                     <p className="text-amber-700 font-medium text-base">
-                      {isLogin
+                      {!useMobile
+                        ? "Practise free mock tests and track your results"
+                        : isLogin
                         ? "Continue your learning journey"
                         : "Start your free government exam preparation"
                       }
@@ -156,6 +167,32 @@ export default function AuthModal({ onSuccess }: AuthModalProps) {
                 </CardHeader>
 
                 <CardContent className="p-6 sm:p-8 space-y-6">
+                  {notice && (
+                    <Alert className="border-2 border-amber-300 bg-amber-50">
+                      <CheckCircle2 className="h-5 w-5 text-amber-700" />
+                      <AlertDescription className="text-amber-900 font-semibold ml-2">
+                        {notice}
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                  {!useMobile && (
+                    <>
+                      <FirebaseAuthPanel
+                        onSuccess={(user) => {
+                          onSuccess(user);
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setUseMobile(true)}
+                        className="w-full text-sm font-semibold text-amber-700 hover:underline"
+                      >
+                        Have an account with your mobile number? Use mobile number
+                      </button>
+                    </>
+                  )}
+                  {useMobile && (
+                  <>
                   <form onSubmit={handleSubmit} className="space-y-6">
                     {!isLogin && (
                       <div className="space-y-3">
@@ -258,8 +295,34 @@ export default function AuthModal({ onSuccess }: AuthModalProps) {
                     </span>
                   </Button>
 
+                  {firebaseAvailable && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUseMobile(false);
+                        setError(null);
+                      }}
+                      className="w-full text-sm font-semibold text-amber-700 hover:underline"
+                    >
+                      Continue with Google or Email instead
+                    </button>
+                  )}
+                  </>
+                  )}
+
+                  {onCancel && (
+                    <Button
+                      type="button"
+                      onClick={onCancel}
+                      variant="ghost"
+                      className="w-full text-amber-700 hover:bg-amber-50 font-semibold py-3 rounded-lg"
+                    >
+                      Cancel
+                    </Button>
+                  )}
+
                   {/* Success indicator when form is valid */}
-                  {((isLogin && mobile.length >= 10) ||
+                  {useMobile && ((isLogin && mobile.length >= 10) ||
                     (!isLogin &&
                       name.trim().length >= 2 &&
                       mobile.length >= 10)) && (

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { CheckCircle2, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { progressByQuiz, type QuizProgress } from "@/lib/attempt-stats";
+import { logoutUser } from "@/lib/auth-session";
 
 // One request per page for the signed-in visitor's test history, shared by every quiz card.
 let progressPromise: Promise<Record<string, QuizProgress>> | null = null;
@@ -11,10 +12,11 @@ let progressPromise: Promise<Record<string, QuizProgress>> | null = null;
 function loadMyProgress(): Promise<Record<string, QuizProgress>> {
   if (!progressPromise) {
     progressPromise = (async () => {
-      const user = JSON.parse(localStorage.getItem("user") || "null") as { mobile?: string } | null;
-      // Attempts are saved with the mobile number as the user id (see the quiz page's submit).
-      if (!user?.mobile) return {};
-      const res = await fetch(`/api/quiz-attempts?userId=${encodeURIComponent(user.mobile)}`, { cache: "no-store" });
+      const user = JSON.parse(localStorage.getItem("user") || "null") as { mobile?: string; _id?: string } | null;
+      // Attempts are saved under the mobile number, or the profile id for Google / email accounts.
+      const historyId = user?.mobile || user?._id;
+      if (!historyId) return {};
+      const res = await fetch(`/api/quiz-attempts?userId=${encodeURIComponent(historyId)}`, { cache: "no-store" });
       if (!res.ok) return {};
       const json = await res.json();
       return progressByQuiz(json.data?.attempts ?? []);
@@ -66,7 +68,7 @@ export function QuizUserBar() {
   if (!user) return null;
 
   const logout = () => {
-    localStorage.removeItem("user");
+    logoutUser();
     setUser(null);
     toast.success("Logged out successfully");
   };

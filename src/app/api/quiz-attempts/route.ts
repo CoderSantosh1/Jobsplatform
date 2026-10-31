@@ -5,10 +5,15 @@ import QuizAttempt from "@/lib/models/QuizAttempt";
 import mongoose from "mongoose";
 import { rankFromTotals, summarizeAttempts, type AttemptRow } from "@/lib/attempt-stats";
 import { clientIp, createRateLimiter } from "@/lib/rate-limit";
-import { isMobileNumber, isObjectIdString, isValidAnswerList } from "@/lib/upload-rules";
+import { isClientAttemptId, isMobileNumber, isObjectIdString, isValidAnswerList } from "@/lib/upload-rules";
+import { upsertAuthUser, verifyFirebaseRequest } from "@/lib/firebase-auth-server";
 
 // Public endpoint (students log in with their mobile number only), so it is rate limited and validated.
 const allow = createRateLimiter({ limit: 20, windowMs: 60_000 });
+
+function validTime(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value) && value > 0 && value <= Date.now() + 60_000;
+}
 
 export async function POST(request: Request) {
   if (!allow(clientIp(request.headers))) {
@@ -16,16 +21,42 @@ export async function POST(request: Request) {
   }
   try {
     const body = await request.json().catch(() => null);
-    const { quizId, userId, answers } = (body ?? {}) as { quizId?: unknown; userId?: unknown; answers?: unknown };
-    if (!isObjectIdString(quizId) || !isMobileNumber(userId)) {
+    const { quizId, userId: bodyUserId, answers, clientAttemptId, startedAt, submittedAt } = (body ?? {}) as {
+      quizId?: unknown;
+      userId?: unknown;
+      answers?: unknown;
+      clientAttemptId?: unknown;
+      startedAt?: unknown;
+      submittedAt?: unknown;
+    };
+    const authorization = request.headers.get("authorization");
+    if (!isObjectIdString(quizId) || (!authorization && !isMobileNumber(bodyUserId))) {
       return NextResponse.json({ error: "Invalid quiz or user" }, { status: 400 });
+    }
+    if (clientAttemptId !== undefined && !isClientAttemptId(clientAttemptId)) {
+      return NextResponse.json({ error: "Invalid attempt id" }, { status: 400 });
     }
 
     await connectDB();
-    // Only registered students can be scored and ranked (attempts are stored under the mobile number).
-    const user = await mongoose.connection.db?.collection("users").findOne({ mobile: userId }, { projection: { _id: 1 } });
-    if (!user) {
-      return NextResponse.json({ error: "Please register before submitting a test" }, { status: 401 });
+    let userId: string;
+    if (authorization) {
+      // Google / email accounts: the user comes from the verified token, never from the request body.
+      const decoded = await verifyFirebaseRequest(authorization);
+      if (!decoded) return NextResponse.json({ error: "Please log in again" }, { status: 401 });
+      userId = String((await upsertAuthUser(decoded))._id);
+    } else {
+      // Mobile accounts: only registered students can be scored and ranked (attempts are stored under the number).
+      userId = bodyUserId as string;
+      const user = await mongoose.connection.db?.collection("users").findOne({ mobile: userId }, { projection: { _id: 1 } });
+      if (!user) {
+        return NextResponse.json({ error: "Please register before submitting a test" }, { status: 401 });
+      }
+    }
+
+    // The same attempt sent again (double click, refresh, lost response) returns the saved result.
+    if (clientAttemptId) {
+      const existing = await QuizAttempt.findOne({ quizId, userId, clientAttemptId });
+      if (existing) return NextResponse.json(existing);
     }
 
     // Fetch the quiz to get the correct answers
@@ -48,14 +79,27 @@ export async function POST(request: Request) {
       }
     });
 
-    const attempt = await QuizAttempt.create({
-      quizId,
-      userId,
-      answers,
-      score,
-    });
-
-    return NextResponse.json(attempt);
+    try {
+      const attempt = await QuizAttempt.create({
+        quizId,
+        userId,
+        answers,
+        score,
+        ...(clientAttemptId && {
+          clientAttemptId,
+          ...(validTime(startedAt) && { clientStartedAt: new Date(startedAt) }),
+          ...(validTime(submittedAt) && { clientSubmittedAt: new Date(submittedAt) }),
+        }),
+      });
+      return NextResponse.json(attempt);
+    } catch (error) {
+      // Two identical requests at the same moment: the unique index lets one through; return that one.
+      if (clientAttemptId && (error as { code?: number }).code === 11000) {
+        const existing = await QuizAttempt.findOne({ quizId, userId, clientAttemptId });
+        if (existing) return NextResponse.json(existing);
+      }
+      throw error;
+    }
   } catch (error) {
     console.error("Error submitting quiz attempt:", error);
     return NextResponse.json(

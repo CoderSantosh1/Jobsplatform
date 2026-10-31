@@ -1,4 +1,5 @@
 "use client"
+import { logoutUser } from "@/lib/auth-session"
 
 import type React from "react"
 import { useCallback, useEffect, useRef, useState } from "react"
@@ -108,7 +109,7 @@ const ProfilePage: React.FC = () => {
   }, [historyId, fetchHistory])
 
   const handleLogout = () => {
-    localStorage.removeItem("user")
+    logoutUser()
     toast.success("Logged out successfully")
     window.location.href = "/quizzes"
   }

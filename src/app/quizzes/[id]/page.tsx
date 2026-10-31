@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback, Suspense } from 'react';
+import React, { useEffect, useRef, useState, useCallback, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button, type ButtonProps } from '@/components/ui/button';
@@ -14,6 +14,19 @@ import Link from "next/link"
 import { title } from 'process';
 import { LANG } from "./lang";
 import { idFromParam } from "@/lib/slug";
+import { attemptIdentity, logoutUser, readStoredUser, type StoredUser } from "@/lib/auth-session";
+import {
+  clearAttempt,
+  createAttempt,
+  isAbandoned,
+  isLoginAfterSubmitQuiz,
+  loadAttempt,
+  markSubmitted,
+  newClientAttemptId,
+  remainingSeconds,
+  saveAttempt,
+  type SavedAttempt,
+} from "@/lib/quiz-attempt-store";
 
 // Dynamic imports for non-critical components to reduce render-blocking
 const Header = React.lazy(() => import('@/components/Header'));
@@ -42,8 +55,12 @@ interface Quiz {
   description: string;
   timeLimit: number;
   totalMarks: number;
+  subcategory?: string;
   questions: Question[];
 }
+
+const SUBMITTED_LOGIN_MESSAGE = "Your test has been submitted. Please login or create an account to view your result.";
+
 
 const getStatusColor = (status: QuestionStatus): string => {
   switch (status) {
@@ -87,6 +104,11 @@ export default function TakeQuiz({ params }: { params: Promise<{ id: string }> }
   });
   const [lang, setLang] = useState<'en' | 'hi'>('en');
   const t = LANG[lang];
+  // Tests that ask for login after submitting (see quiz-attempt-store). Stays null for every other test.
+  const attemptRef = useRef<SavedAttempt | null>(null);
+  const sendingRef = useRef(false);
+  const [afterSubmit, setAfterSubmit] = useState<"none" | "login" | "login-closed" | "sending" | "failed">("none");
+  const [sendError, setSendError] = useState("");
 
   // Initialize user check
   useEffect(() => {
@@ -98,18 +120,27 @@ export default function TakeQuiz({ params }: { params: Promise<{ id: string }> }
         return;
       }
       // If quiz already started, enforce validations
+      const continueToTest = () => {
+        const acknowledged = localStorage.getItem(`quiz-instructions-acknowledged-${resolvedParams.id}`);
+        if (!acknowledged) {
+          router.replace(`/quizzes/${resolvedParams.id}/instructions`);
+          return;
+        }
+        setIsInitializing(false);
+      };
       const user = localStorage.getItem("user");
       if (!user) {
-        setShowRegister(true);
-        setIsInitializing(false);
+        const askForLogin = () => {
+          setShowRegister(true);
+          setIsInitializing(false);
+        };
+        fetch(`/api/quizzes/${resolvedParams.id}`)
+          .then((res) => (res.ok ? res.json() : null))
+          .then((data) => (isLoginAfterSubmitQuiz(data) ? continueToTest() : askForLogin()))
+          .catch(askForLogin);
         return;
       }
-      const acknowledged = localStorage.getItem(`quiz-instructions-acknowledged-${resolvedParams.id}`);
-      if (!acknowledged) {
-        router.replace(`/quizzes/${resolvedParams.id}/instructions`);
-        return;
-      }
-      setIsInitializing(false);
+      continueToTest();
     }
   }, [resolvedParams.id, router]);
 
@@ -131,6 +162,25 @@ export default function TakeQuiz({ params }: { params: Promise<{ id: string }> }
         }
         setAnswers(new Array(data.questions.length).fill(-1));
         setQuestionStatuses(new Array(data.questions.length).fill(QuestionStatus.NotViewed));
+
+        if (isLoginAfterSubmitQuiz(data) && data.timeLimit > 0 && data.questions.length > 0) {
+          // Pick up the attempt saved before a refresh, or start one; the timer runs from its start time.
+          const questionIds = data.questions.map((q: Question) => q._id);
+          const now = Date.now();
+          const saved = attemptRef.current ?? loadAttempt(localStorage, data._id, questionIds);
+          const attempt =
+            saved && !isAbandoned(saved, now)
+              ? saved
+              : createAttempt(data, newClientAttemptId(), now, QuestionStatus.NotViewed);
+          attemptRef.current = attempt;
+          saveAttempt(localStorage, attempt);
+          setAnswers(attempt.answers);
+          setQuestionStatuses(attempt.statuses as QuestionStatus[]);
+          setCurrentQuestion(attempt.currentQuestion);
+          setTimeLeft(remainingSeconds(attempt, Date.now()));
+          // Refreshed after submitting: carry on with the same attempt instead of showing the test again.
+          if (attempt.submittedAt !== null) finishAttempt();
+        }
       } catch (error) {
         console.error('Error fetching quiz:', error);
         toast.error('Failed to load quiz. Please check your internet connection and try again.');
@@ -153,8 +203,13 @@ export default function TakeQuiz({ params }: { params: Promise<{ id: string }> }
       return;
     }
 
+    if (attemptRef.current?.submittedAt) {
+      return;
+    }
+
     const timer = setInterval(() => {
-      setTimeLeft((prev) => prev - 1);
+      const attempt = attemptRef.current;
+      setTimeLeft((prev) => (attempt ? remainingSeconds(attempt, Date.now()) : prev - 1));
     }, 1000);
 
     return () => clearInterval(timer);
@@ -198,7 +253,88 @@ export default function TakeQuiz({ params }: { params: Promise<{ id: string }> }
     setShowConfirmModal(true);
   };
 
+  /** Sends the saved attempt. The temporary copy is removed only after the server has accepted it. */
+  const sendAttempt = useCallback(async (user: StoredUser) => {
+    const attempt = attemptRef.current;
+    if (!attempt || sendingRef.current) return;
+    sendingRef.current = true;
+    setSubmitting(true);
+    setAfterSubmit("sending");
+    try {
+      const identity = await attemptIdentity(user);
+      if (!identity) {
+        // The login on this device has ended: keep the attempt and ask again.
+        await logoutUser();
+        sendingRef.current = false;
+        setSubmitting(false);
+        setAfterSubmit("login");
+        return;
+      }
+      const response = await fetch('/api/quiz-attempts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...identity.headers },
+        body: JSON.stringify({
+          quizId: attempt.quizId,
+          ...identity.body,
+          answers: attempt.answers,
+          clientAttemptId: attempt.clientAttemptId,
+          startedAt: attempt.startedAt,
+          submittedAt: attempt.submittedAt,
+        }),
+      });
+      if (response.status === 401) {
+        // This account is not valid any more: keep the attempt and ask again.
+        await logoutUser();
+        sendingRef.current = false;
+        setSubmitting(false);
+        setAfterSubmit("login");
+        return;
+      }
+      const data = await response.json().catch(() => null);
+      if (!response.ok || !data?._id) {
+        throw new Error(data?.error || "We could not submit your test.");
+      }
+      clearAttempt(localStorage, attempt.quizId);
+      attemptRef.current = null;
+      toast.success('Quiz submitted successfully!');
+      router.replace(`/quizzes/${attempt.quizId}/results?attemptId=${data._id}`);
+    } catch (error) {
+      console.error('Error submitting quiz:', error);
+      sendingRef.current = false;
+      setSubmitting(false);
+      setSendError(error instanceof Error && error.message !== 'Failed to fetch' ? error.message : "We could not reach the server.");
+      setAfterSubmit("failed");
+    }
+  }, [router]);
+
+  /** Submitted: send it if logged in, otherwise ask for login first. */
+  const finishAttempt = useCallback(() => {
+    const user = readStoredUser();
+    if (user?.mobile || user?.firebaseUid) {
+      sendAttempt(user);
+    } else {
+      setAfterSubmit("login");
+    }
+  }, [sendAttempt]);
+
+  /** Locks the answers (they can no longer change) and saves them before anything else happens. */
+  const submitSavedAttempt = useCallback((latestAnswers: number[], latestStatuses: QuestionStatus[]) => {
+    const attempt = attemptRef.current;
+    if (!attempt || sendingRef.current) return;
+    const locked =
+      attempt.submittedAt === null
+        ? markSubmitted({ ...attempt, answers: latestAnswers, statuses: latestStatuses }, Date.now())
+        : attempt;
+    attemptRef.current = locked;
+    saveAttempt(localStorage, locked);
+    finishAttempt();
+  }, [finishAttempt]);
+
   const handleSubmit = useCallback(async () => {
+    if (attemptRef.current) {
+      submitSavedAttempt(answers, questionStatuses);
+      return;
+    }
     if (submitting) return;
 
     if (!quiz) {
@@ -217,7 +353,8 @@ export default function TakeQuiz({ params }: { params: Promise<{ id: string }> }
         return null;
       }
     })();
-    if (!user || !user.mobile) {
+    const identity = await attemptIdentity(user).catch(() => null);
+    if (!identity) {
       toast.error("User not found. Please register again.");
       setShowRegister(true);
       return;
@@ -225,15 +362,15 @@ export default function TakeQuiz({ params }: { params: Promise<{ id: string }> }
 
     setSubmitting(true);
     try {
-      console.log("Submitting quiz attempt with quizId:", quiz._id, "userId:", user.mobile, "answers:", answers);
       const response = await fetch('/api/quiz-attempts', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...identity.headers,
         },
         body: JSON.stringify({
           quizId: quiz._id,
-          userId: user.mobile,
+          ...identity.body,
           answers,
         }),
       });
@@ -254,6 +391,14 @@ export default function TakeQuiz({ params }: { params: Promise<{ id: string }> }
 
   // Handle time expiration
   useEffect(() => {
+    if (attemptRef.current) {
+      if (timeLeft === 0 && quiz && attemptRef.current.submittedAt === null) {
+        setShowConfirmModal(false);
+        toast.info("Time is up. Your answers have been submitted.");
+        submitSavedAttempt(answers, questionStatuses);
+      }
+      return;
+    }
     // Only trigger expiration if timeLeft is zero and was set from a valid timeLimit
     if (timeLeft === 0 && quiz && quiz.timeLimit && quiz.timeLimit > 0 && !submitting) {
       setConfirmModalData({
@@ -278,7 +423,16 @@ export default function TakeQuiz({ params }: { params: Promise<{ id: string }> }
         }, 3000);
       }, 3000);
     }
-  }, [timeLeft, submitting, handleSubmit, answers, quiz]);
+  }, [timeLeft, submitting, handleSubmit, answers, quiz, questionStatuses, submitSavedAttempt]);
+
+  // Keep the saved attempt up to date, so a refresh loses nothing.
+  useEffect(() => {
+    const attempt = attemptRef.current;
+    if (!attempt || attempt.submittedAt !== null || answers.length !== attempt.answers.length) return;
+    const updated = { ...attempt, answers, statuses: questionStatuses, currentQuestion };
+    attemptRef.current = updated;
+    saveAttempt(localStorage, updated);
+  }, [answers, questionStatuses, currentQuestion]);
 
   const handleAnswerChange = (value: string) => {
     try {
@@ -415,6 +569,80 @@ export default function TakeQuiz({ params }: { params: Promise<{ id: string }> }
       <Suspense fallback={<div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-2 border-amber-600 border-t-transparent"></div></div>}>
         <AuthModal onSuccess={handleRegister} />
       </Suspense>
+    );
+  }
+
+  // Test submitted: login, sending and error screens. The attempt stays saved throughout.
+  if (afterSubmit === "login") {
+    return (
+      <Suspense fallback={<div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50" />}>
+        <AuthModal
+          notice={SUBMITTED_LOGIN_MESSAGE}
+          onCancel={() => setAfterSubmit("login-closed")}
+          onSuccess={(user: StoredUser) => {
+            localStorage.setItem("user", JSON.stringify(user));
+            sendAttempt(user);
+          }}
+        />
+      </Suspense>
+    );
+  }
+
+  if (afterSubmit !== "none") {
+    const discard = () => {
+      if (!confirm("Discard this attempt? Your answers will be lost and you can start the test again.")) return;
+      clearAttempt(localStorage, resolvedParams.id);
+      window.location.reload();
+    };
+    return (
+      <>
+        <Suspense fallback={<div className="h-16 bg-white shadow-sm animate-pulse"></div>}>
+          <Header />
+        </Suspense>
+        <main className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-white/90 rounded-2xl p-6 sm:p-8 shadow-xl border border-amber-200 text-center">
+            {afterSubmit === "sending" && (
+              <>
+                <div className="h-10 w-10 mx-auto mb-4 animate-spin rounded-full border-4 border-amber-600 border-t-transparent"></div>
+                <h1 className="text-xl font-bold text-amber-900">Getting your result…</h1>
+              </>
+            )}
+            {afterSubmit === "login-closed" && (
+              <>
+                <CheckCircle2 className="h-12 w-12 text-green-600 mx-auto mb-4" />
+                <p className="text-amber-900 font-semibold mb-6">{SUBMITTED_LOGIN_MESSAGE}</p>
+                <Button
+                  onClick={() => setAfterSubmit("login")}
+                  className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-bold py-3"
+                >
+                  Login / Create Account
+                </Button>
+              </>
+            )}
+            {afterSubmit === "failed" && (
+              <>
+                <AlertCircle className="h-12 w-12 text-red-600 mx-auto mb-4" />
+                <h1 className="text-xl font-bold text-amber-900 mb-2">Your answers are saved</h1>
+                <p className="text-amber-800 mb-6">{sendError} Please try again.</p>
+                <Button
+                  onClick={finishAttempt}
+                  className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-bold py-3"
+                >
+                  Try Again
+                </Button>
+              </>
+            )}
+            {afterSubmit !== "sending" && (
+              <button onClick={discard} className="mt-4 text-sm text-gray-600 underline">
+                Discard this attempt and start again
+              </button>
+            )}
+          </div>
+        </main>
+        <Suspense fallback={<div className="h-32 bg-gray-100 animate-pulse"></div>}>
+          <Footer />
+        </Suspense>
+      </>
     );
   }
 

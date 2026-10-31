@@ -1,6 +1,7 @@
 // @ts-ignore: Could not find module 'cloudinary' types
 import { v2 as cloudinary, UploadApiResponse } from "cloudinary";
 import mongoose from "mongoose";
+import AuthUser from "@/lib/models/AuthUser";
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import { clientIp, createRateLimiter } from "@/lib/rate-limit";
@@ -45,7 +46,8 @@ export async function POST(request: Request) {
     const user = await mongoose.connection.db
       ?.collection("users")
       .findOne({ _id: new mongoose.Types.ObjectId(userId) }, { projection: { _id: 1 } });
-    if (!user) return fail("Unknown user", 404);
+    const authUser = user ? null : await AuthUser.exists({ _id: userId });
+    if (!user && !authUser) return fail("Unknown user", 404);
 
     const result = await new Promise<UploadApiResponse>((resolve, reject) => {
       cloudinary.uploader
