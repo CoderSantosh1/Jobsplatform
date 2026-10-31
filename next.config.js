@@ -47,7 +47,15 @@ const nextConfig = {
     ];
   },
   async rewrites() {
-    return [{ source: '/favicon.ico', destination: '/icon.png' }];
+    const rules = [{ source: '/favicon.ico', destination: '/icon.png' }];
+    // Serves Firebase's sign-in pages from this site, so Google shows our domain (with
+    // NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN) and the login redirect does not depend on third-party storage.
+    const firebaseProject = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+    if (firebaseProject) {
+      rules.push({ source: '/__/auth/:path*', destination: `https://${firebaseProject}.firebaseapp.com/__/auth/:path*` });
+      rules.push({ source: '/__/firebase/:path*', destination: `https://${firebaseProject}.firebaseapp.com/__/firebase/:path*` });
+    }
+    return rules;
   },
 };
 

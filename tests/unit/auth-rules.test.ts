@@ -38,7 +38,11 @@ test("Firebase errors become readable messages and unknown ones stay generic", (
   assert.match(authErrorMessage({ code: "auth/email-already-in-use" }), /already exists/);
   assert.match(authErrorMessage({ code: "auth/popup-closed-by-user" }), /closed/);
   assert.match(authErrorMessage({ code: "auth/popup-blocked" }), /blocked/);
-  assert.match(authErrorMessage({ code: "auth/configuration-not-found" }), /not enabled/);
+  assert.match(authErrorMessage({ code: "auth/configuration-not-found" }), /turned off/);
+  assert.match(authErrorMessage({ code: "auth/operation-not-allowed" }), /turned off/);
+  assert.match(authErrorMessage({ code: "auth/unauthorized-domain" }), /not allowed on this website/);
+  assert.match(authErrorMessage({ code: "auth/invalid-api-key" }), /not set up correctly/);
+  assert.match(authErrorMessage({ code: "auth/api-key-not-valid.-please-pass-a-valid-api-key." }), /not set up correctly/);
   const generic = authErrorMessage({ code: "auth/secret-internal", message: "stack trace" });
   assert.equal(generic, "Something went wrong. Please try again.");
   assert.equal(authErrorMessage(new Error("boom")), generic);

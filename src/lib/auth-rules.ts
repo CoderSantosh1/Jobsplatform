@@ -31,9 +31,13 @@ const MESSAGES: Record<string, string> = {
   "auth/popup-blocked": "Your browser blocked the Google sign-in window. Please allow popups and try again.",
   "auth/account-exists-with-different-credential":
     "This email already uses a different sign-in method. Please log in with email and password.",
-  "auth/unauthorized-domain": "Google sign-in is not enabled for this website yet. Please use another login option.",
-  "auth/operation-not-allowed": "This login option is not enabled yet. Please use another login option.",
-  "auth/configuration-not-found": "This login option is not enabled yet. Please use another login option.",
+  "auth/unauthorized-domain":
+    "Google sign-in is not allowed on this website address yet. Please continue with email or try again later.",
+  "auth/operation-not-allowed": "This login option is turned off right now. Please use another login option.",
+  "auth/configuration-not-found": "This login option is turned off right now. Please use another login option.",
+  "auth/invalid-api-key": "Login is not set up correctly on this website. Please try again later.",
+  "auth/api-key-not-valid.-please-pass-a-valid-api-key.":
+    "Login is not set up correctly on this website. Please try again later.",
   "auth/web-storage-unsupported": "Please enable cookies and site data in your browser, then try again.",
 };
 

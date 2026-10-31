@@ -82,6 +82,8 @@ export default function FirebaseAuthPanel({ onSuccess }: { onSuccess: (user: Sto
       await action();
     } catch (e) {
       const code = (e as { code?: unknown }).code;
+      // Visitors see a friendly message; the code in the console tells us which setting or error it was.
+      console.error("Login failed:", code ?? e);
       setError(typeof code === "string" ? authErrorMessage(e) : e instanceof Error ? e.message : authErrorMessage(e));
     } finally {
       setBusy(false);
