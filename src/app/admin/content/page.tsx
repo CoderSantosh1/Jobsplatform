@@ -1,0 +1,1089 @@
+"use client";
+
+import { Suspense, useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import JobList from "../components/JobList";
+import ResultList from "../components/ResultList";
+import AdmitCard from "../components/AdmitCardList";
+import NewsList from "../components/NewsList";
+import AnswerKeyForm from "../components/AnswerKeyForm";
+import AnswerKeyList from "../components/AnswerKeyList";
+import AdmissionForm, {
+  AdmissionFormData as AdmissionFormDataType,
+} from "../components/AdmissionForm";
+import AdmissionList from "../components/AdmissionList";
+import JobForm from "../components/JobForm";
+import QuizForm from "../components/QuizForm";
+import QuizList from "../components/QuizList";
+import CategoryManager from "../components/CategoryManager";
+import PushComposer from "../components/PushComposer";
+import { off } from "process";
+import { adminFetch } from "@/lib/admin-fetch";
+
+interface NewsFormData {
+  title: string;
+  content: string;
+  organization: string;
+  category: string;
+  status: string;
+  publishDate: string;
+  image?: File;
+  imagePreview?: string;
+}
+
+interface JobFormData {
+  title: string;
+  organization: string;
+  location: string;
+  status: string;
+  applicationDeadline: string;
+  applyJob: string;
+  description?: string;
+  category?: string;
+  salary?: string;
+  minimumAge?: string;
+  maximumAge?: string;
+  gender?: string;
+  qualification?: string;
+  totalVacancy: string;
+  requirements?: string[] | string; // Allow both array and comma-separated string
+  applicationBeginDate?: string;
+  lastDateApplyOnline?: string;
+  formCompleteLastDate?: string;
+  correctionDate?: string;
+  examDate?: string;
+  admitCardDate?: string;
+  applicationFeeGeneral?: string;
+  applicationFeeSCST?: string;
+  paymentMethod?: string;
+}
+
+interface AdmitCardFormData {
+  title: string;
+  description: string;
+  organization: string;
+  subtitle: string;
+  category: string;
+  applicationDeadline: string;
+  location: string;
+  downloadAdmitcardLink: string;
+}
+interface ResultFormData {
+  title: string;
+  organization: string;
+  resultDate: string;
+  category: string;
+  downloadLink1: string;
+  downloadLink2: string;
+  downloadLink3: string;
+  youtubeLink: string;
+  description: string;
+  status: string;
+  officalwebsites: string;
+  downloadnotificationresultlis: string;
+}
+
+type TabType =
+  | "jobs"
+  | "results"
+  | "admit-cards"
+  | "news"
+  | "answer-keys"
+  | "admissions"
+  | "quizzes"
+  | "categories"
+  | "notifications";
+
+const TAB_IDS: TabType[] = ["jobs", "results", "admit-cards", "news", "answer-keys", "admissions", "quizzes", "categories", "notifications"];
+
+const TAB_LABELS: Record<TabType, string> = {
+  jobs: "Jobs",
+  results: "Results",
+  "admit-cards": "Admit Cards",
+  news: "News / Exam Preparation",
+  "answer-keys": "Answer Keys",
+  admissions: "Admissions",
+  quizzes: "Create Test",
+  categories: "Categories",
+  notifications: "Notifications",
+};
+
+// The admin sidebar links here with ?tab=<id>; the existing forms and lists below are unchanged.
+export default function ContentManagerPage() {
+  return (
+    <Suspense fallback={null}>
+      <ContentManager />
+    </Suspense>
+  );
+}
+
+function ContentManager() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const router = useRouter();
+
+  useEffect(() => {
+    const token = localStorage.getItem("adminToken");
+    if (!token) {
+      router.push("/admin/login");
+    } else {
+      setIsLoggedIn(true);
+    }
+  }, []);
+
+
+  const requestedTab = useSearchParams()?.get("tab") as TabType | null;
+  const activeTab: TabType = requestedTab && TAB_IDS.includes(requestedTab) ? requestedTab : "jobs";
+  const [jobFormData, setJobFormData] = useState<JobFormData>({
+    title: "",
+    organization: "",
+    location: "",
+    status: "published",
+    applicationDeadline: "",
+    applyJob: "",
+    description: "",
+    category: "",
+    salary: "",
+    minimumAge: "",
+    maximumAge: "",
+    gender: "",
+    qualification: "",
+    totalVacancy: "",
+    requirements: "", // Initialize as empty string, JobForm will handle conversion
+    applicationBeginDate: "",
+    lastDateApplyOnline: "",
+    formCompleteLastDate: "",
+    correctionDate: "",
+    examDate: "",
+    admitCardDate: "",
+    applicationFeeGeneral: "",
+    applicationFeeSCST: "",
+    paymentMethod: "",
+  });
+
+  const [admitCardFormData, setAdmitCardFormData] = useState<AdmitCardFormData>(
+    {
+      title: "",
+      description: "",
+      organization: "",
+      location: "",
+      subtitle: "",
+      applicationDeadline: "",
+      category: "",
+      downloadAdmitcardLink: "",
+    }
+  );
+
+  const [newsFormData, setNewsFormData] = useState<NewsFormData>({
+    title: "",
+    content: "",
+    organization: "",
+    category: "",
+    status: "published",
+    publishDate: new Date().toISOString().split("T")[0],
+  });
+
+  const [resultsFormData, setResultsFormData] = useState<ResultFormData>({
+    title: "",
+    organization: "",
+    resultDate: "",
+    category: "",
+    downloadLink1: "",
+    downloadLink2: "",
+    downloadLink3: "",
+    youtubeLink: "",
+    description: "",
+    status: "published",
+    officalwebsites: "",
+    downloadnotificationresultlis: "",
+  });
+
+  const [answerKeyFormData, setAnswerKeyFormData] = useState({
+    title: "",
+    organization: "",
+    examDate: "",
+    category: "",
+    downloadLink: "",
+    description: "",
+    content: "", // Added content field
+    status: "published",
+  });
+
+  const [jobListRefreshKey, setJobListRefreshKey] = useState(0);
+  const [answerKeyListRefreshKey, setAnswerKeyListRefreshKey] = useState(0);
+  const [admissionListRefreshKey, setAdmissionListRefreshKey] = useState(0); // Added for admissions list
+
+  const [admissionFormData, setAdmissionFormData] =
+    useState<AdmissionFormDataType>({
+      title: "",
+      organization: "",
+      applicationDeadline: "", // Changed from admissionDate and ensured it's present
+      category: "",
+      description: "",
+      content: "", // Added missing content field
+      applicationLink: "",
+      status: "published",
+    });
+
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  if (!isLoggedIn) {
+    return null;
+  }
+
+  const handleCreateJobSubmit = async (formData: JobFormData) => {
+    // Basic client-side validation (already handled by JobForm, but can be kept for extra safety or specific logic here)
+    if (!formData.title.trim()) {
+      alert("Title is required.");
+      return;
+    }
+
+    const dataToSubmit = {
+      ...formData,
+      requirements:
+        typeof formData.requirements === "string"
+          ? formData.requirements
+              .split(",")
+              .map((req) => req.trim())
+              .filter((req) => req)
+          : formData.requirements,
+    };
+
+    try {
+      const response = await adminFetch("/api/jobs", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(dataToSubmit),
+      });
+
+      if (response.ok) {
+        alert("Job posted successfully!");
+        setJobListRefreshKey((prev) => prev + 1); // Refresh the job list
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        alert(
+          `Failed to post job: ${errorData.message || response.statusText}`
+        );
+      }
+    } catch (error) {
+      console.error("Error posting job:", error);
+      alert("Error posting job");
+    }
+  };
+
+  const handleAdmitCardSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const response = await adminFetch("/api/admit-cards", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(admitCardFormData),
+      });
+
+      if (response.ok) {
+        alert("Admit card posted successfully!");
+        setAdmitCardFormData({
+          title: "",
+          description: "",
+          organization: "",
+          location: "",
+          subtitle: "",
+          applicationDeadline: "",
+          category: "",
+          downloadAdmitcardLink: "",
+        });
+      } else {
+        alert("Failed to post admit card");
+      }
+    } catch (error) {
+      console.error("Error posting admit card:", error);
+      alert("Error posting admit card");
+    }
+  };
+
+  const handleNewsSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const formData = new FormData();
+      formData.append("title", newsFormData.title);
+      formData.append("content", newsFormData.content);
+      formData.append("organization", newsFormData.organization);
+      formData.append("category", newsFormData.category);
+      formData.append("status", newsFormData.status);
+      formData.append("publishDate", newsFormData.publishDate);
+      if (newsFormData.image && newsFormData.image instanceof File) {
+        formData.append("image", newsFormData.image);
+      }
+
+      const response = await adminFetch("/api/news", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (response.ok) {
+        alert("News posted successfully!");
+        setNewsFormData({
+          title: "",
+          content: "",
+          organization: "",
+          category: "",
+          status: "published",
+          publishDate: new Date().toISOString().split("T")[0],
+          image: undefined,
+          imagePreview: undefined,
+        });
+        setImagePreview(null);
+      } else {
+        alert("Failed to post news");
+      }
+    } catch (error) {
+      console.error("Error posting news:", error);
+      alert("Error posting news");
+    }
+  };
+
+  const handleResultSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const response = await adminFetch("/api/results", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(resultsFormData),
+      });
+
+      if (response.ok) {
+        alert("Results posted successfully!");
+        setResultsFormData({
+          title: "",
+          organization: "",
+          resultDate: "",
+          category: "",
+          downloadLink1: "",
+          downloadLink2: "",
+          downloadLink3: "",
+          youtubeLink: "",
+          description: "",
+          status: "draft",
+          officalwebsites: "",
+          downloadnotificationresultlis: "",
+        });
+      } else {
+        alert("Failed to post results");
+      }
+    } catch (error) {
+      console.error("Error posting results:", error);
+      alert("Error posting results");
+    }
+  };
+
+  const handleAnswerKeyFormSuccess = () => {
+    setAnswerKeyListRefreshKey((prev) => prev + 1); // Trigger list refresh
+    // The form itself now handles resetting its state on successful creation via its own internal logic triggered by onSubmit completing without initialData
+  };
+
+  // This function will be passed as the onSubmit prop to AnswerKeyForm for creating new entries
+  const handleCreateAnswerKey = async (data: any) => {
+    // 'data' comes from AnswerKeyForm
+    try {
+      const response = await adminFetch("/api/answer-keys", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data), // Use data from the form
+      });
+
+      if (response.ok) {
+        alert("Answer key posted successfully!");
+        // No need to reset answerKeyFormData here, AnswerKeyForm handles its own state reset on success for create mode
+        // onSuccess (handleAnswerKeyFormSuccess) will be called by AnswerKeyForm to refresh the list
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        alert(
+          `Failed to post answer key: ${
+            errorData.message || response.statusText
+          }`
+        );
+      }
+    } catch (error) {
+      console.error("Error posting answer key:", error);
+      alert("Error posting answer key");
+    }
+  };
+
+  const handleAdmissionSubmit = async (data: AdmissionFormDataType) => {
+    try {
+      const response = await adminFetch("/api/admissions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (response.ok) {
+        alert("Admission posted successfully!");
+        setAdmissionFormData({
+          title: "",
+          organization: "",
+          applicationDeadline: "", // Corrected from admissionDate
+          category: "",
+          description: "",
+          content: "", // Added content field
+          applicationLink: "",
+          status: "published",
+        });
+      } else {
+        alert("Failed to post admission");
+      }
+    } catch (error) {
+      console.error("Error posting admission:", error);
+      alert("Error posting admission");
+    }
+  };
+
+  return (
+    <div>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">{TAB_LABELS[activeTab]}</h1>
+        <p className="mt-1 text-sm text-slate-500">Create, edit and manage {TAB_LABELS[activeTab].toLowerCase()}.</p>
+      </div>
+
+      {activeTab === "jobs" && (
+        <>
+          {/* The duplicated form content from approximately line 411 to 574 is replaced by the following: */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-4">
+            <div>
+              <h2 className="text-2xl font-semibold mb-6">Post New Job</h2>
+              <JobForm
+                onSubmit={handleCreateJobSubmit} // Assumes handleCreateJobSubmit is defined in AdminPage
+                onCancel={() => {
+                  // Form cancelled - no action needed
+                }}
+              />
+            </div>
+            <JobList key={jobListRefreshKey} />
+          </div>
+        </>
+      )}
+
+      {activeTab === "results" && (
+        <>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="bg-white rounded-lg shadow-lg p-6 border border-orange-100">
+              {/* <div className="mb-6 rounded-lg border border-orange-200 bg-orange-50 p-4"> */}
+                <h2 className="text-2xl font-semibold text-gray-900 mb-4">Post New Results</h2>
+
+              {/* </div> */}
+              <form onSubmit={handleResultSubmit} className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Exam Name
+                  </label>
+                  <input
+                    type="text"
+                    value={resultsFormData.title}
+                    onChange={(e) =>
+                      setResultsFormData({
+                        ...resultsFormData,
+                        title: e.target.value,
+                      })
+                    }
+                    className="w-full p-2 border rounded-md"
+                    required
+                    minLength={3}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Organization
+                  </label>
+                  <input
+                    type="text"
+                    value={resultsFormData.organization}
+                    onChange={(e) =>
+                      setResultsFormData({
+                        ...resultsFormData,
+                        organization: e.target.value,
+                      })
+                    }
+                    className="w-full p-2 border rounded-md"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Description
+                  </label>
+                  <textarea
+                    value={resultsFormData.description}
+                    onChange={(e) =>
+                      setResultsFormData({
+                        ...resultsFormData,
+                        description: e.target.value,
+                      })
+                    }
+                    className="w-full p-2 border rounded-md h-32"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Result Date
+                  </label>
+                  <input
+                    type="date"
+                    value={resultsFormData.resultDate}
+                    onChange={(e) =>
+                      setResultsFormData({
+                        ...resultsFormData,
+                        resultDate: e.target.value,
+                      })
+                    }
+                    className="w-full p-2 border rounded-md"
+                    required
+                    max={new Date().toISOString().split("T")[0]}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Category
+                  </label>
+                  <select
+                    value={resultsFormData.category}
+                    onChange={(e) =>
+                      setResultsFormData({
+                        ...resultsFormData,
+                        category: e.target.value,
+                      })
+                    }
+                    className="w-full p-2 border rounded-md"
+                  >
+                    <option value="">Select a category</option>
+                    <option value="government">Government</option>
+                    <option value="private">Private</option>
+                    <option value="education">Education</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+
+                <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 space-y-4">
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-900">Result Access Section</h3>
+                    <p className="mt-1 text-xs text-gray-600">
+                      All fields are optional. Use them for result links, alternate links, or simple status text.
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Download Link 1 / Text (Optional)
+                    </label>
+                  <input
+                    type="text"
+                    value={resultsFormData.downloadLink1}
+                    onChange={(e) =>
+                      setResultsFormData({
+                        ...resultsFormData,
+                        downloadLink1: e.target.value,
+                      })
+                    }
+                    className="w-full p-2 border rounded-md"
+                    placeholder="https://example.com/result-main or Coming Soon"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Download Link 2 / Text (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={resultsFormData.downloadLink2}
+                    onChange={(e) =>
+                      setResultsFormData({
+                        ...resultsFormData,
+                        downloadLink2: e.target.value,
+                      })
+                    }
+                    className="w-full p-2 border rounded-md"
+                    placeholder="https://example.com/result-mirror or Coming Soon"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Download Link 3 / Text (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={resultsFormData.downloadLink3}
+                    onChange={(e) =>
+                      setResultsFormData({
+                        ...resultsFormData,
+                        downloadLink3: e.target.value,
+                      })
+                    }
+                    className="w-full p-2 border rounded-md"
+                    placeholder="https://example.com/result-3 or Comming Soon-21/03/2026"
+                  />
+                  <p className="mt-2 text-xs text-gray-500">
+                    Example: official URL, alternate link, Coming Soon, or Comming Soon-21/03/2026.
+                  </p>
+                </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    YouTube Video Link (Optional)
+                  </label>
+                  <input
+                    type="url"
+                    value={resultsFormData.youtubeLink}
+                    onChange={(e) =>
+                      setResultsFormData({
+                        ...resultsFormData,
+                        youtubeLink: e.target.value,
+                      })
+                    }
+                    className="w-full p-2 border rounded-md"
+                    placeholder="https://www.youtube.com/watch?v=VIDEO_ID or https://youtu.be/VIDEO_ID"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Official Websites (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={resultsFormData.officalwebsites}
+                    onChange={(e) =>
+                      setResultsFormData({
+                        ...resultsFormData,
+                        officalwebsites: e.target.value,
+                      })
+                    }
+                    className="w-full p-2 border rounded-md"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Download Notification (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={resultsFormData.downloadnotificationresultlis}
+                    onChange={(e) =>
+                      setResultsFormData({
+                        ...resultsFormData,
+                        downloadnotificationresultlis: e.target.value,
+                      })
+                    }
+                    className="w-full p-2 border rounded-md"
+                  />
+                </div>
+                <Button type="submit" className="w-full">
+                  Post Result
+                </Button>
+              </form>
+            </div>
+            <ResultList />
+          </div>
+        </>
+      )}
+
+      {activeTab === "news" && (
+        <>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="bg-white rounded-lg shadow-lg p-6">
+              <h2 className="text-2xl font-semibold mb-6">Post News</h2>
+              <form onSubmit={handleNewsSubmit} className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Title
+                  </label>
+                  <input
+                    type="text"
+                    value={newsFormData.title}
+                    onChange={(e) =>
+                      setNewsFormData({
+                        ...newsFormData,
+                        title: e.target.value,
+                      })
+                    }
+                    className="w-full p-2 border rounded-md"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Organization
+                  </label>
+                  <input
+                    type="text"
+                    value={newsFormData.organization}
+                    onChange={(e) =>
+                      setNewsFormData({
+                        ...newsFormData,
+                        organization: e.target.value,
+                      })
+                    }
+                    className="w-full p-2 border rounded-md"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Content
+                  </label>
+                  <textarea
+                    value={newsFormData.content}
+                    onChange={(e) =>
+                      setNewsFormData({
+                        ...newsFormData,
+                        content: e.target.value,
+                      })
+                    }
+                    className="w-full p-2 border rounded-md h-32"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Category
+                  </label>
+                  <select
+                    value={newsFormData.category}
+                    onChange={(e) =>
+                      setNewsFormData({
+                        ...newsFormData,
+                        category: e.target.value,
+                      })
+                    }
+                    className="w-full p-2 border rounded-md"
+                    required
+                  >
+                    <option value="">Select a category</option>
+                    <option value="government">Government</option>
+                    <option value="private">Private</option>
+                    <option value="education">Education</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Publish Date
+                  </label>
+                  <input
+                    type="date"
+                    value={newsFormData.publishDate}
+                    onChange={(e) =>
+                      setNewsFormData({
+                        ...newsFormData,
+                        publishDate: e.target.value,
+                      })
+                    }
+                    className="w-full p-2 border rounded-md"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Status
+                  </label>
+                  <select
+                    className="w-full p-2 border rounded-md"
+                    value={newsFormData.status}
+                    onChange={(e) =>
+                      setNewsFormData({
+                        ...newsFormData,
+                        status: e.target.value,
+                      })
+                    }
+                    required
+                  >
+                    <option value="published">Published</option>
+                    <option value="draft">Draft</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Image (optional)
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setNewsFormData({ ...newsFormData, image: file });
+                        setImagePreview(URL.createObjectURL(file));
+                      }
+                    }}
+                    className="w-full p-2 border rounded-md"
+                  />
+                  {imagePreview && (
+                    <div className="mt-2">
+                      <img
+                        src={imagePreview}
+                        alt="Preview"
+                        className="max-h-40 rounded border"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <Button type="submit" className="w-full">
+                  Post News
+                </Button>
+              </form>
+            </div>
+            <NewsList />
+          </div>
+        </>
+      )}
+
+      {activeTab === "admit-cards" && (
+        <>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="bg-white rounded-lg shadow-lg p-6">
+              <h2 className="text-2xl font-semibold mb-6">
+                Post New Admit Card
+              </h2>
+              <form onSubmit={handleAdmitCardSubmit} className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Title
+                  </label>
+                  <input
+                    type="text"
+                    value={admitCardFormData.title}
+                    onChange={(e) =>
+                      setAdmitCardFormData({
+                        ...admitCardFormData,
+                        title: e.target.value,
+                      })
+                    }
+                    className="w-full p-2 border rounded-md"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Organization
+                  </label>
+                  <input
+                    type="text"
+                    value={admitCardFormData.organization}
+                    onChange={(e) =>
+                      setAdmitCardFormData({
+                        ...admitCardFormData,
+                        organization: e.target.value,
+                      })
+                    }
+                    className="w-full p-2 border rounded-md"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Description
+                  </label>
+                  <textarea
+                    value={admitCardFormData.description}
+                    onChange={(e) =>
+                      setAdmitCardFormData({
+                        ...admitCardFormData,
+                        description: e.target.value,
+                      })
+                    }
+                    className="w-full p-2 border rounded-md h-32"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Download Link
+                  </label>
+                  <input
+                    type="text"
+                    value={admitCardFormData.downloadAdmitcardLink}
+                    onChange={(e) =>
+                      setAdmitCardFormData({
+                        ...admitCardFormData,
+                        downloadAdmitcardLink: e.target.value,
+                      })
+                    }
+                    className="w-full p-2 border rounded-md"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Location
+                  </label>
+                  <input
+                    type="text"
+                    value={admitCardFormData.location}
+                    onChange={(e) =>
+                      setAdmitCardFormData({
+                        ...admitCardFormData,
+                        location: e.target.value,
+                      })
+                    }
+                    className="w-full p-2 border rounded-md"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Subtitle
+                  </label>
+                  <input
+                    type="text"
+                    value={admitCardFormData.subtitle}
+                    onChange={(e) =>
+                      setAdmitCardFormData({
+                        ...admitCardFormData,
+                        subtitle: e.target.value,
+                      })
+                    }
+                    className="w-full p-2 border rounded-md"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Category
+                  </label>
+                  <select
+                    value={admitCardFormData.category}
+                    onChange={(e) =>
+                      setAdmitCardFormData({
+                        ...admitCardFormData,
+                        category: e.target.value,
+                      })
+                    }
+                    className="w-full p-2 border rounded-md"
+                    required
+                  >
+                    <option value="">Select a category</option>
+                    <option value="government">Government</option>
+                    <option value="private">Private</option>
+                    <option value="education">Education</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Application Deadline
+                  </label>
+                  <input
+                    type="date"
+                    value={admitCardFormData.applicationDeadline}
+                    onChange={(e) =>
+                      setAdmitCardFormData({
+                        ...admitCardFormData,
+                        applicationDeadline: e.target.value,
+                      })
+                    }
+                    className="w-full p-2 border rounded-md"
+                    required
+                  />
+                </div>
+
+                <Button type="submit" className="w-full">
+                  Post Admit Card
+                </Button>
+              </form>
+            </div>
+            <AdmitCard />
+          </div>
+        </>
+      )}
+      {activeTab === "answer-keys" && (
+        <>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="bg-white rounded-lg shadow-lg p-6">
+              <AnswerKeyForm
+                onSubmit={handleCreateAnswerKey}
+                onSuccess={handleAnswerKeyFormSuccess}
+              />
+            </div>
+            <AnswerKeyList key={answerKeyListRefreshKey} />{" "}
+            {/* Refresh key ensures list updates */}
+          </div>
+        </>
+      )}
+      {activeTab === "admissions" && (
+        <>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="bg-white rounded-lg shadow-lg p-6">
+              <h2 className="text-2xl font-semibold mb-6">
+                Post New Admission
+              </h2>
+
+              <AdmissionForm
+                onSubmit={handleAdmissionSubmit}
+                initialData={admissionFormData}
+                onCancel={() => {
+                  setAdmissionFormData({
+                    title: "",
+                    organization: "",
+                    applicationDeadline: "",
+                    category: "",
+                    description: "",
+                    content: "",
+                    applicationLink: "",
+                    status: "published",
+                  });
+                }}
+              />
+            </div>
+            <AdmissionList key={admissionListRefreshKey} />
+          </div>
+        </>
+      )}
+      {activeTab === "quizzes" && (
+        <>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="bg-white rounded-lg shadow-lg p-6">
+              <h2 className="text-2xl font-semibold mb-6">Create New Quiz</h2>
+              <QuizForm />
+            </div>
+            <div className="bg-white rounded-lg shadow-lg p-6">
+              <h2 className="text-2xl font-semibold mb-6">Quiz List</h2>
+              <QuizList />
+            </div>
+          </div>
+        </>
+      )}
+      {activeTab === "notifications" && <PushComposer />}
+      {activeTab === "categories" && (
+        <div className="bg-white rounded-lg shadow-lg p-6">
+          <CategoryManager />
+        </div>
+      )}
+    </div>
+  );
+}

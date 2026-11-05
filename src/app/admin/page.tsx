@@ -1,1123 +1,327 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import JobList from "./components/JobList";
-import ResultList from "./components/ResultList";
-import AdmitCard from "./components/AdmitCardList";
-import NewsList from "./components/NewsList";
-import AnswerKeyForm from "./components/AnswerKeyForm";
-import AnswerKeyList from "./components/AnswerKeyList";
-import AdmissionForm, {
-  AdmissionFormData as AdmissionFormDataType,
-} from "./components/AdmissionForm";
-import AdmissionList from "./components/AdmissionList";
-import JobForm from "./components/JobForm";
-import QuizForm from "./components/QuizForm";
-import QuizList from "./components/QuizList";
-import CategoryManager from "./components/CategoryManager";
-import PushComposer from "./components/PushComposer";
-import { off } from "process";
+import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
+import {
+  AlertTriangle,
+  BarChart3,
+  Briefcase,
+  ClipboardCheck,
+  CreditCard,
+  ExternalLink,
+  FileText,
+  Layers,
+  Newspaper,
+  PencilLine,
+  PieChart,
+  Plus,
+  Trophy,
+} from "lucide-react";
 import { adminFetch } from "@/lib/admin-fetch";
+import { Badge, Card, ErrorState, PageHeader, Skeleton, StatCard } from "./_components/ui";
 
-interface NewsFormData {
-  title: string;
-  content: string;
-  organization: string;
-  category: string;
-  status: string;
-  publishDate: string;
-  image?: File;
-  imagePreview?: string;
+type Row = { id: string; kind: string; label: string; title: string; status: string; date: string; url: string; adminTab: string };
+type Overview = {
+  generatedAt: string;
+  totals: Record<string, { label: string; total: number; statuses: Record<string, number> }>;
+  drafts: number;
+  testSeriesPages: number;
+  activity: ({ day: string } & Record<string, number>)[];
+  recent: Row[];
+  updated: Row[];
+  seo: { auditedAt: string; total: number; counts: Record<string, number> };
+};
+
+const KIND_LABELS: Record<string, string> = {
+  jobs: "Jobs",
+  results: "Results",
+  "admit-cards": "Admit Cards",
+  news: "News",
+  "answer-keys": "Answer Keys",
+  admissions: "Admissions",
+  quizzes: "Mock Tests",
+};
+const fmt = new Intl.NumberFormat("en-IN");
+const dateFmt = (iso: string) => new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+
+function statusTone(status: string) {
+  return status === "published" ? "emerald" : status === "draft" ? "amber" : "slate";
 }
 
-interface JobFormData {
-  title: string;
-  organization: string;
-  location: string;
-  status: string;
-  applicationDeadline: string;
-  applyJob: string;
-  description?: string;
-  category?: string;
-  salary?: string;
-  minimumAge?: string;
-  maximumAge?: string;
-  gender?: string;
-  qualification?: string;
-  totalVacancy: string;
-  requirements?: string[] | string; // Allow both array and comma-separated string
-  applicationBeginDate?: string;
-  lastDateApplyOnline?: string;
-  formCompleteLastDate?: string;
-  correctionDate?: string;
-  examDate?: string;
-  admitCardDate?: string;
-  applicationFeeGeneral?: string;
-  applicationFeeSCST?: string;
-  paymentMethod?: string;
+/** One bar per day (total posts created); hover or focus shows the split by content type. */
+function ActivityChart({ activity }: { activity: Overview["activity"] }) {
+  const [hover, setHover] = useState<number | null>(null);
+  const totals = activity.map((d) => Object.entries(d).reduce((n, [k, v]) => (k === "day" ? n : n + Number(v)), 0));
+  const max = Math.max(1, ...totals);
+  const sum = totals.reduce((a, b) => a + b, 0);
+  const ticks = [0, Math.ceil(max / 2), max];
+  const H = 160;
+  const active = hover ?? null;
+
+  return (
+    <div>
+      <p className="mb-3 text-sm text-slate-500">
+        {fmt.format(sum)} posts created in the last 30 days
+      </p>
+      <div className="relative flex gap-2">
+        <div className="flex flex-col justify-between text-right text-[11px] tabular-nums text-slate-400" style={{ height: H }}>
+          {[...ticks].reverse().map((t) => (
+            <span key={t}>{t}</span>
+          ))}
+        </div>
+        <div className="relative flex-1">
+          <div className="absolute inset-x-0 top-0 border-t border-slate-100" />
+          <div className="absolute inset-x-0 border-t border-slate-100" style={{ top: H / 2 }} />
+          <div className="relative flex items-end gap-[2px] border-b border-slate-200" style={{ height: H }} role="img" aria-label={`Posts created per day, last 30 days; ${sum} in total`}>
+            {activity.map((d, i) => (
+              <button
+                key={d.day}
+                type="button"
+                onMouseEnter={() => setHover(i)}
+                onMouseLeave={() => setHover(null)}
+                onFocus={() => setHover(i)}
+                onBlur={() => setHover(null)}
+                aria-label={`${dateFmt(d.day)}: ${totals[i]} posts`}
+                className="group flex h-full flex-1 items-end"
+              >
+                <span
+                  className={`block w-full rounded-t-[4px] transition-colors ${active === i ? "bg-indigo-700" : "bg-indigo-500"} ${totals[i] ? "" : "opacity-0"}`}
+                  style={{ height: `${(totals[i] / max) * 100}%`, minHeight: totals[i] ? 3 : 0 }}
+                />
+              </button>
+            ))}
+          </div>
+          <div className="mt-1.5 flex justify-between text-[11px] text-slate-400">
+            <span>{dateFmt(activity[0].day)}</span>
+            <span>{dateFmt(activity[activity.length - 1].day)}</span>
+          </div>
+          {active !== null && (
+            <div
+              className="pointer-events-none absolute z-10 w-44 -translate-x-1/2 rounded-lg border border-slate-200 bg-white p-3 text-xs shadow-lg"
+              style={{ left: `${((active + 0.5) / activity.length) * 100}%`, bottom: H + 12 }}
+            >
+              <p className="font-semibold text-slate-900">{dateFmt(activity[active].day)}</p>
+              <p className="mb-1 text-slate-500">{totals[active]} posts</p>
+              {Object.entries(activity[active])
+                .filter(([k, v]) => k !== "day" && Number(v) > 0)
+                .map(([k, v]) => (
+                  <p key={k} className="flex justify-between text-slate-700">
+                    <span>{KIND_LABELS[k] ?? k}</span>
+                    <span className="tabular-nums">{v}</span>
+                  </p>
+                ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 }
 
-interface AdmitCardFormData {
-  title: string;
-  description: string;
-  organization: string;
-  subtitle: string;
-  category: string;
-  applicationDeadline: string;
-  location: string;
-  downloadAdmitcardLink: string;
-}
-interface ResultFormData {
-  title: string;
-  organization: string;
-  resultDate: string;
-  category: string;
-  downloadLink1: string;
-  downloadLink2: string;
-  downloadLink3: string;
-  youtubeLink: string;
-  description: string;
-  status: string;
-  officalwebsites: string;
-  downloadnotificationresultlis: string;
+function Distribution({ totals }: { totals: Overview["totals"] }) {
+  const rows = Object.entries(totals).map(([k, v]) => ({ k, label: KIND_LABELS[k] ?? v.label, n: v.total })).sort((a, b) => b.n - a.n);
+  const max = Math.max(1, ...rows.map((r) => r.n));
+  const all = rows.reduce((n, r) => n + r.n, 0);
+  return (
+    <ul className="space-y-3">
+      {rows.map((r) => (
+        <li key={r.k}>
+          <div className="mb-1 flex justify-between text-sm">
+            <span className="font-medium text-slate-700">{r.label}</span>
+            <span className="tabular-nums text-slate-500">
+              {fmt.format(r.n)} · {all ? Math.round((100 * r.n) / all) : 0}%
+            </span>
+          </div>
+          <div className="h-2 rounded-full bg-slate-100">
+            <div className="h-2 rounded-full bg-indigo-500" style={{ width: `${(r.n / max) * 100}%` }} />
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
 }
 
-type TabType =
-  | "jobs"
-  | "results"
-  | "admit-cards"
-  | "news"
-  | "answer-keys"
-  | "admissions"
-  | "quizzes"
-  | "categories"
-  | "notifications";
+function PostsTable({ rows, dateLabel }: { rows: Row[]; dateLabel: string }) {
+  if (!rows.length) return <p className="py-6 text-center text-sm text-slate-500">Nothing here yet.</p>;
+  return (
+    <div className="-mx-5 overflow-x-auto">
+      <table className="w-full min-w-[640px] text-sm">
+        <thead>
+          <tr className="border-b border-slate-100 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <th className="px-5 py-2.5">Title</th>
+            <th className="px-3 py-2.5">Type</th>
+            <th className="px-3 py-2.5">{dateLabel}</th>
+            <th className="px-3 py-2.5">Status</th>
+            <th className="px-5 py-2.5 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => (
+            <tr key={`${r.kind}-${r.id}`} className="border-b border-slate-50 last:border-0 hover:bg-slate-50/60">
+              <td className="max-w-[340px] px-5 py-3 font-medium text-slate-900">
+                <span className="line-clamp-2">{r.title}</span>
+              </td>
+              <td className="px-3 py-3 text-slate-600">{r.label}</td>
+              <td className="whitespace-nowrap px-3 py-3 tabular-nums text-slate-600">{dateFmt(r.date)}</td>
+              <td className="px-3 py-3">
+                <Badge tone={statusTone(r.status)}>{r.status}</Badge>
+              </td>
+              <td className="px-5 py-3">
+                <div className="flex justify-end gap-1">
+                  <Link href={`/admin/content?tab=${r.adminTab}`} title="Manage" className="rounded-lg p-2 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600">
+                    <PencilLine className="h-4 w-4" />
+                  </Link>
+                  <a href={r.url} target="_blank" rel="noopener noreferrer" title="View on site" className="rounded-lg p-2 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600">
+                    <ExternalLink className="h-4 w-4" />
+                  </a>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
 
-export default function AdminDashboard() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const router = useRouter();
+const QUICK = [
+  { label: "Create Job", href: "/admin/content?tab=jobs", icon: Briefcase },
+  { label: "Create Result", href: "/admin/content?tab=results", icon: Trophy },
+  { label: "Create Admit Card", href: "/admin/content?tab=admit-cards", icon: CreditCard },
+  { label: "Create News", href: "/admin/content?tab=news", icon: Newspaper },
+  { label: "Add Test Series", href: "/admin/quizzes/create", icon: Layers },
+  { label: "SEO Audit", href: "/admin/seo/test-series", icon: ClipboardCheck },
+];
 
-  useEffect(() => {
-    const token = localStorage.getItem("adminToken");
-    if (!token) {
-      router.push("/admin/login");
-    } else {
-      setIsLoggedIn(true);
+export default function AdminOverviewPage() {
+  const [data, setData] = useState<Overview | null>(null);
+  const [error, setError] = useState("");
+
+  const load = useCallback(async () => {
+    setError("");
+    try {
+      const res = await adminFetch("/api/admin/overview", { cache: "no-store" });
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.success) throw new Error(json?.error || "Could not load dashboard data.");
+      setData(json.data);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not load dashboard data.");
     }
   }, []);
 
-  const handleLogout = async () => {
-    try {
-      await fetch("/api/admin/logout", {
-        method: "POST",
-      });
-      localStorage.removeItem("adminToken");
-      router.push("/admin/login");
-    } catch (error) {
-      console.error("Logout error:", error);
-    }
-  };
+  useEffect(() => {
+    load();
+  }, [load]);
 
-  const [activeTab, setActiveTab] = useState<TabType>("jobs");
-  const [jobFormData, setJobFormData] = useState<JobFormData>({
-    title: "",
-    organization: "",
-    location: "",
-    status: "published",
-    applicationDeadline: "",
-    applyJob: "",
-    description: "",
-    category: "",
-    salary: "",
-    minimumAge: "",
-    maximumAge: "",
-    gender: "",
-    qualification: "",
-    totalVacancy: "",
-    requirements: "", // Initialize as empty string, JobForm will handle conversion
-    applicationBeginDate: "",
-    lastDateApplyOnline: "",
-    formCompleteLastDate: "",
-    correctionDate: "",
-    examDate: "",
-    admitCardDate: "",
-    applicationFeeGeneral: "",
-    applicationFeeSCST: "",
-    paymentMethod: "",
-  });
-
-  const [admitCardFormData, setAdmitCardFormData] = useState<AdmitCardFormData>(
-    {
-      title: "",
-      description: "",
-      organization: "",
-      location: "",
-      subtitle: "",
-      applicationDeadline: "",
-      category: "",
-      downloadAdmitcardLink: "",
-    }
-  );
-
-  const [newsFormData, setNewsFormData] = useState<NewsFormData>({
-    title: "",
-    content: "",
-    organization: "",
-    category: "",
-    status: "published",
-    publishDate: new Date().toISOString().split("T")[0],
-  });
-
-  const [resultsFormData, setResultsFormData] = useState<ResultFormData>({
-    title: "",
-    organization: "",
-    resultDate: "",
-    category: "",
-    downloadLink1: "",
-    downloadLink2: "",
-    downloadLink3: "",
-    youtubeLink: "",
-    description: "",
-    status: "published",
-    officalwebsites: "",
-    downloadnotificationresultlis: "",
-  });
-
-  const [answerKeyFormData, setAnswerKeyFormData] = useState({
-    title: "",
-    organization: "",
-    examDate: "",
-    category: "",
-    downloadLink: "",
-    description: "",
-    content: "", // Added content field
-    status: "published",
-  });
-
-  const [jobListRefreshKey, setJobListRefreshKey] = useState(0);
-  const [answerKeyListRefreshKey, setAnswerKeyListRefreshKey] = useState(0);
-  const [admissionListRefreshKey, setAdmissionListRefreshKey] = useState(0); // Added for admissions list
-
-  const [admissionFormData, setAdmissionFormData] =
-    useState<AdmissionFormDataType>({
-      title: "",
-      organization: "",
-      applicationDeadline: "", // Changed from admissionDate and ensured it's present
-      category: "",
-      description: "",
-      content: "", // Added missing content field
-      applicationLink: "",
-      status: "published",
-    });
-
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-
-  if (!isLoggedIn) {
-    return null;
-  }
-
-  const handleCreateJobSubmit = async (formData: JobFormData) => {
-    // Basic client-side validation (already handled by JobForm, but can be kept for extra safety or specific logic here)
-    if (!formData.title.trim()) {
-      alert("Title is required.");
-      return;
-    }
-
-    const dataToSubmit = {
-      ...formData,
-      requirements:
-        typeof formData.requirements === "string"
-          ? formData.requirements
-              .split(",")
-              .map((req) => req.trim())
-              .filter((req) => req)
-          : formData.requirements,
-    };
-
-    try {
-      const response = await adminFetch("/api/jobs", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(dataToSubmit),
-      });
-
-      if (response.ok) {
-        alert("Job posted successfully!");
-        setJobListRefreshKey((prev) => prev + 1); // Refresh the job list
-      } else {
-        const errorData = await response.json().catch(() => ({}));
-        alert(
-          `Failed to post job: ${errorData.message || response.statusText}`
-        );
-      }
-    } catch (error) {
-      console.error("Error posting job:", error);
-      alert("Error posting job");
-    }
-  };
-
-  const handleAdmitCardSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const response = await adminFetch("/api/admit-cards", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(admitCardFormData),
-      });
-
-      if (response.ok) {
-        alert("Admit card posted successfully!");
-        setAdmitCardFormData({
-          title: "",
-          description: "",
-          organization: "",
-          location: "",
-          subtitle: "",
-          applicationDeadline: "",
-          category: "",
-          downloadAdmitcardLink: "",
-        });
-      } else {
-        alert("Failed to post admit card");
-      }
-    } catch (error) {
-      console.error("Error posting admit card:", error);
-      alert("Error posting admit card");
-    }
-  };
-
-  const handleNewsSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const formData = new FormData();
-      formData.append("title", newsFormData.title);
-      formData.append("content", newsFormData.content);
-      formData.append("organization", newsFormData.organization);
-      formData.append("category", newsFormData.category);
-      formData.append("status", newsFormData.status);
-      formData.append("publishDate", newsFormData.publishDate);
-      if (newsFormData.image && newsFormData.image instanceof File) {
-        formData.append("image", newsFormData.image);
-      }
-
-      const response = await adminFetch("/api/news", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (response.ok) {
-        alert("News posted successfully!");
-        setNewsFormData({
-          title: "",
-          content: "",
-          organization: "",
-          category: "",
-          status: "published",
-          publishDate: new Date().toISOString().split("T")[0],
-          image: undefined,
-          imagePreview: undefined,
-        });
-        setImagePreview(null);
-      } else {
-        alert("Failed to post news");
-      }
-    } catch (error) {
-      console.error("Error posting news:", error);
-      alert("Error posting news");
-    }
-  };
-
-  const handleResultSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const response = await adminFetch("/api/results", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(resultsFormData),
-      });
-
-      if (response.ok) {
-        alert("Results posted successfully!");
-        setResultsFormData({
-          title: "",
-          organization: "",
-          resultDate: "",
-          category: "",
-          downloadLink1: "",
-          downloadLink2: "",
-          downloadLink3: "",
-          youtubeLink: "",
-          description: "",
-          status: "draft",
-          officalwebsites: "",
-          downloadnotificationresultlis: "",
-        });
-      } else {
-        alert("Failed to post results");
-      }
-    } catch (error) {
-      console.error("Error posting results:", error);
-      alert("Error posting results");
-    }
-  };
-
-  const handleAnswerKeyFormSuccess = () => {
-    setAnswerKeyListRefreshKey((prev) => prev + 1); // Trigger list refresh
-    // The form itself now handles resetting its state on successful creation via its own internal logic triggered by onSubmit completing without initialData
-  };
-
-  // This function will be passed as the onSubmit prop to AnswerKeyForm for creating new entries
-  const handleCreateAnswerKey = async (data: any) => {
-    // 'data' comes from AnswerKeyForm
-    try {
-      const response = await adminFetch("/api/answer-keys", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data), // Use data from the form
-      });
-
-      if (response.ok) {
-        alert("Answer key posted successfully!");
-        // No need to reset answerKeyFormData here, AnswerKeyForm handles its own state reset on success for create mode
-        // onSuccess (handleAnswerKeyFormSuccess) will be called by AnswerKeyForm to refresh the list
-      } else {
-        const errorData = await response.json().catch(() => ({}));
-        alert(
-          `Failed to post answer key: ${
-            errorData.message || response.statusText
-          }`
-        );
-      }
-    } catch (error) {
-      console.error("Error posting answer key:", error);
-      alert("Error posting answer key");
-    }
-  };
-
-  const handleAdmissionSubmit = async (data: AdmissionFormDataType) => {
-    try {
-      const response = await adminFetch("/api/admissions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (response.ok) {
-        alert("Admission posted successfully!");
-        setAdmissionFormData({
-          title: "",
-          organization: "",
-          applicationDeadline: "", // Corrected from admissionDate
-          category: "",
-          description: "",
-          content: "", // Added content field
-          applicationLink: "",
-          status: "published",
-        });
-      } else {
-        alert("Failed to post admission");
-      }
-    } catch (error) {
-      console.error("Error posting admission:", error);
-      alert("Error posting admission");
-    }
-  };
-
-  const tabs = [
-    { id: "jobs" as TabType, label: "Jobs" },
-    { id: "results" as TabType, label: "Results" },
-    { id: "admit-cards" as TabType, label: "Admit Cards" },
-    { id: "news" as TabType, label: "News" },
-    { id: "answer-keys" as TabType, label: "Answer Keys" },
-    { id: "admissions" as TabType, label: "Admissions" },
-    { id: "quizzes" as TabType, label: "Quizzes" },
-    { id: "categories" as TabType, label: "Categories" },
-    { id: "notifications" as TabType, label: "Notifications" },
-  ];
+  const t = data?.totals;
+  const posts = t ? ["jobs", "results", "admit-cards", "news", "answer-keys", "admissions"].reduce((n, k) => n + (t[k]?.total ?? 0), 0) : 0;
+  const seoIssues = data ? (data.seo.counts.NOINDEX ?? 0) + (data.seo.counts.CONSOLIDATE ?? 0) + (data.seo.counts.IMPROVE ?? 0) : 0;
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold">Admin Dashboard - Job Management System</h1>
-          <p className="text-gray-600 mt-2">Manage jobs, results, admit cards, news, answer keys, admissions, quizzes, and categories</p>
-        </div>
-        <Button className="">
-          <a
-            href="/admin/quizzes"
-            className="text-gray-900  hover:text-blue-500 px-3 py-2 rounded-md text-sm font-medium"
-          >
-            All quiz
-          </a>
-        </Button>
-        <Button onClick={handleLogout} variant="outline">
-          Logout
-        </Button>
-      </div>
+    <div>
+      <PageHeader
+        title="Dashboard"
+        subtitle={data ? `Live data from the database · updated ${new Date(data.generatedAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}` : "Overview of content and SEO"}
+        actions={
+          <button type="button" onClick={load} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">
+            Refresh
+          </button>
+        }
+      />
 
-      <div className="mb-6">
-        <div className="border-b border-gray-200">
-          <nav className="-mb-px flex space-x-8" aria-label="Tabs">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`
-                  whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm
-                  ${
-                    activeTab === tab.id
-                      ? "border-blue-500 text-blue-600"
-                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                  }
-                `}
+      {error && <ErrorState message={error} onRetry={load} />}
+
+      {!error && (
+        <>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {!data ? (
+              Array.from({ length: 8 }, (_, i) => <Skeleton key={i} className="h-[92px]" />)
+            ) : (
+              <>
+                <StatCard label="Total Posts" value={fmt.format(posts)} hint="Jobs, results, admit cards, news, answer keys, admissions" icon={FileText} />
+                <StatCard label="Published Jobs" value={fmt.format(t!.jobs.statuses.published ?? 0)} hint={`${fmt.format(t!.jobs.total)} jobs in total`} icon={Briefcase} tone="blue" />
+                <StatCard label="Results" value={fmt.format(t!.results.total)} icon={Trophy} tone="amber" />
+                <StatCard label="Admit Cards" value={fmt.format(t!["admit-cards"].total)} icon={CreditCard} tone="violet" />
+                <StatCard label="News / Updates" value={fmt.format(t!.news.total)} icon={Newspaper} tone="emerald" />
+                <StatCard label="Test Series Pages" value={fmt.format(data.testSeriesPages)} hint={`${fmt.format(t!.quizzes.total)} mock tests`} icon={Layers} />
+                <StatCard label="Draft Content" value={fmt.format(data.drafts)} hint="Across all content types" icon={PencilLine} tone="slate" />
+                <StatCard label="SEO Issues" value={fmt.format(seoIssues)} hint={`Test-series audit of ${dateFmt(data.seo.auditedAt)}`} icon={AlertTriangle} tone="rose" />
+              </>
+            )}
+          </div>
+
+          <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-3">
+            <Card title="Publishing Activity" icon={BarChart3} className="xl:col-span-2">
+              {data ? <ActivityChart activity={data.activity} /> : <Skeleton className="h-48" />}
+            </Card>
+            <Card title="Content Distribution" icon={PieChart}>
+              {data ? <Distribution totals={data.totals} /> : <Skeleton className="h-48" />}
+            </Card>
+          </div>
+
+          <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-3">
+            <Card title="Recent Posts" icon={FileText} className="xl:col-span-2">
+              {data ? <PostsTable rows={data.recent} dateLabel="Created" /> : <Skeleton className="h-64" />}
+            </Card>
+            <div className="space-y-6">
+              <Card
+                title="SEO Issues"
+                icon={AlertTriangle}
+                actions={
+                  <Link href="/admin/seo/test-series" className="text-sm font-semibold text-indigo-600 hover:underline">
+                    View audit
+                  </Link>
+                }
               >
-                {tab.label}
-              </button>
-            ))}
-          </nav>
-        </div>
-      </div>
-
-      {activeTab === "jobs" && (
-        <>
-          {/* The duplicated form content from approximately line 411 to 574 is replaced by the following: */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-4">
-            <div>
-              <h2 className="text-2xl font-semibold mb-6">Post New Job</h2>
-              <JobForm
-                onSubmit={handleCreateJobSubmit} // Assumes handleCreateJobSubmit is defined in AdminPage
-                onCancel={() => {
-                  // Form cancelled - no action needed
-                }}
-              />
-            </div>
-            <JobList key={jobListRefreshKey} />
-          </div>
-        </>
-      )}
-
-      {activeTab === "results" && (
-        <>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="bg-white rounded-lg shadow-lg p-6 border border-orange-100">
-              {/* <div className="mb-6 rounded-lg border border-orange-200 bg-orange-50 p-4"> */}
-                <h2 className="text-2xl font-semibold text-gray-900 mb-4">Post New Results</h2>
-
-              {/* </div> */}
-              <form onSubmit={handleResultSubmit} className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Exam Name
-                  </label>
-                  <input
-                    type="text"
-                    value={resultsFormData.title}
-                    onChange={(e) =>
-                      setResultsFormData({
-                        ...resultsFormData,
-                        title: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 border rounded-md"
-                    required
-                    minLength={3}
-                  />
+                {data ? (
+                  <ul className="space-y-2 text-sm">
+                    {[
+                      ["NOINDEX", "Noindex candidates", "rose"],
+                      ["CONSOLIDATE", "Duplicate URLs to consolidate", "amber"],
+                      ["IMPROVE", "Pages needing better content", "indigo"],
+                      ["NONE (404)", "Already returning 404", "slate"],
+                    ].map(([key, label, tone]) => (
+                      <li key={key}>
+                        <Link
+                          href={`/admin/seo/test-series?action=${encodeURIComponent(key)}`}
+                          className="flex items-center justify-between rounded-lg border border-slate-100 px-3 py-2.5 hover:border-indigo-200 hover:bg-indigo-50/40"
+                        >
+                          <span className="text-slate-700">{label}</span>
+                          <Badge tone={tone as "rose"}>{fmt.format(data.seo.counts[key] ?? 0)}</Badge>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <Skeleton className="h-40" />
+                )}
+                <p className="mt-3 text-xs text-slate-500">
+                  From the test-series audit of {data ? dateFmt(data.seo.auditedAt) : "…"}. These are recommendations, not Google&apos;s decisions.
+                </p>
+              </Card>
+              <Card title="Quick Actions" icon={Plus}>
+                <div className="grid grid-cols-2 gap-2">
+                  {QUICK.map((q) => (
+                    <Link
+                      key={q.label}
+                      href={q.href}
+                      className="flex flex-col items-center gap-1.5 rounded-xl border border-slate-200 px-2 py-3 text-center text-xs font-medium text-slate-700 hover:border-indigo-300 hover:bg-indigo-50/50 hover:text-indigo-700"
+                    >
+                      <q.icon className="h-5 w-5 text-indigo-600" />
+                      {q.label}
+                    </Link>
+                  ))}
                 </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Organization
-                  </label>
-                  <input
-                    type="text"
-                    value={resultsFormData.organization}
-                    onChange={(e) =>
-                      setResultsFormData({
-                        ...resultsFormData,
-                        organization: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 border rounded-md"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Description
-                  </label>
-                  <textarea
-                    value={resultsFormData.description}
-                    onChange={(e) =>
-                      setResultsFormData({
-                        ...resultsFormData,
-                        description: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 border rounded-md h-32"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Result Date
-                  </label>
-                  <input
-                    type="date"
-                    value={resultsFormData.resultDate}
-                    onChange={(e) =>
-                      setResultsFormData({
-                        ...resultsFormData,
-                        resultDate: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 border rounded-md"
-                    required
-                    max={new Date().toISOString().split("T")[0]}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Category
-                  </label>
-                  <select
-                    value={resultsFormData.category}
-                    onChange={(e) =>
-                      setResultsFormData({
-                        ...resultsFormData,
-                        category: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 border rounded-md"
-                  >
-                    <option value="">Select a category</option>
-                    <option value="government">Government</option>
-                    <option value="private">Private</option>
-                    <option value="education">Education</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-
-                <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 space-y-4">
-                  <div>
-                    <h3 className="text-sm font-semibold text-gray-900">Result Access Section</h3>
-                    <p className="mt-1 text-xs text-gray-600">
-                      All fields are optional. Use them for result links, alternate links, or simple status text.
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2">
-                      Download Link 1 / Text (Optional)
-                    </label>
-                  <input
-                    type="text"
-                    value={resultsFormData.downloadLink1}
-                    onChange={(e) =>
-                      setResultsFormData({
-                        ...resultsFormData,
-                        downloadLink1: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 border rounded-md"
-                    placeholder="https://example.com/result-main or Coming Soon"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Download Link 2 / Text (Optional)
-                  </label>
-                  <input
-                    type="text"
-                    value={resultsFormData.downloadLink2}
-                    onChange={(e) =>
-                      setResultsFormData({
-                        ...resultsFormData,
-                        downloadLink2: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 border rounded-md"
-                    placeholder="https://example.com/result-mirror or Coming Soon"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Download Link 3 / Text (Optional)
-                  </label>
-                  <input
-                    type="text"
-                    value={resultsFormData.downloadLink3}
-                    onChange={(e) =>
-                      setResultsFormData({
-                        ...resultsFormData,
-                        downloadLink3: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 border rounded-md"
-                    placeholder="https://example.com/result-3 or Comming Soon-21/03/2026"
-                  />
-                  <p className="mt-2 text-xs text-gray-500">
-                    Example: official URL, alternate link, Coming Soon, or Comming Soon-21/03/2026.
-                  </p>
-                </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    YouTube Video Link (Optional)
-                  </label>
-                  <input
-                    type="url"
-                    value={resultsFormData.youtubeLink}
-                    onChange={(e) =>
-                      setResultsFormData({
-                        ...resultsFormData,
-                        youtubeLink: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 border rounded-md"
-                    placeholder="https://www.youtube.com/watch?v=VIDEO_ID or https://youtu.be/VIDEO_ID"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Official Websites (Optional)
-                  </label>
-                  <input
-                    type="text"
-                    value={resultsFormData.officalwebsites}
-                    onChange={(e) =>
-                      setResultsFormData({
-                        ...resultsFormData,
-                        officalwebsites: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 border rounded-md"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Download Notification (Optional)
-                  </label>
-                  <input
-                    type="text"
-                    value={resultsFormData.downloadnotificationresultlis}
-                    onChange={(e) =>
-                      setResultsFormData({
-                        ...resultsFormData,
-                        downloadnotificationresultlis: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 border rounded-md"
-                  />
-                </div>
-                <Button type="submit" className="w-full">
-                  Post Result
-                </Button>
-              </form>
-            </div>
-            <ResultList />
-          </div>
-        </>
-      )}
-
-      {activeTab === "news" && (
-        <>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <h2 className="text-2xl font-semibold mb-6">Post News</h2>
-              <form onSubmit={handleNewsSubmit} className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Title
-                  </label>
-                  <input
-                    type="text"
-                    value={newsFormData.title}
-                    onChange={(e) =>
-                      setNewsFormData({
-                        ...newsFormData,
-                        title: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 border rounded-md"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Organization
-                  </label>
-                  <input
-                    type="text"
-                    value={newsFormData.organization}
-                    onChange={(e) =>
-                      setNewsFormData({
-                        ...newsFormData,
-                        organization: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 border rounded-md"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Content
-                  </label>
-                  <textarea
-                    value={newsFormData.content}
-                    onChange={(e) =>
-                      setNewsFormData({
-                        ...newsFormData,
-                        content: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 border rounded-md h-32"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Category
-                  </label>
-                  <select
-                    value={newsFormData.category}
-                    onChange={(e) =>
-                      setNewsFormData({
-                        ...newsFormData,
-                        category: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 border rounded-md"
-                    required
-                  >
-                    <option value="">Select a category</option>
-                    <option value="government">Government</option>
-                    <option value="private">Private</option>
-                    <option value="education">Education</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Publish Date
-                  </label>
-                  <input
-                    type="date"
-                    value={newsFormData.publishDate}
-                    onChange={(e) =>
-                      setNewsFormData({
-                        ...newsFormData,
-                        publishDate: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 border rounded-md"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Status
-                  </label>
-                  <select
-                    className="w-full p-2 border rounded-md"
-                    value={newsFormData.status}
-                    onChange={(e) =>
-                      setNewsFormData({
-                        ...newsFormData,
-                        status: e.target.value,
-                      })
-                    }
-                    required
-                  >
-                    <option value="published">Published</option>
-                    <option value="draft">Draft</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Image (optional)
-                  </label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        setNewsFormData({ ...newsFormData, image: file });
-                        setImagePreview(URL.createObjectURL(file));
-                      }
-                    }}
-                    className="w-full p-2 border rounded-md"
-                  />
-                  {imagePreview && (
-                    <div className="mt-2">
-                      <img
-                        src={imagePreview}
-                        alt="Preview"
-                        className="max-h-40 rounded border"
-                      />
-                    </div>
-                  )}
-                </div>
-
-                <Button type="submit" className="w-full">
-                  Post News
-                </Button>
-              </form>
-            </div>
-            <NewsList />
-          </div>
-        </>
-      )}
-
-      {activeTab === "admit-cards" && (
-        <>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <h2 className="text-2xl font-semibold mb-6">
-                Post New Admit Card
-              </h2>
-              <form onSubmit={handleAdmitCardSubmit} className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Title
-                  </label>
-                  <input
-                    type="text"
-                    value={admitCardFormData.title}
-                    onChange={(e) =>
-                      setAdmitCardFormData({
-                        ...admitCardFormData,
-                        title: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 border rounded-md"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Organization
-                  </label>
-                  <input
-                    type="text"
-                    value={admitCardFormData.organization}
-                    onChange={(e) =>
-                      setAdmitCardFormData({
-                        ...admitCardFormData,
-                        organization: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 border rounded-md"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Description
-                  </label>
-                  <textarea
-                    value={admitCardFormData.description}
-                    onChange={(e) =>
-                      setAdmitCardFormData({
-                        ...admitCardFormData,
-                        description: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 border rounded-md h-32"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Download Link
-                  </label>
-                  <input
-                    type="text"
-                    value={admitCardFormData.downloadAdmitcardLink}
-                    onChange={(e) =>
-                      setAdmitCardFormData({
-                        ...admitCardFormData,
-                        downloadAdmitcardLink: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 border rounded-md"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Location
-                  </label>
-                  <input
-                    type="text"
-                    value={admitCardFormData.location}
-                    onChange={(e) =>
-                      setAdmitCardFormData({
-                        ...admitCardFormData,
-                        location: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 border rounded-md"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Subtitle
-                  </label>
-                  <input
-                    type="text"
-                    value={admitCardFormData.subtitle}
-                    onChange={(e) =>
-                      setAdmitCardFormData({
-                        ...admitCardFormData,
-                        subtitle: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 border rounded-md"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Category
-                  </label>
-                  <select
-                    value={admitCardFormData.category}
-                    onChange={(e) =>
-                      setAdmitCardFormData({
-                        ...admitCardFormData,
-                        category: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 border rounded-md"
-                    required
-                  >
-                    <option value="">Select a category</option>
-                    <option value="government">Government</option>
-                    <option value="private">Private</option>
-                    <option value="education">Education</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Application Deadline
-                  </label>
-                  <input
-                    type="date"
-                    value={admitCardFormData.applicationDeadline}
-                    onChange={(e) =>
-                      setAdmitCardFormData({
-                        ...admitCardFormData,
-                        applicationDeadline: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 border rounded-md"
-                    required
-                  />
-                </div>
-
-                <Button type="submit" className="w-full">
-                  Post Admit Card
-                </Button>
-              </form>
-            </div>
-            <AdmitCard />
-          </div>
-        </>
-      )}
-      {activeTab === "answer-keys" && (
-        <>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <AnswerKeyForm
-                onSubmit={handleCreateAnswerKey}
-                onSuccess={handleAnswerKeyFormSuccess}
-              />
-            </div>
-            <AnswerKeyList key={answerKeyListRefreshKey} />{" "}
-            {/* Refresh key ensures list updates */}
-          </div>
-        </>
-      )}
-      {activeTab === "admissions" && (
-        <>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <h2 className="text-2xl font-semibold mb-6">
-                Post New Admission
-              </h2>
-
-              <AdmissionForm
-                onSubmit={handleAdmissionSubmit}
-                initialData={admissionFormData}
-                onCancel={() => {
-                  setAdmissionFormData({
-                    title: "",
-                    organization: "",
-                    applicationDeadline: "",
-                    category: "",
-                    description: "",
-                    content: "",
-                    applicationLink: "",
-                    status: "published",
-                  });
-                }}
-              />
-            </div>
-            <AdmissionList key={admissionListRefreshKey} />
-          </div>
-        </>
-      )}
-      {activeTab === "quizzes" && (
-        <>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <h2 className="text-2xl font-semibold mb-6">Create New Quiz</h2>
-              <QuizForm />
-            </div>
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <h2 className="text-2xl font-semibold mb-6">Quiz List</h2>
-              <QuizList />
+              </Card>
             </div>
           </div>
+
+          <div className="mt-6">
+            <Card title="Recently Updated" icon={PencilLine}>
+              {data ? <PostsTable rows={data.updated} dateLabel="Updated" /> : <Skeleton className="h-48" />}
+            </Card>
+          </div>
         </>
-      )}
-      {activeTab === "notifications" && <PushComposer />}
-      {activeTab === "categories" && (
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <CategoryManager />
-        </div>
       )}
     </div>
   );
