@@ -12,7 +12,10 @@ interface ValidationError {
   };
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  // Lists every result, drafts included, so it is admin-only like the write routes below.
+  const denied = requireAdmin(request);
+  if (denied) return denied;
   try {
     await connectToDatabase();
     const results = await Result.find().sort({ createdAt: -1 });

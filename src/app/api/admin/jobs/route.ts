@@ -4,7 +4,10 @@ import Job from '@/lib/models/Job';
 import mongoose from 'mongoose';
 import { requireAdmin } from '@/lib/admin-guard';
 
-export async function GET() {
+export async function GET(request: Request) {
+  // Lists every job, drafts included, so it is admin-only like the write routes below.
+  const denied = requireAdmin(request);
+  if (denied) return denied;
   try {
     await connectToDatabase();
     const jobs = await Job.find().select('+totalVacancy').sort({ createdAt: -1 });
