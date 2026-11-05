@@ -14,14 +14,17 @@ interface GlobalWithMongoose extends Global {
   mongoose: CachedConnection;
 }
 
-if (!process.env.MONGODB_URI) {
-  throw new Error('Please define the MONGODB_URI environment variable inside .env')
-}
-
-const MONGODB_URI = process.env.MONGODB_URI.trim();
-
-if (!MONGODB_URI.startsWith('mongodb://') && !MONGODB_URI.startsWith('mongodb+srv://')) {
-  throw new Error('Invalid MongoDB connection string. Must start with "mongodb://" or "mongodb+srv://"')
+// Checked when a connection is opened, not when the module loads: `next build` imports every route to read its
+// config, so a module-level throw fails the whole build on a host where the variable is only set at runtime.
+function mongoUri(): string {
+  const uri = process.env.MONGODB_URI?.trim();
+  if (!uri) {
+    throw new Error('Please define the MONGODB_URI environment variable inside .env')
+  }
+  if (!uri.startsWith('mongodb://') && !uri.startsWith('mongodb+srv://')) {
+    throw new Error('Invalid MongoDB connection string. Must start with "mongodb://" or "mongodb+srv://"')
+  }
+  return uri;
 }
 
 let cached: CachedConnection = ((global as unknown) as GlobalWithMongoose).mongoose;
@@ -36,6 +39,7 @@ export default async function connectDB() {
   }
 
   if (!cached.promise) {
+    const MONGODB_URI = mongoUri();
     // Serverless-friendly pool: every Vercel function instance keeps its own pool, so a large
     // minPoolSize multiplies into hundreds of idle Atlas connections and causes resets/timeouts.
     const opts = {
