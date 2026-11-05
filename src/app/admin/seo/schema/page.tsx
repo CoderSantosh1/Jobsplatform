@@ -1,0 +1,147 @@
+"use client";
+
+import { useMemo, useRef, useState } from "react";
+import { ScanSearch } from "lucide-react";
+import { Badge, Card, ErrorState, PageHeader, Skeleton } from "../../_components/ui";
+import { Btn, Note, SelectBox, Table, runPool, useAdminJson } from "../../_components/kit";
+import { InspectForm, inspect, TARGETS, type InspectOutcome, type InspectTarget } from "../../_components/inspect";
+
+type Sitemap = { name: string; urls: { path: string }[] };
+
+function PageReport({ path, outcome }: { path: string; outcome: InspectOutcome }) {
+  if (!outcome.ok) return <ErrorState message={`${path}: ${outcome.error}`} />;
+  const p = outcome.page;
+  const facts: [string, React.ReactNode][] = [
+    ["URL", <span key="u" className="break-all font-mono text-xs">{p.url}</span>],
+    ["HTTP status", p.status >= 300 && p.status < 400 ? `${p.status} → ${p.location}` : p.status],
+    ["Title", p.title ? `${p.title} (${p.title.length})` : <Badge key="t" tone="rose">missing</Badge>],
+    ["Description", p.description ? `${p.description} (${p.description.length})` : <Badge key="d" tone="rose">missing</Badge>],
+    ["Canonical", p.canonical ?? <Badge key="c" tone="rose">missing</Badge>],
+    ["Robots", p.noindex ? <Badge key="r" tone="rose">noindex ({p.robots ?? p.xRobotsTag})</Badge> : p.robots ?? "index (default)"],
+    ["H1", p.h1.length === 1 ? p.h1[0] : <Badge key="h" tone="amber">{p.h1.length} H1 tags</Badge>],
+    ["Internal links", p.internalLinks.length],
+  ];
+  return (
+    <div className="space-y-5">
+      <Card title="Page tags">
+        <dl className="grid gap-x-6 gap-y-3 text-sm sm:grid-cols-[160px_1fr]">
+          {facts.map(([k, v]) => (
+            <div key={k} className="contents">
+              <dt className="font-medium text-slate-500">{k}</dt>
+              <dd className="text-slate-800">{v}</dd>
+            </div>
+          ))}
+        </dl>
+      </Card>
+      <Card title={`Structured data (${p.jsonLd.length} blocks)`}>
+        {p.jsonLd.length === 0 && <p className="text-sm text-slate-500">No JSON-LD on this page.</p>}
+        <div className="space-y-4">
+          {p.jsonLd.map((b, i) => (
+            <details key={i} className="rounded-xl border border-slate-200" open={b.missing.length > 0 || Boolean(b.error)}>
+              <summary className="flex cursor-pointer flex-wrap items-center gap-2 px-4 py-3">
+                {b.error ? <Badge tone="rose">Invalid JSON</Badge> : b.types.map((t) => <Badge key={t} tone="indigo">{t}</Badge>)}
+                {!b.error && (b.missing.length ? <Badge tone="amber">missing: {b.missing.join(", ")}</Badge> : <Badge tone="emerald">required fields present</Badge>)}
+              </summary>
+              <pre className="max-h-80 overflow-auto border-t border-slate-100 bg-slate-50 p-4 text-xs text-slate-700">{b.error ?? JSON.stringify(b.data, null, 2)}</pre>
+            </details>
+          ))}
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+export default function SchemaManager() {
+  const maps = useAdminJson<Sitemap[]>("/api/admin/seo/sitemap");
+  const [single, setSingle] = useState<{ path: string; outcome: InspectOutcome } | null>(null);
+  const [name, setName] = useState("jobs");
+  const [target, setTarget] = useState<InspectTarget>("live");
+  const [sample, setSample] = useState<Record<string, InspectOutcome>>({});
+  const [busy, setBusy] = useState(false);
+  const stop = useRef(false);
+
+  const summary = useMemo(() => {
+    const types = new Map<string, { pages: number; incomplete: number }>();
+    let none = 0;
+    let errors = 0;
+    for (const o of Object.values(sample)) {
+      if (!o.ok) {
+        errors++;
+        continue;
+      }
+      if (!o.page.jsonLd.length) none++;
+      const seen = new Set<string>();
+      for (const b of o.page.jsonLd) {
+        for (const t of b.types) {
+          const s = types.get(t) ?? { pages: 0, incomplete: 0 };
+          if (!seen.has(t)) s.pages++;
+          if (b.missing.length) s.incomplete++;
+          seen.add(t);
+          types.set(t, s);
+        }
+      }
+    }
+    return { types: [...types.entries()].sort((a, b) => b[1].pages - a[1].pages), none, errors };
+  }, [sample]);
+
+  const runSample = async () => {
+    const paths = (maps.data?.find((s) => s.name === name)?.urls ?? []).slice(0, 20).map((u) => u.path);
+    setSample({});
+    setBusy(true);
+    stop.current = false;
+    await runPool(paths, 4, (p) => inspect(p, target), (p, o) => setSample((s) => ({ ...s, [p]: o })), () => stop.current);
+    setBusy(false);
+  };
+
+  return (
+    <>
+      <PageHeader title="Schema Manager" subtitle="Inspect the structured data (JSON-LD) and SEO tags a page really outputs." />
+      <Note>
+        Required fields are a practical checklist per type (for example JobPosting needs title, description, datePosted and
+        hiringOrganization). Passing it does not guarantee rich results in Google. Schema is generated by the page code, so this page is read-only.
+      </Note>
+      <Card title="Inspect a page" className="mb-6">
+        <InspectForm onResult={(path, outcome) => setSingle({ path, outcome })} initial="/jobs" />
+      </Card>
+      {single && <PageReport path={single.path} outcome={single.outcome} />}
+
+      <Card title="Check a section (first 20 URLs)" className="mt-6">
+        {maps.error && <ErrorState message={maps.error} onRetry={maps.reload} />}
+        {maps.loading && !maps.data && <Skeleton className="h-12" />}
+        {maps.data && (
+          <div className="mb-4 flex flex-wrap items-center gap-3">
+            <SelectBox label="Sitemap" value={name} onChange={setName} options={maps.data.map((s) => ({ value: s.name, label: s.name }))} />
+            <SelectBox label="Check on" value={target} onChange={(v) => setTarget(v as InspectTarget)} options={TARGETS} />
+            {busy ? (
+              <Btn tone="danger" onClick={() => (stop.current = true)}>
+                Stop ({Object.keys(sample).length})
+              </Btn>
+            ) : (
+              <Btn tone="primary" onClick={runSample}>
+                <ScanSearch className="h-4 w-4" /> Check section
+              </Btn>
+            )}
+          </div>
+        )}
+        {Object.keys(sample).length > 0 && (
+          <>
+            <p className="mb-3 text-sm text-slate-600">
+              {Object.keys(sample).length} pages checked · {summary.none} without JSON-LD · {summary.errors} could not be fetched
+            </p>
+            <Table head={["Schema type", "Pages using it", "Blocks missing fields"]} empty={!summary.types.length}>
+              {summary.types.map(([t, s]) => (
+                <tr key={t}>
+                  <td className="px-5 py-2.5">
+                    <Badge tone="indigo">{t}</Badge>
+                  </td>
+                  <td className="px-5 py-2.5 tabular-nums">{s.pages}</td>
+                  <td className="px-5 py-2.5 tabular-nums">{s.incomplete ? <span className="text-amber-700">{s.incomplete}</span> : 0}</td>
+                </tr>
+              ))}
+            </Table>
+          </>
+        )}
+      </Card>
+    </>
+  );
+}

@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import Link from "next/link";
 import Script from "next/script";
+import { BookOpen, FileText, GraduationCap, Lightbulb, Monitor, Target, type LucideIcon } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import AnnouncementBar from "@/components/ui/AnnouncementBar";
@@ -13,7 +14,6 @@ import { connectToDatabase } from "@/lib/db";
 import Job from "@/lib/models/Job";
 import Result from "@/lib/models/Result";
 import AdmitCard from "@/lib/models/AdmitCard";
-import News from "@/lib/models/News";
 import AnswerKey from "@/lib/models/AnswerKey";
 import Admission from "@/lib/models/Admission";
 import QuizCategory from "@/lib/models/QuizCategory";
@@ -55,13 +55,16 @@ interface AdmitCardItem {
   applicationDeadline: string;
 }
 
-interface NewsItem {
-  _id: string;
-  title: string;
-  organization: string;
-  content: string;
-  postedDate: string;
-}
+// Exam guides shown in the home table. Each links to an exam page that has its syllabus, exam pattern and a
+// free practice set (lib/exam-prep.ts), so the labels describe what the page really contains.
+const EXAM_GUIDES: { href: string; title: string; detail: string; icon: LucideIcon; tone: string }[] = [
+  { href: "/ssc-cgl", title: "SSC CGL Preparation", detail: "Syllabus, Exam Pattern & Practice Set", icon: BookOpen, tone: "text-red-600" },
+  { href: "/rrb-ntpc", title: "Railway NTPC Preparation", detail: "Exam Pattern, Syllabus & Practice Set", icon: GraduationCap, tone: "text-gray-800" },
+  { href: "/bihar-police-constable", title: "Bihar Police Preparation", detail: "Syllabus, Exam Pattern & Practice", icon: Target, tone: "text-red-600" },
+  { href: "/ssc-gd", title: "SSC GD Preparation", detail: "Topic-wise Syllabus & Mock Tests", icon: Monitor, tone: "text-blue-700" },
+  { href: "/bihar-stet", title: "Bihar STET Preparation", detail: "Syllabus, Exam Pattern & Practice Set", icon: FileText, tone: "text-blue-700" },
+  { href: "/rrb-group-d", title: "RRB Group D Preparation", detail: "Exam Pattern, Syllabus & Practice Set", icon: Lightbulb, tone: "text-amber-500" },
+];
 
 interface AnswerKeyItem {
   _id: string;
@@ -87,12 +90,11 @@ async function getHomeData() {
 
   await connectToDatabase();
 
-  const [jobs, results, admitCards, news, answerKeys, admissions, categories] =
+  const [jobs, results, admitCards, answerKeys, admissions, categories] =
     await Promise.all([
       Job.find(PUBLIC_FILTER.jobs).sort({ createdAt: -1 }).select("_id title organization lastDateApplyOnline applicationDeadline").limit(11).lean(),
       Result.find(PUBLIC_FILTER.results).sort({ resultDate: -1 }).select("_id title organization").limit(11).lean(),
       AdmitCard.find(PUBLIC_FILTER["admit-cards"]).sort({ applicationDeadline: -1 }).select("_id title organization").limit(11).lean(),
-      News.find(PUBLIC_FILTER.news).sort({ postedDate: -1 }).select("_id title organization").limit(11).lean(),
       AnswerKey.find(PUBLIC_FILTER["answer-keys"]).sort({ postedDate: -1 }).select("_id title organization").limit(11).lean(),
       Admission.find(PUBLIC_FILTER.admissions).sort({ postedDate: -1 }).select("_id title organization").limit(11).lean(),
       QuizCategory.find().lean(),
@@ -102,7 +104,6 @@ async function getHomeData() {
     jobs: toPlain(jobs) as unknown as JobItem[],
     results: toPlain(results) as unknown as ResultItem[],
     admitCards: toPlain(admitCards) as unknown as AdmitCardItem[],
-    news: toPlain(news) as unknown as NewsItem[],
     answerKeys: toPlain(answerKeys) as unknown as AnswerKeyItem[],
     admissions: toPlain(admissions) as unknown as AdmissionItem[],
     categories: pickHomeCategories(toPlain(categories) as unknown as Category[]),
@@ -110,7 +111,7 @@ async function getHomeData() {
 }
 
 export default async function Home() {
-  const { jobs, results, admitCards, news, answerKeys, admissions, categories } =
+  const { jobs, results, admitCards, answerKeys, admissions, categories } =
     await getHomeData();
 
   const marqueeItems = [
@@ -235,12 +236,12 @@ export default async function Home() {
                           <tr className="bg-red-600 text-[#FCFCD8] font-bold">
                             <th className="p-2 text-center break-words whitespace-normal w-1/3">Result</th>
                             <th className="p-2 text-center break-words whitespace-normal w-1/3">Latest Jobs</th>
-                            <th className="p-2 text-center break-words whitespace-normal w-1/3">Latest News</th>
+                            <th className="p-2 text-center break-words whitespace-normal w-1/3">Exam Preparation</th>
                           </tr>
                         </thead>
                         <tbody>
                           {Array.from({
-                            length: Math.min(10, Math.max(results.length, jobs.length, news.length)),
+                            length: Math.min(10, Math.max(results.length, jobs.length, EXAM_GUIDES.length)),
                           }).map((_, index) => (
                             <tr key={index} className="border-t-2 border-red-500 hover:bg-[#fdfefe]">
                               <td className="p-2 border-x text-left align-top break-words whitespace-pre-wrap">
@@ -267,17 +268,26 @@ export default async function Home() {
                                 )}
                               </td>
                               <td className="p-2 text-left align-top break-words whitespace-pre-wrap">
-                                {news[index] ? (
-                                  <Link href={detailPath('news', news[index])} className="text-[#014F59] hover:underline hover:text-blue-800">
-                                    {news[index].title}
-                                  </Link>
+                                {EXAM_GUIDES[index] ? (
+                                  (() => {
+                                    const g = EXAM_GUIDES[index];
+                                    return (
+                                      <Link href={g.href} className="group flex items-center gap-2 text-gray-900 hover:text-blue-800">
+                                        <g.icon aria-hidden="true" className={`h-5 w-5 shrink-0 sm:h-6 sm:w-6 ${g.tone}`} />
+                                        <span className="group-hover:underline">
+                                          {g.title} – {g.detail}
+                                        </span>
+                                      </Link>
+                                    );
+                                  })()
                                 ) : (
                                   "-"
                                 )}
                               </td>
                             </tr>
                           ))}
-                          {(results.length > 10 || jobs.length > 10 || news.length > 10) && (
+                          {(
+
                             <tr className="hover:bg-[#FFF8CC]">
                               <td className="text-center">
                                 {results.length > 10 && (
@@ -294,11 +304,9 @@ export default async function Home() {
                                 )}
                               </td>
                               <td className="text-center">
-                                {news.length > 10 && (
-                                  <Link href="/news" className="text-blue-600 font-semibold hover:underline">
-                                    View Latest Exam News
-                                  </Link>
-                                )}
+                                <Link href="/test-series" className="text-blue-600 font-semibold hover:underline">
+                                  Explore Exam Preparation
+                                </Link>
                               </td>
                             </tr>
                           )}

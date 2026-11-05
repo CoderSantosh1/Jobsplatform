@@ -1,4 +1,4 @@
-// Admin sidebar structure. Items without `href` are planned and shown as "Soon" so nothing links to a missing page.
+// Admin sidebar structure. An item without `href` is shown as "Soon" so nothing links to a missing page.
 import type { LucideIcon } from "lucide-react";
 import {
   Bell,
@@ -16,6 +16,7 @@ import {
   Link2,
   ListChecks,
   Map,
+  Network,
   Newspaper,
   Settings,
   ShieldOff,
@@ -34,6 +35,8 @@ const tab = (id: string): Pick<NavItem, "href" | "match"> => ({
   href: `/admin/content?tab=${id}`,
   match: (path, current) => path === "/admin/content" && (current ?? "jobs") === id,
 });
+
+const page = (href: string): Pick<NavItem, "href" | "match"> => ({ href, match: (path) => path === href });
 
 export const NAV: NavGroup[] = [
   {
@@ -58,30 +61,30 @@ export const NAV: NavGroup[] = [
     items: [
       { label: "Quiz Management", icon: ListChecks, href: "/admin/quizzes", match: (p) => p.startsWith("/admin/quizzes") },
       { label: "Create Test", icon: Layers, ...tab("quizzes") },
-      { label: "Question Bank", icon: Library },
-      { label: "Exam Categories", icon: BookOpen },
+      { label: "Question Bank", icon: Library, ...page("/admin/questions") },
+      { label: "Exam Categories", icon: BookOpen, ...page("/admin/exam-categories") },
     ],
   },
   {
     title: "SEO Management",
     items: [
-      { label: "Test Series SEO Audit", icon: ClipboardCheck, href: "/admin/seo/test-series", match: (p) => p === "/admin/seo/test-series" },
-      { label: "SEO Dashboard", icon: BarChart3 },
-      { label: "Content SEO Audit", icon: FileSearch },
-      { label: "Sitemap Manager", icon: Map },
-      { label: "Canonical Manager", icon: Link2 },
-      { label: "Redirect Manager", icon: GitBranch },
-      { label: "Noindex Manager", icon: ShieldOff },
-      { label: "Schema Manager", icon: Code2 },
-      { label: "Internal Linking", icon: Link2 },
+      { label: "SEO Dashboard", icon: BarChart3, ...page("/admin/seo") },
+      { label: "Test Series SEO Audit", icon: ClipboardCheck, ...page("/admin/seo/test-series") },
+      { label: "Content SEO Audit", icon: FileSearch, ...page("/admin/seo/content") },
+      { label: "Sitemap Manager", icon: Map, ...page("/admin/seo/sitemap") },
+      { label: "Canonical Manager", icon: Link2, ...page("/admin/seo/canonical") },
+      { label: "Redirect Manager", icon: GitBranch, ...page("/admin/seo/redirects") },
+      { label: "Noindex Manager", icon: ShieldOff, ...page("/admin/seo/noindex") },
+      { label: "Schema Manager", icon: Code2, ...page("/admin/seo/schema") },
+      { label: "Internal Linking", icon: Network, ...page("/admin/seo/internal-links") },
     ],
   },
   {
     title: "System",
     items: [
-      { label: "Activity Logs", icon: History },
-      { label: "Admin Users", icon: Users },
-      { label: "Site Settings", icon: Settings },
+      { label: "Activity Logs", icon: History, ...page("/admin/activity") },
+      { label: "Admin Users", icon: Users, ...page("/admin/users") },
+      { label: "Site Settings", icon: Settings, ...page("/admin/settings") },
     ],
   },
 ];
