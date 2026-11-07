@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { BarChart3, ClipboardCheck, Code2, FileSearch, GitBranch, Link2, Map, ShieldOff } from "lucide-react";
+import { BarChart3, ClipboardCheck, HeartPulse, Code2, FileSearch, GitBranch, Link2, Map, ShieldOff } from "lucide-react";
 import { ISSUE_LABEL, type ContentIssue } from "@/lib/admin-seo-checks";
 import { Card, ErrorState, PageHeader, Skeleton, StatCard } from "../_components/ui";
 import { Note, useAdminJson } from "../_components/kit";
@@ -14,6 +14,7 @@ type Summary = {
 };
 
 const TOOLS = [
+  { href: "/admin/seo/health", label: "Page Health", icon: HeartPulse, text: "Check every sitemap page for indexing and thin content" },
   { href: "/admin/seo/content", label: "Content SEO Audit", icon: FileSearch, text: "Titles and descriptions of every post" },
   { href: "/admin/seo/test-series", label: "Test Series SEO Audit", icon: ClipboardCheck, text: "Thin and duplicate exam pages" },
   { href: "/admin/seo/sitemap", label: "Sitemap Manager", icon: Map, text: "Every URL in the sitemaps" },

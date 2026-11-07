@@ -10,13 +10,14 @@ export const DESCRIPTION_MAX = 160;
 export const DESCRIPTION_MIN = 70;
 export const TITLE_MIN = 25;
 
-export type ContentIssue = "title-cut" | "title-short" | "description-short" | "duplicate" | "no-organization" | "expired" | "draft";
+export type ContentIssue = "title-cut" | "title-short" | "description-short" | "duplicate" | "same-search-title" | "no-organization" | "expired" | "draft";
 
 export const ISSUE_LABEL: Record<ContentIssue, string> = {
   "title-cut": "Title cut to 60 chars",
   "title-short": "Title too short",
   "description-short": "Description too short",
   duplicate: "Duplicate title",
+  "same-search-title": "Same search title as another post",
   "no-organization": "No organization",
   expired: "Deadline passed",
   draft: "Draft (not public)",
@@ -68,7 +69,100 @@ export type PageSeo = {
   h1: string[];
   jsonLd: JsonLdBlock[];
   internalLinks: string[];
+  /** Words of readable text in <main> (scripts, header, nav and footer left out). */
+  words: number;
 };
+
+/** Readable words in a page's main content: <main> if present, without scripts, styles, header, nav or footer. */
+export function mainWordCount(html: string): number {
+  let h = html.replace(/<(script|style|noscript)\b[\s\S]*?<\/\1>/gi, " ");
+  const main = h.match(/<main\b[^>]*>([\s\S]*)<\/main>/i);
+  if (main) h = main[1];
+  const text = h
+    .replace(/<(header|footer|nav)\b[\s\S]*?<\/\1>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&[a-z#0-9]+;/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return text ? text.split(" ").length : 0;
+}
+
+export const LOW_WORDS = 300;
+/** Legal and contact pages are not meant to rank, so only "thin" (not "low content") applies to them. */
+export const UTILITY_PATHS = ["/contact", "/about", "/privacy-policy", "/terms", "/disclaimer"];
+export const THIN_WORDS = 150;
+
+export type HealthIssue =
+  | "not-200"
+  | "redirect"
+  | "noindex-in-sitemap"
+  | "canonical-other"
+  | "canonical-missing"
+  | "title-missing"
+  | "title-long"
+  | "description-missing"
+  | "description-short"
+  | "h1"
+  | "thin"
+  | "low-content"
+  | "schema-invalid"
+  | "schema-incomplete"
+  | "duplicate-title"
+  | "duplicate-description";
+
+export const HEALTH_LABEL: Record<HealthIssue, string> = {
+  "not-200": "Error status",
+  redirect: "Redirects",
+  "noindex-in-sitemap": "Noindex but in sitemap",
+  "canonical-other": "Canonical points elsewhere",
+  "canonical-missing": "No canonical",
+  "title-missing": "No title",
+  "title-long": "Title over 60",
+  "description-missing": "No description",
+  "description-short": "Short description",
+  h1: "Not exactly one H1",
+  thin: `Thin (< ${THIN_WORDS} words)`,
+  "low-content": `Low content (< ${LOW_WORDS} words)`,
+  "schema-invalid": "Invalid JSON-LD",
+  "schema-incomplete": "JSON-LD missing fields",
+  "duplicate-title": "Same title as another page",
+  "duplicate-description": "Same description as another page",
+};
+
+/** Problems on one fetched page. Duplicate checks need the whole crawl, see `markDuplicates`. */
+export function pageHealthIssues(path: string, page: PageSeo, origin: string, inSitemap = true): HealthIssue[] {
+  if (page.status >= 300 && page.status < 400) return ["redirect"];
+  if (page.status !== 200) return ["not-200"];
+  const issues: HealthIssue[] = [];
+  if (page.noindex && inSitemap) issues.push("noindex-in-sitemap");
+  const canon = canonicalVerdict(path, page.canonical, origin);
+  if (canon === "missing") issues.push("canonical-missing");
+  else if (canon === "other") issues.push("canonical-other");
+  if (!page.title) issues.push("title-missing");
+  else if (page.title.length > TITLE_MAX) issues.push("title-long");
+  if (!page.description) issues.push("description-missing");
+  else if (page.description.length < DESCRIPTION_MIN) issues.push("description-short");
+  if (page.h1.length !== 1) issues.push("h1");
+  if (page.words < THIN_WORDS) issues.push("thin");
+  else if (page.words < LOW_WORDS && !UTILITY_PATHS.includes(path.replace(/\/+$/, ""))) issues.push("low-content");
+  if (page.jsonLd.some((b) => b.error)) issues.push("schema-invalid");
+  if (page.jsonLd.some((b) => b.missing.length)) issues.push("schema-incomplete");
+  return issues;
+}
+
+/** Add duplicate-title / duplicate-description to pages that share them with another indexable page. */
+export function markDuplicates<T extends { path: string; page: Pick<PageSeo, "status" | "noindex" | "title" | "description">; issues: HealthIssue[] }>(rows: T[]): T[] {
+  const live = rows.filter((r) => r.page.status === 200 && !r.page.noindex);
+  for (const [field, issue] of [["title", "duplicate-title"], ["description", "duplicate-description"]] as const) {
+    const groups = new Map<string, T[]>();
+    for (const r of live) {
+      const key = r.page[field].trim().toLowerCase();
+      if (key) groups.set(key, [...(groups.get(key) ?? []), r]);
+    }
+    for (const group of groups.values()) if (group.length > 1) for (const r of group) if (!r.issues.includes(issue)) r.issues.push(issue);
+  }
+  return rows;
+}
 
 function decode(text: string): string {
   return text
@@ -179,6 +273,7 @@ export function parsePageSeo(html: string, opts: { status: number; location?: st
     h1,
     jsonLd,
     internalLinks: [...links].sort(),
+    words: mainWordCount(html),
   };
 }
 

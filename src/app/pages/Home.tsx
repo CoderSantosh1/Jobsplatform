@@ -273,9 +273,11 @@ export default async function Home() {
                                     const g = EXAM_GUIDES[index];
                                     return (
                                       <Link href={g.href} className="group flex items-center gap-2 text-gray-900 hover:text-blue-800">
-                                        <g.icon aria-hidden="true" className={`h-5 w-5 shrink-0 sm:h-6 sm:w-6 ${g.tone}`} />
+                                        {/* Narrow phones: title only, so the row stays as short as the other two columns. */}
+                                        <g.icon aria-hidden="true" className={`hidden h-6 w-6 shrink-0 sm:block ${g.tone}`} />
                                         <span className="group-hover:underline">
-                                          {g.title} – {g.detail}
+                                          {g.title}
+                                          <span className="hidden sm:inline"> – {g.detail}</span>
                                         </span>
                                       </Link>
                                     );

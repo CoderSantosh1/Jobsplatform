@@ -49,11 +49,21 @@ export async function contentSeoAudit(): Promise<ContentAuditRow[]> {
         const k = titleKey(d.title);
         if (k) seen.set(k, (seen.get(k) ?? 0) + 1);
       }
-      return docs.map((d: any) => ({
+      const rows = docs.map((d: any) => ({
         ...contentSeoRow(section, d, (seen.get(titleKey(d.title)) ?? 0) > 1),
         url: detailPath(section, d),
         adminTab: section,
       }));
+      // Different titles that become the same title in search results once cut to 60 characters
+      // (usually the same notice posted twice). Not caught by the exact duplicate check, so Google sees two pages.
+      const bySearchTitle = new Map<string, ContentAuditRow[]>();
+      for (const r of rows) {
+        if (r.status === "draft" || r.issues.includes("duplicate")) continue;
+        const k = r.metaTitle.toLowerCase();
+        bySearchTitle.set(k, [...(bySearchTitle.get(k) ?? []), r]);
+      }
+      for (const group of bySearchTitle.values()) if (group.length > 1) for (const r of group) r.issues.push("same-search-title");
+      return rows;
     }),
   );
   return perSection.flat();

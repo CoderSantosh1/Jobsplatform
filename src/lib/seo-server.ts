@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { cache } from "react";
 import { connectToDatabase } from "@/lib/db";
 import Quiz from "@/lib/models/Quiz";
-import { getCanonicalCopy, getDetail, type Doc } from "@/lib/content";
+import { getCanonicalCopy, getDetail, isPublicDoc, type Doc } from "@/lib/content";
 import { detailPath, idFromParam, quizPath, type Section } from "@/lib/slug";
 import { pageMetadata } from "@/lib/seo";
 import { detailText } from "@/lib/detail-titles";
@@ -71,6 +71,10 @@ export async function detailMetadata(section: DetailSection, param: string): Pro
   if (section === "quizzes") {
     // Single quizzes are thin, near-identical pages: keep them out of the index; /test-series pages rank instead.
     return pageMetadata({ ...detailText(section, doc), path: quizPath(doc as { _id: string; title: string }), noIndex: true });
+  }
+  // Drafts stay viewable by link (e.g. to preview them) but are kept out of search results.
+  if (!isPublicDoc(section, doc)) {
+    return pageMetadata({ ...detailText(section, doc), path: detailPath(section, doc as Doc), noIndex: true });
   }
   // A post entered twice points its canonical at the oldest copy, so Google sees one page, not two duplicates.
   const canonical = await getCanonicalCopy(section, doc as Doc);

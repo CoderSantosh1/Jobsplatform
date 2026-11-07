@@ -34,6 +34,7 @@ const ISSUE_TONE: Record<ContentIssue, Tone> = {
   "title-short": "amber",
   "description-short": "amber",
   duplicate: "rose",
+  "same-search-title": "rose",
   "no-organization": "slate",
   expired: "violet",
   draft: "slate",

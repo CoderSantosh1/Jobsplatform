@@ -82,3 +82,41 @@ test("redirect rules block homepage targets, self-redirects and chains", () => {
   assert.ok(redirectProblems({ from: "/jobs", to: "/results" }, live).some((p) => p.includes("chain")));
   assert.ok(redirectProblems({ from: "old", to: "https://evil.com" }, live).length >= 2);
 });
+
+test("word count reads only the main content", async () => {
+  const { mainWordCount } = await import("../../src/lib/admin-seo-checks.ts");
+  const html = `<header><nav>Home Jobs Results</nav></header><main><h1>Title here</h1><p>one two three</p><script>var a = "x y z";</script></main><footer>Footer words</footer>`;
+  assert.equal(mainWordCount(html), 5);
+  assert.equal(mainWordCount("<body><p>no main tag here</p><footer>skip</footer></body>"), 4);
+});
+
+test("page health flags indexing and content problems", async () => {
+  const { pageHealthIssues, markDuplicates } = await import("../../src/lib/admin-seo-checks.ts");
+  const good = parsePageSeo(
+    `<title>A good title for a page | SRN</title><meta name="description" content="${"word ".repeat(20)}"><link rel="canonical" href="/a"><main><h1>A</h1>${"<p>text</p>".repeat(320)}</main>`,
+    { status: 200, origin: ORIGIN },
+  );
+  assert.deepEqual(pageHealthIssues("/a", good, ORIGIN), []);
+  const bad = parsePageSeo(`<meta name="robots" content="noindex"><main><p>short</p></main>`, { status: 200, origin: ORIGIN });
+  assert.deepEqual(
+    pageHealthIssues("/b", bad, ORIGIN).sort(),
+    ["canonical-missing", "description-missing", "h1", "noindex-in-sitemap", "thin", "title-missing"].sort(),
+  );
+  assert.deepEqual(pageHealthIssues("/c", { ...good, status: 308 }, ORIGIN), ["redirect"]);
+  assert.deepEqual(pageHealthIssues("/c", { ...good, status: 404 }, ORIGIN), ["not-200"]);
+
+  const rows = markDuplicates([
+    { path: "/a", page: good, issues: [] },
+    { path: "/a2", page: good, issues: [] },
+    { path: "/n", page: { ...good, noindex: true }, issues: [] },
+  ]);
+  assert.deepEqual(rows[0].issues.sort(), ["duplicate-description", "duplicate-title"]);
+  assert.deepEqual(rows[2].issues, [], "noindex pages are not counted as duplicates");
+});
+
+test("utility pages are not flagged as low content", async () => {
+  const { pageHealthIssues } = await import("../../src/lib/admin-seo-checks.ts");
+  const page = parsePageSeo(`<title>Contact Us | SRN</title><meta name="description" content="${"word ".repeat(20)}"><link rel="canonical" href="/contact"><main><h1>Contact</h1>${"<p>w</p>".repeat(200)}</main>`, { status: 200, origin: ORIGIN });
+  assert.deepEqual(pageHealthIssues("/contact", page, ORIGIN), []);
+  assert.deepEqual(pageHealthIssues("/news/x", { ...page, canonical: "/news/x" }, ORIGIN), ["low-content"]);
+});

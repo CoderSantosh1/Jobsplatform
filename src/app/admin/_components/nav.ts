@@ -10,6 +10,7 @@ import {
   FolderTree,
   GitBranch,
   GraduationCap,
+  HeartPulse,
   History,
   LayoutDashboard,
   Layers,
@@ -69,6 +70,7 @@ export const NAV: NavGroup[] = [
     title: "SEO Management",
     items: [
       { label: "SEO Dashboard", icon: BarChart3, ...page("/admin/seo") },
+      { label: "Page Health", icon: HeartPulse, ...page("/admin/seo/health") },
       { label: "Test Series SEO Audit", icon: ClipboardCheck, ...page("/admin/seo/test-series") },
       { label: "Content SEO Audit", icon: FileSearch, ...page("/admin/seo/content") },
       { label: "Sitemap Manager", icon: Map, ...page("/admin/seo/sitemap") },

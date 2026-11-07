@@ -113,6 +113,16 @@ export const PUBLIC_FILTER: Record<Section, Record<string, unknown>> = {
 };
 
 /**
+ * Same rule as PUBLIC_FILTER, for one loaded document: unpublished jobs and draft answer keys, admissions and
+ * news are not public. Results and admit cards are always listed (their filter is empty), so they always are.
+ */
+export function isPublicDoc(section: Section, doc: { status?: unknown }): boolean {
+  if (section === "jobs") return doc.status === "published";
+  if (section === "results" || section === "admit-cards") return true;
+  return doc.status !== "draft";
+}
+
+/**
  * When the same post was entered more than once, the oldest public copy is canonical.
  * Returns that copy (possibly `doc` itself), so later copies can point their canonical tag at it.
  */

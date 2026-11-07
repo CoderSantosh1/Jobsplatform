@@ -5,6 +5,8 @@ import { connectToDatabase } from "@/lib/db";
 import News from "@/lib/models/News";
 import { pageMetadata } from "@/lib/seo";
 import { detailPath } from "@/lib/slug";
+import { PUBLIC_FILTER } from "@/lib/content";
+import { NEWS_GUIDE } from "@/lib/section-guides";
 
 export const revalidate = 300;
 
@@ -28,12 +30,12 @@ function toPlain<T>(value: T): T {
 
 export default async function NewsListPage() {
   await connectToDatabase();
-  const news = toPlain(await News.find().sort({ postedDate: -1 }).select("_id title").lean()) as unknown as NewsItem[];
+  const news = toPlain(await News.find(PUBLIC_FILTER.news).sort({ postedDate: -1 }).select("_id title").lean()) as unknown as NewsItem[];
 
   return (
     <>
       <Header />
-      <div className="max-w-7xl mx-auto px-2 sm:px-4 py-8 w-full">
+      <main className="max-w-7xl mx-auto px-2 sm:px-4 py-8 w-full">
         <h1 className="text-3xl font-bold mb-8 text-gray-900">Latest News</h1>
         <div className="w-full overflow-x-auto hide-scrollbar">
           <table className="w-full table-fixed border-collapse border border-orange-500 text-xs sm:text-sm md:text-base">
@@ -60,7 +62,28 @@ export default async function NewsListPage() {
             </div>
           )}
         </div>
-      </div>
+
+        <section className="mt-8 max-w-4xl">
+          <h2 className="text-xl font-bold text-red-800 mb-2">{NEWS_GUIDE.heading}</h2>
+          <ol className="list-decimal pl-6 space-y-1 text-gray-800">
+            {NEWS_GUIDE.steps.map((s) => (
+              <li key={s}>{s}</li>
+            ))}
+          </ol>
+        </section>
+
+        <section className="mt-6 max-w-4xl">
+          <h2 className="text-xl font-bold text-red-800 mb-2">Frequently Asked Questions</h2>
+          <dl className="space-y-3">
+            {NEWS_GUIDE.faqs.map((f) => (
+              <div key={f.q}>
+                <dt className="font-semibold">{f.q}</dt>
+                <dd className="text-gray-800">{f.a}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+      </main>
       <Footer />
     </>
   );
