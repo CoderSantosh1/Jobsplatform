@@ -1,60 +1,113 @@
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+
   eslint: {
-    // Warning: This allows production builds to successfully complete even if
-    // your project has ESLint errors.
     ignoreDuringBuilds: true,
   },
+
   images: {
     domains: ['localhost'],
   },
-  // Ensure static files are served correctly
+
   poweredByHeader: false,
   compress: true,
+
+  // Application-level redirects
+  // Domain redirects are managed by Netlify.
   async redirects() {
     return [
-      // Send the bare domain straight to https://www (one permanent hop instead of a temporary 307).
       {
-        source: '/:path*',
-        has: [{ type: 'host', value: 'sarkariresultsnow.com' }],
-        destination: 'https://www.sarkariresultsnow.com/:path*',
+        source: '/latest-jobs',
+        destination: '/jobs',
         permanent: true,
       },
-      // Old footer links that used to 404.
-      { source: '/latest-jobs', destination: '/jobs', permanent: true },
-      { source: '/admit-card', destination: '/admit-cards', permanent: true },
-      { source: '/answer-key', destination: '/answer-keys', permanent: true },
-      { source: '/contact-us', destination: '/contact', permanent: true },
-      { source: '/syllabus', destination: '/quizzes', permanent: true },
-      { source: '/search', destination: '/', permanent: true },
+      {
+        source: '/admit-card',
+        destination: '/admit-cards',
+        permanent: true,
+      },
+      {
+        source: '/answer-key',
+        destination: '/answer-keys',
+        permanent: true,
+      },
+      {
+        source: '/contact-us',
+        destination: '/contact',
+        permanent: true,
+      },
+      {
+        source: '/syllabus',
+        destination: '/quizzes',
+        permanent: true,
+      },
+      {
+        source: '/search',
+        destination: '/',
+        permanent: true,
+      },
     ];
   },
-  // Basic hardening headers for every response. (No Content-Security-Policy: AdSense/Analytics load scripts from
-  // many Google domains, so a CSP would need careful tuning to avoid breaking ads.)
+
+  // Security headers
   async headers() {
     return [
       {
         source: '/:path*',
         headers: [
-          { key: 'X-Content-Type-Options', value: 'nosniff' },
-          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
-          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-          { key: 'Strict-Transport-Security', value: 'max-age=31536000' },
-          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), payment=()' },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'SAMEORIGIN',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
+          },
+          {
+            key: 'Strict-Transport-Security',
+            value: 'max-age=31536000',
+          },
+          {
+            key: 'Permissions-Policy',
+            value:
+              'camera=(), microphone=(), geolocation=(), payment=()',
+          },
         ],
       },
     ];
   },
+
+  // Firebase authentication rewrites
   async rewrites() {
-    const rules = [{ source: '/favicon.ico', destination: '/icon.png' }];
-    // Serves Firebase's sign-in pages from this site, so Google shows our domain (with
-    // NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN) and the login redirect does not depend on third-party storage.
-    const firebaseProject = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+    const rules = [
+      {
+        source: '/favicon.ico',
+        destination: '/icon.png',
+      },
+    ];
+
+    const firebaseProject =
+      process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+
     if (firebaseProject) {
-      rules.push({ source: '/__/auth/:path*', destination: `https://${firebaseProject}.firebaseapp.com/__/auth/:path*` });
-      rules.push({ source: '/__/firebase/:path*', destination: `https://${firebaseProject}.firebaseapp.com/__/firebase/:path*` });
+      rules.push(
+        {
+          source: '/__/auth/:path*',
+          destination: `https://${firebaseProject}.firebaseapp.com/__/auth/:path*`,
+        },
+        {
+          source: '/__/firebase/:path*',
+          destination: `https://${firebaseProject}.firebaseapp.com/__/firebase/:path*`,
+        }
+      );
     }
+
     return rules;
   },
 };
