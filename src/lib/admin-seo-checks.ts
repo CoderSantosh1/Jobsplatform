@@ -66,6 +66,7 @@ export type PageSeo = {
   robots: string | null;
   xRobotsTag: string | null;
   noindex: boolean;
+  hasViewport: boolean;
   h1: string[];
   jsonLd: JsonLdBlock[];
   internalLinks: string[];
@@ -102,13 +103,16 @@ export type HealthIssue =
   | "title-long"
   | "description-missing"
   | "description-short"
+  | "viewport-missing"
   | "h1"
   | "thin"
   | "low-content"
   | "schema-invalid"
   | "schema-incomplete"
   | "duplicate-title"
-  | "duplicate-description";
+  | "duplicate-description"
+  | "orphan"
+  | "broken-links";
 
 export const HEALTH_LABEL: Record<HealthIssue, string> = {
   "not-200": "Error status",
@@ -120,6 +124,7 @@ export const HEALTH_LABEL: Record<HealthIssue, string> = {
   "title-long": "Title over 60",
   "description-missing": "No description",
   "description-short": "Short description",
+  "viewport-missing": "Missing viewport meta",
   h1: "Not exactly one H1",
   thin: `Thin (< ${THIN_WORDS} words)`,
   "low-content": `Low content (< ${LOW_WORDS} words)`,
@@ -127,9 +132,11 @@ export const HEALTH_LABEL: Record<HealthIssue, string> = {
   "schema-incomplete": "JSON-LD missing fields",
   "duplicate-title": "Same title as another page",
   "duplicate-description": "Same description as another page",
+  orphan: "Orphan page (0 inlinks)",
+  "broken-links": "Has broken internal link",
 };
 
-/** Problems on one fetched page. Duplicate checks need the whole crawl, see `markDuplicates`. */
+/** Problems on one fetched page. Duplicate/graph checks need the whole crawl, see `markDuplicates` and `markGraphIssues`. */
 export function pageHealthIssues(path: string, page: PageSeo, origin: string, inSitemap = true): HealthIssue[] {
   if (page.status >= 300 && page.status < 400) return ["redirect"];
   if (page.status !== 200) return ["not-200"];
@@ -142,6 +149,7 @@ export function pageHealthIssues(path: string, page: PageSeo, origin: string, in
   else if (page.title.length > TITLE_MAX) issues.push("title-long");
   if (!page.description) issues.push("description-missing");
   else if (page.description.length < DESCRIPTION_MIN) issues.push("description-short");
+  if (!page.hasViewport) issues.push("viewport-missing");
   if (page.h1.length !== 1) issues.push("h1");
   if (page.words < THIN_WORDS) issues.push("thin");
   else if (page.words < LOW_WORDS && !UTILITY_PATHS.includes(path.replace(/\/+$/, ""))) issues.push("low-content");
@@ -160,6 +168,61 @@ export function markDuplicates<T extends { path: string; page: Pick<PageSeo, "st
       if (key) groups.set(key, [...(groups.get(key) ?? []), r]);
     }
     for (const group of groups.values()) if (group.length > 1) for (const r of group) if (!r.issues.includes(issue)) r.issues.push(issue);
+  }
+  return rows;
+}
+
+const normPath = (p: string) => {
+  try {
+    return decodeURI(p).replace(/\/+$/, "") || "/";
+  } catch {
+    return p.replace(/\/+$/, "") || "/";
+  }
+};
+
+/**
+ * Cross-page internal link graph checks across all crawled pages:
+ * - `orphan`: a 200 indexable non-home page with 0 inbound links from other crawled pages.
+ * - `broken-links`: a 200 page whose `internalLinks` include a crawled path that returned >= 400 or failed.
+ */
+export function markGraphIssues<T extends { path: string; page: Pick<PageSeo, "status" | "noindex" | "internalLinks"> | null; issues: HealthIssue[]; inboundCount?: number }>(rows: T[]): T[] {
+  const statusByPath = new Map<string, number | null>();
+  const inbound = new Map<string, number>();
+
+  for (const r of rows) {
+    const key = normPath(r.path);
+    statusByPath.set(key, r.page ? r.page.status : null);
+    inbound.set(key, 0);
+  }
+
+  for (const r of rows) {
+    if (!r.page || r.page.status !== 200) continue;
+    const from = normPath(r.path);
+    for (const link of r.page.internalLinks) {
+      const target = normPath(link);
+      if (target !== from && inbound.has(target)) {
+        inbound.set(target, (inbound.get(target) ?? 0) + 1);
+      }
+    }
+  }
+
+  for (const r of rows) {
+    const key = normPath(r.path);
+    const count = inbound.get(key) ?? 0;
+    r.inboundCount = count;
+    if (!r.page || r.page.status !== 200) continue;
+    if (!r.page.noindex && key !== "/" && count === 0 && !r.issues.includes("orphan")) {
+      r.issues.push("orphan");
+    }
+    const hasBroken = r.page.internalLinks.some((link) => {
+      const target = normPath(link);
+      if (!statusByPath.has(target)) return false;
+      const st = statusByPath.get(target);
+      return st === undefined || st === null || st >= 400;
+    });
+    if (hasBroken && !r.issues.includes("broken-links")) {
+      r.issues.push("broken-links");
+    }
   }
   return rows;
 }
@@ -227,15 +290,17 @@ function flatten(data: unknown): unknown[] {
   return [data];
 }
 
-/** Title, description, canonical, robots, headings, JSON-LD and internal links of one page's HTML. */
+/** Title, description, canonical, robots, viewport, headings, JSON-LD and internal links of one page's HTML. */
 export function parsePageSeo(html: string, opts: { status: number; location?: string | null; xRobotsTag?: string | null; origin: string }): PageSeo {
   const title = decode(html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] ?? "");
   const descTag = findTag(html, "meta", (t) => attr(t, "name")?.toLowerCase() === "description");
   const robotsTag = findTag(html, "meta", (t) => attr(t, "name")?.toLowerCase() === "robots");
+  const viewportTag = findTag(html, "meta", (t) => attr(t, "name")?.toLowerCase() === "viewport");
   const canonTag = findTag(html, "link", (t) => (attr(t, "rel") ?? "").toLowerCase().split(/\s+/).includes("canonical"));
   const robots = robotsTag ? attr(robotsTag, "content") : null;
   const xRobotsTag = opts.xRobotsTag ?? null;
   const noindex = /\bnoindex\b/i.test(`${robots ?? ""} ${xRobotsTag ?? ""}`);
+  const hasViewport = Boolean(viewportTag && attr(viewportTag, "content"));
 
   const h1 = [...html.matchAll(/<h1\b[^>]*>([\s\S]*?)<\/h1>/gi)].map((m) => decode(m[1].replace(/<[^>]+>/g, " "))).filter(Boolean);
 
@@ -270,6 +335,7 @@ export function parsePageSeo(html: string, opts: { status: number; location?: st
     robots,
     xRobotsTag,
     noindex,
+    hasViewport,
     h1,
     jsonLd,
     internalLinks: [...links].sort(),

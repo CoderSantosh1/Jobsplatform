@@ -26,10 +26,11 @@ test("expired is only flagged for published jobs past their last date", () => {
   assert.ok(!future.issues.includes("expired"));
 });
 
-test("page parser reads title, description, canonical, robots, h1, JSON-LD and internal links", () => {
+test("page parser reads title, description, canonical, robots, viewport, h1, JSON-LD and internal links", () => {
   const html = `<html><head><title>Jobs &amp; Results | SRN</title>
     <meta name="description" content="Latest jobs">
     <meta name="robots" content="noindex, follow">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="canonical" href="https://www.sarkariresultsnow.com/jobs"/>
     <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"JobPosting","title":"X"},{"@type":"BreadcrumbList","itemListElement":[1]}]}</script>
     <script type="application/ld+json">{bad json</script>
@@ -41,6 +42,7 @@ test("page parser reads title, description, canonical, robots, h1, JSON-LD and i
   assert.equal(p.description, "Latest jobs");
   assert.equal(p.canonical, "https://www.sarkariresultsnow.com/jobs");
   assert.equal(p.noindex, true);
+  assert.equal(p.hasViewport, true);
   assert.deepEqual(p.h1, ["Latest Jobs"]);
   assert.deepEqual(p.internalLinks, ["/jobs/a", "/results"]);
   assert.equal(p.jsonLd.length, 3);
@@ -90,17 +92,17 @@ test("word count reads only the main content", async () => {
   assert.equal(mainWordCount("<body><p>no main tag here</p><footer>skip</footer></body>"), 4);
 });
 
-test("page health flags indexing and content problems", async () => {
-  const { pageHealthIssues, markDuplicates } = await import("../../src/lib/admin-seo-checks.ts");
+test("page health flags indexing, viewport, graph and content problems", async () => {
+  const { pageHealthIssues, markDuplicates, markGraphIssues } = await import("../../src/lib/admin-seo-checks.ts");
   const good = parsePageSeo(
-    `<title>A good title for a page | SRN</title><meta name="description" content="${"word ".repeat(20)}"><link rel="canonical" href="/a"><main><h1>A</h1>${"<p>text</p>".repeat(320)}</main>`,
+    `<meta name="viewport" content="width=device-width, initial-scale=1"><title>A good title for a page | SRN</title><meta name="description" content="${"word ".repeat(20)}"><link rel="canonical" href="/a"><main><h1>A</h1>${"<p>text</p>".repeat(320)}</main>`,
     { status: 200, origin: ORIGIN },
   );
   assert.deepEqual(pageHealthIssues("/a", good, ORIGIN), []);
   const bad = parsePageSeo(`<meta name="robots" content="noindex"><main><p>short</p></main>`, { status: 200, origin: ORIGIN });
   assert.deepEqual(
     pageHealthIssues("/b", bad, ORIGIN).sort(),
-    ["canonical-missing", "description-missing", "h1", "noindex-in-sitemap", "thin", "title-missing"].sort(),
+    ["canonical-missing", "description-missing", "h1", "noindex-in-sitemap", "thin", "title-missing", "viewport-missing"].sort(),
   );
   assert.deepEqual(pageHealthIssues("/c", { ...good, status: 308 }, ORIGIN), ["redirect"]);
   assert.deepEqual(pageHealthIssues("/c", { ...good, status: 404 }, ORIGIN), ["not-200"]);
@@ -112,11 +114,21 @@ test("page health flags indexing and content problems", async () => {
   ]);
   assert.deepEqual(rows[0].issues.sort(), ["duplicate-description", "duplicate-title"]);
   assert.deepEqual(rows[2].issues, [], "noindex pages are not counted as duplicates");
+
+  const graphRows = markGraphIssues([
+    { path: "/", page: { ...good, internalLinks: ["/linked", "/dead"] }, issues: [] },
+    { path: "/linked", page: { ...good, internalLinks: [] }, issues: [] },
+    { path: "/orphan-page", page: { ...good, internalLinks: [] }, issues: [] },
+    { path: "/dead", page: null, issues: ["not-200"] },
+  ]);
+  assert.ok(graphRows[0].issues.includes("broken-links"));
+  assert.ok(!graphRows[1].issues.includes("orphan"));
+  assert.ok(graphRows[2].issues.includes("orphan"));
 });
 
 test("utility pages are not flagged as low content", async () => {
   const { pageHealthIssues } = await import("../../src/lib/admin-seo-checks.ts");
-  const page = parsePageSeo(`<title>Contact Us | SRN</title><meta name="description" content="${"word ".repeat(20)}"><link rel="canonical" href="/contact"><main><h1>Contact</h1>${"<p>w</p>".repeat(200)}</main>`, { status: 200, origin: ORIGIN });
+  const page = parsePageSeo(`<meta name="viewport" content="width=device-width, initial-scale=1"><title>Contact Us | SRN</title><meta name="description" content="${"word ".repeat(20)}"><link rel="canonical" href="/contact"><main><h1>Contact</h1>${"<p>w</p>".repeat(200)}</main>`, { status: 200, origin: ORIGIN });
   assert.deepEqual(pageHealthIssues("/contact", page, ORIGIN), []);
   assert.deepEqual(pageHealthIssues("/news/x", { ...page, canonical: "/news/x" }, ORIGIN), ["low-content"]);
 });

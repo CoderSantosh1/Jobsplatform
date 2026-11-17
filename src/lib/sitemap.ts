@@ -15,6 +15,7 @@ import { uniqueByTitle } from "@/lib/dedupe";
 import { LEGAL_LAST_UPDATED } from "@/lib/legal";
 import { slugify, detailPath, type Section } from "@/lib/slug";
 import { SITE_URL } from "@/lib/seo";
+import { isTestSeriesExcludedFromSitemap } from "@/lib/test-series-seo";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export type UrlEntry = { loc: string; lastmod?: Date };
@@ -155,8 +156,13 @@ async function testSeriesEntries(): Promise<UrlEntry[]> {
     if (ts) entries.push({ loc: `${SITE_URL}${ts.href}`, lastmod: subLastmod.get(ts.href) });
   }
   // Two Hindi-only names can both slug to "all"; keep one URL each.
+  // Exclude noindex and permanently consolidated/redirected test-series paths.
   const seen = new Set<string>();
-  return entries.filter((e) => !seen.has(e.loc) && seen.add(e.loc));
+  return entries.filter((e) => {
+    const path = e.loc.startsWith(SITE_URL) ? e.loc.slice(SITE_URL.length) : e.loc;
+    if (isTestSeriesExcludedFromSitemap(path)) return false;
+    return !seen.has(e.loc) && seen.add(e.loc);
+  });
 }
 
 export async function getSitemapEntries(name: SitemapName): Promise<UrlEntry[]> {

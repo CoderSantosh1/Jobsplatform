@@ -49,6 +49,53 @@ function AuditTable() {
   const [filters, setFilters] = useState<AuditFilters>({ action: params?.get("action") ?? "", sort: "action", dir: "asc" });
   const [page, setPage] = useState(0);
   const [open, setOpen] = useState<string | null>(null);
+  const [consolidatePreview, setConsolidatePreview] = useState<{
+    sourcePath: string;
+    destinationPath: string;
+    sourceQuizCount: number;
+    destinationQuizCount: number;
+    sourceQuestionCount: number;
+    sourceAttemptCount: number;
+    duplicateQuizTitles: string[];
+  }[] | null>(null);
+  const [consolidateBusy, setConsolidateBusy] = useState(false);
+  const [consolidateMsg, setConsolidateMsg] = useState("");
+
+  const loadConsolidatePreview = async () => {
+    setConsolidateBusy(true);
+    setConsolidateMsg("");
+    try {
+      const res = await adminFetch("/api/admin/seo/test-series/consolidate", { cache: "no-store" });
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.success) throw new Error(json?.error || "Could not load consolidation preview.");
+      setConsolidatePreview(json.data?.pairs ?? []);
+    } catch (e) {
+      setConsolidateMsg(e instanceof Error ? e.message : "Could not load consolidation preview.");
+    } finally {
+      setConsolidateBusy(false);
+    }
+  };
+
+  const runConsolidate = async () => {
+    setConsolidateBusy(true);
+    setConsolidateMsg("");
+    try {
+      const res = await adminFetch("/api/admin/seo/test-series/consolidate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ confirm: true }),
+      });
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.success) throw new Error(json?.error || "Consolidation failed.");
+      setConsolidateMsg(`Migrated ${json.data.migratedQuizzes} quiz(zes) across ${json.data.pairsChecked} pairs.`);
+      setConsolidatePreview(null);
+      load();
+    } catch (e) {
+      setConsolidateMsg(e instanceof Error ? e.message : "Consolidation failed.");
+    } finally {
+      setConsolidateBusy(false);
+    }
+  };
 
   const load = useCallback(async () => {
     setError("");
@@ -289,6 +336,68 @@ function AuditTable() {
             </button>
           </div>
         </div>
+      </Card>
+
+      <Card title="Test-Series Consolidation (6 Overlapping Pages)" className="mt-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm text-slate-600">
+            Preview database quizzes, questions, and attempts before safely reassigning the 6 overlapping subcategories. All IDs and historical attempts are preserved.
+          </p>
+          <button
+            type="button"
+            disabled={consolidateBusy}
+            onClick={loadConsolidatePreview}
+            className="rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-2 text-sm font-semibold text-indigo-700 hover:bg-indigo-100 disabled:opacity-50"
+          >
+            {consolidateBusy ? "Loading..." : "Preview Consolidation"}
+          </button>
+        </div>
+        {consolidateMsg && <p className="mt-3 text-sm font-medium text-indigo-700">{consolidateMsg}</p>}
+        {consolidatePreview && (
+          <div className="mt-4 overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="border-y border-slate-100 bg-slate-50 text-slate-500">
+                  <th className="px-3 py-2">Source</th>
+                  <th className="px-3 py-2">Destination</th>
+                  <th className="px-3 py-2 text-right">Src Quizzes</th>
+                  <th className="px-3 py-2 text-right">Questions</th>
+                  <th className="px-3 py-2 text-right">Attempts</th>
+                  <th className="px-3 py-2 text-right">Duplicates</th>
+                </tr>
+              </thead>
+              <tbody>
+                {consolidatePreview.map((p) => (
+                  <tr key={p.sourcePath} className="border-b border-slate-50">
+                    <td className="px-3 py-2 font-mono text-slate-700">{p.sourcePath}</td>
+                    <td className="px-3 py-2 font-mono text-slate-700">{p.destinationPath}</td>
+                    <td className="px-3 py-2 text-right tabular-nums">{p.sourceQuizCount}</td>
+                    <td className="px-3 py-2 text-right tabular-nums">{p.sourceQuestionCount}</td>
+                    <td className="px-3 py-2 text-right tabular-nums">{p.sourceAttemptCount}</td>
+                    <td className="px-3 py-2 text-right tabular-nums">{p.duplicateQuizTitles.length}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setConsolidatePreview(null)}
+                className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={consolidateBusy}
+                onClick={runConsolidate}
+                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
+              >
+                Confirm &amp; Consolidate
+              </button>
+            </div>
+          </div>
+        )}
       </Card>
 
       {snap && (

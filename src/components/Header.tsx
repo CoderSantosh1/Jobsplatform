@@ -31,10 +31,6 @@ export default function Header() {
             <div className="text-xs md:text-sm text-gray-200 text-center tracking-wider font-[700] ">
               <Link href="/">WWW.SARKARIRESULTSNOW.COM</Link>
             </div>
-            {/* Logo */}
-            {/* <h1 className="text-[1.5rem] md:text-3xl font-bold text-[#000000]">
-              SARKARIRESULTSNOW
-            </h1> */}
           </div>
 
           {/* Desktop Navigation */}
@@ -58,9 +54,6 @@ export default function Header() {
             >
               Results
             </Link>
-            <a href="/news" className="text-[#000000] hover:text-blue-800 font-medium">
-              Latest Sarkari Job News
-            </a>
             <Link
               href="/admit-cards"
               className="text-[#000000] hover:text-blue-800 font-medium"
@@ -72,6 +65,18 @@ export default function Header() {
               className="text-[#000000] hover:text-blue-800 font-medium"
             >
               Answer Key
+            </Link>
+            <Link
+              href="/admissions"
+              className="text-[#000000] hover:text-blue-800 font-medium"
+            >
+              Admissions
+            </Link>
+            <Link
+              href="/news"
+              className="text-[#000000] hover:text-blue-800 font-medium"
+            >
+              Latest Sarkari Job News
             </Link>
             <Link
               href="/contact"
@@ -92,8 +97,6 @@ export default function Header() {
 
               {/* Sidebar Drawer */}
               <div className="relative  w-[300px] bg-white shadow-lg h-full overflow-y-auto animate-slide-in-left ">
-                {/* Header */}
-
                 {/* Menu Icon - now also closes the drawer */}
                 <button
                   onClick={() => setMobileNavOpen(false)}
@@ -134,13 +137,6 @@ export default function Header() {
                     Results
                   </Link>
                   <Link
-                    href="/news"
-                    className="px-4 py-2 text-gray-800 hover:bg-gray-100"
-                    onClick={() => setMobileNavOpen(false)}
-                  >
-                    News
-                  </Link>
-                  <Link
                     href="/admit-cards"
                     className="px-4 py-2 text-gray-800 hover:bg-gray-100"
                     onClick={() => setMobileNavOpen(false)}
@@ -153,6 +149,20 @@ export default function Header() {
                     onClick={() => setMobileNavOpen(false)}
                   >
                     Answer Key
+                  </Link>
+                  <Link
+                    href="/admissions"
+                    className="px-4 py-2 text-gray-800 hover:bg-gray-100"
+                    onClick={() => setMobileNavOpen(false)}
+                  >
+                    Admissions
+                  </Link>
+                  <Link
+                    href="/news"
+                    className="px-4 py-2 text-gray-800 hover:bg-gray-100"
+                    onClick={() => setMobileNavOpen(false)}
+                  >
+                    News
                   </Link>
                   <Link
                     href="/contact"

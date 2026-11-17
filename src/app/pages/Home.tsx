@@ -37,7 +37,8 @@ const QUICK_LINKS = [
   { href: "/results", label: "Results", hint: "Exam results & merit lists", cls: "bg-green-700 hover:bg-green-800" },
   { href: "/admit-cards", label: "Admit Cards", hint: "Download hall tickets", cls: "bg-blue-700 hover:bg-blue-800" },
   { href: "/answer-keys", label: "Answer Keys", hint: "Check your answers", cls: "bg-purple-700 hover:bg-purple-800" },
-  { href: "/quizzes", label: "Free Mock Tests", hint: "Practice with timed tests", cls: "bg-amber-700 hover:bg-amber-800" },
+  { href: "/admissions", label: "Admissions", hint: "University & college forms", cls: "bg-teal-700 hover:bg-teal-800" },
+  { href: "/test-series", label: "Test Series", hint: "Free exam-wise mock tests", cls: "bg-amber-700 hover:bg-amber-800" },
 ];
 
 interface ResultItem {

@@ -1,4 +1,3 @@
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -14,8 +13,7 @@ const nextConfig = {
   poweredByHeader: false,
   compress: true,
 
-  // Application-level redirects
-  // Domain redirects are managed by Netlify.
+  // Application-level redirects (domain redirects are managed by Vercel).
   async redirects() {
     return [
       {
@@ -46,6 +44,37 @@ const nextConfig = {
       {
         source: '/search',
         destination: '/',
+        permanent: true,
+      },
+      // Consolidated overlapping test-series pages (from test-series SEO audit)
+      {
+        source: '/test-series/police/bpsc-aedo',
+        destination: '/test-series/state-govt-exams/bpsc-aedo',
+        permanent: true,
+      },
+      {
+        source: '/test-series/police/delhi-police-constable',
+        destination: '/test-series/ssc-exams/delhi-police-constable',
+        permanent: true,
+      },
+      {
+        source: '/test-series/police/delhi-police-driver',
+        destination: '/test-series/ssc-exams/delhi-police-driver',
+        permanent: true,
+      },
+      {
+        source: '/test-series/police/delhi-police-head-constable',
+        destination: '/test-series/ssc-exams/delhi-police-head-constable',
+        permanent: true,
+      },
+      {
+        source: '/test-series/regulatory-body-exams/nabard-grade-a',
+        destination: '/test-series/banking-exams/nabard-grade-a',
+        permanent: true,
+      },
+      {
+        source: '/test-series/regulatory-body-exams/rbi-grade-b',
+        destination: '/test-series/banking-exams/rbi-grade-b',
         permanent: true,
       },
     ];

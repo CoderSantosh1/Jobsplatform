@@ -11,6 +11,7 @@ import { findCategory, findQuizzes, sampleQuestions } from "@/lib/quizzes";
 import { searchPosts } from "@/lib/content";
 import { SITE_URL, clip, pageMetadata } from "@/lib/seo";
 import { quizPath } from "@/lib/slug";
+import { isTestSeriesNoindex } from "@/lib/test-series-seo";
 
 export const revalidate = 600;
 export async function generateStaticParams() {
@@ -24,10 +25,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const found = await findCategory(category, sub);
   if (!found?.sub) return { title: "Mock Test", robots: { index: false } };
   const { category: c, sub: s } = found;
+  const path = `/test-series/${c.slug}/${s.slug}`;
   return pageMetadata({
     title: `${s.name} Mock Test 2026 – ${s.count} Free Tests`,
     description: `Attempt ${s.count} free ${s.name} mock tests online. Timed practice sets based on the latest ${s.name} exam pattern with score and answers, part of the ${c.name} test series.`,
-    path: `/test-series/${c.slug}/${s.slug}`,
+    path,
+    noIndex: isTestSeriesNoindex(path),
   });
 }
 

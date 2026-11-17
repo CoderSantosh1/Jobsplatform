@@ -2,21 +2,24 @@
 
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { Download, ExternalLink, HeartPulse, ScanSearch } from "lucide-react";
-import { HEALTH_LABEL, markDuplicates, pageHealthIssues, type HealthIssue } from "@/lib/admin-seo-checks";
+import { HEALTH_LABEL, markDuplicates, markGraphIssues, pageHealthIssues, type HealthIssue } from "@/lib/admin-seo-checks";
 import { Badge, Card, ErrorState, PageHeader, Skeleton, StatCard, type Tone } from "../../_components/ui";
 import { Btn, Note, Pager, SearchBox, SelectBox, Table, csv, download, fmtDate, runPool, useAdminJson } from "../../_components/kit";
 import { inspect, TARGETS, type Inspected, type InspectTarget } from "../../_components/inspect";
 
 type Sitemap = { name: string; urls: { path: string }[] };
-type Row = { path: string; sitemap: string; page: Inspected; issues: HealthIssue[] } | { path: string; sitemap: string; page: null; error: string; issues: HealthIssue[] };
+type Row = (
+  | { path: string; sitemap: string; page: Inspected; issues: HealthIssue[] }
+  | { path: string; sitemap: string; page: null; error: string; issues: HealthIssue[] }
+) & { inboundCount?: number };
 type Saved = { at: string; target: InspectTarget; rows: Row[] };
 
 const ORIGIN = "https://www.sarkariresultsnow.com";
-const STORE = "admin-page-health-v1";
+const STORE = "admin-page-health-v2";
 const PAGE = 25;
 // Problems that stop a page from being indexed or shown correctly come first.
-const SEVERE: HealthIssue[] = ["not-200", "noindex-in-sitemap", "canonical-other", "canonical-missing", "thin", "title-missing", "description-missing", "schema-invalid", "redirect"];
-const tone = (i: HealthIssue): Tone => (SEVERE.includes(i) ? "rose" : i.startsWith("duplicate") ? "violet" : "amber");
+const SEVERE: HealthIssue[] = ["not-200", "noindex-in-sitemap", "canonical-other", "canonical-missing", "thin", "title-missing", "description-missing", "viewport-missing", "schema-invalid", "redirect", "broken-links"];
+const tone = (i: HealthIssue): Tone => (SEVERE.includes(i) ? "rose" : i.startsWith("duplicate") || i === "orphan" ? "violet" : "amber");
 
 function load(): Saved | null {
   try {
@@ -77,8 +80,8 @@ export default function PageHealth() {
       },
       () => stop.current,
     );
-    const final = markDuplicates(found.filter((r): r is Extract<Row, { page: Inspected }> => r.page !== null)) as Row[];
-    const merged = [...final, ...found.filter((r) => r.page === null)];
+    const liveWithDupes = markDuplicates(found.filter((r): r is Extract<Row, { page: Inspected }> => r.page !== null)) as Row[];
+    const merged = markGraphIssues([...liveWithDupes, ...found.filter((r) => r.page === null)]);
     const at = new Date().toISOString();
     setRows(merged);
     setCheckedAt(at);
@@ -109,7 +112,7 @@ export default function PageHealth() {
     download(
       "page-health.csv",
       csv([
-        ["url", "sitemap", "status", "words", "title", "title_length", "description_length", "canonical", "noindex", "issues"],
+        ["url", "sitemap", "status", "words", "title", "title_length", "description_length", "canonical", "noindex", "viewport", "inbound_links", "issues"],
         ...rows.map((r) => [
           `${ORIGIN}${r.path}`,
           r.sitemap,
@@ -120,6 +123,8 @@ export default function PageHealth() {
           r.page?.description.length ?? "",
           r.page?.canonical ?? "",
           r.page?.noindex ?? "",
+          r.page ? r.page.hasViewport : "",
+          r.inboundCount ?? "",
           r.issues.map((i) => HEALTH_LABEL[i]).join("; "),
         ]),
       ]),
@@ -129,7 +134,7 @@ export default function PageHealth() {
     <>
       <PageHeader
         title="Page Health"
-        subtitle="Fetch every page in the sitemaps and check status, indexability, canonical, title, description, H1, content length and structured data."
+        subtitle="Fetch every page in the sitemaps and check status, indexability, canonical, title, description, viewport, H1, content length, internal links and structured data."
         actions={
           <Btn onClick={exportCsv} disabled={!rows.length}>
             <Download className="h-4 w-4" /> Export CSV
@@ -238,12 +243,14 @@ export default function PageHealth() {
                           <dd className="break-all font-mono text-xs">{r.page.canonical ?? "—"}</dd>
                           <dt className="text-slate-500">Robots</dt>
                           <dd>{r.page.robots ?? "index (default)"}</dd>
+                          <dt className="text-slate-500">Viewport</dt>
+                          <dd>{r.page.hasViewport ? "Present" : "Missing"}</dd>
                           <dt className="text-slate-500">H1</dt>
                           <dd>{r.page.h1.join(" | ") || "—"}</dd>
                           <dt className="text-slate-500">Structured data</dt>
                           <dd>{r.page.jsonLd.map((b) => b.types.join("+") + (b.missing.length ? ` (missing ${b.missing.join(", ")})` : "")).join(", ") || "none"}</dd>
-                          <dt className="text-slate-500">Internal links</dt>
-                          <dd>{r.page.internalLinks.length}</dd>
+                          <dt className="text-slate-500">Links (out / in)</dt>
+                          <dd>{r.page.internalLinks.length} outgoing / {r.inboundCount ?? 0} incoming</dd>
                         </dl>
                       </td>
                     </tr>
