@@ -1,7 +1,7 @@
 
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "sarkari",
+  "name": "jobsplatform",
   "main": ".open-next/worker.js",
   "compatibility_date": "2026-11-19",
   "compatibility_flags": [
@@ -15,7 +15,7 @@
   "services": [
     {
       "binding": "WORKER_SELF_REFERENCE",
-      "service": "sarkari"
+      "service": "jobsplatform"
     }
   ],
   "images": {
