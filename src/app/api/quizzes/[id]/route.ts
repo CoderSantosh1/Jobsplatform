@@ -6,12 +6,18 @@ import QuizAttempt from "@/lib/models/QuizAttempt";
 import { requireAdmin } from '@/lib/admin-guard';
 import { verifyAdminAuthorization } from '@/lib/admin-auth';
 import { withoutAnswers } from '@/lib/quiz-public';
+import { logMongoError } from '@/lib/mongo-error';
 
 export async function GET(req: any, ctx: any) {
+  let quizId: string | undefined;
+  let stage = "params";
   try {
     const { id } = await ctx.params;
+    quizId = String(id);
 
+    stage = "connect";
     await connectDB();
+    stage = "query";
     const quiz = await Quiz.findById(id).populate("questions");
 
     if (!quiz) {
@@ -22,10 +28,11 @@ export async function GET(req: any, ctx: any) {
     }
 
     // Test-takers get the questions without the correct answers; the admin edit page gets everything.
+    stage = "serialize";
     if (verifyAdminAuthorization(req.headers.get("authorization")).ok) return NextResponse.json(quiz);
     return NextResponse.json(withoutAnswers(quiz.toObject()));
   } catch (error) {
-    console.error("Error fetching quiz:", error);
+    logMongoError("quiz_fetch_failed", error, { quizId, stage });
     return NextResponse.json(
       { error: "Failed to fetch quiz" },
       { status: 500 }

@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { logMongoError } from '@/lib/mongo-error';
 
 interface MongoDBError extends Error {
   code?: number;
@@ -39,9 +40,15 @@ export default async function connectDB() {
   }
 
   if (!cached.promise) {
-    const MONGODB_URI = mongoUri();
-    // Serverless-friendly pool: every Vercel function instance keeps its own pool, so a large
-    // minPoolSize multiplies into hundreds of idle Atlas connections and causes resets/timeouts.
+    let MONGODB_URI: string;
+    try {
+      MONGODB_URI = mongoUri();
+    } catch (error) {
+      logMongoError('mongo_connection_config_failed', error);
+      throw error;
+    }
+    // Each serverless runtime instance keeps its own pool, so a large minPoolSize multiplies
+    // into many idle Atlas connections and can cause resets/timeouts.
     const opts = {
       bufferCommands: true,
       serverSelectionTimeoutMS: 10000,
@@ -64,11 +71,7 @@ export default async function connectDB() {
         return mongooseInstance;
       } catch (error) {
         const dbError = error as MongoDBError;
-        console.error('MongoDB connection error:', dbError);
-        
         if (dbError.code === 8000 || dbError.message.includes('bad auth')) {
-          console.error('MongoDB Authentication Error: Please check your credentials in .env file');
-          console.error('Make sure your MongoDB Atlas connection string is in the format: mongodb+srv://<username>:<password>@<cluster-url>/<database>');
           throw dbError;
         } else if (retries > 0 && !dbError.message.includes('bad auth')) {
           console.warn(`Connection failed, retrying... (${retries} attempts remaining)`);
@@ -76,7 +79,6 @@ export default async function connectDB() {
           await new Promise(resolve => setTimeout(resolve, 1000));
           return connect();
         } else {
-          console.error('MongoDB Connection Error:', dbError.message);
           throw dbError;
         }
       }
@@ -88,7 +90,7 @@ export default async function connectDB() {
     cached.conn = await cached.promise;
   } catch (e) {
     cached.promise = null;
-    console.error('Failed to establish database connection:', e);
+    logMongoError('mongo_connection_failed', e);
     throw e;
   }
 

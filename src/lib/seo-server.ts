@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { cache } from "react";
 import { connectToDatabase } from "@/lib/db";
+import { logMongoError } from "@/lib/mongo-error";
 import Quiz from "@/lib/models/Quiz";
 import { getCanonicalCopy, getDetail, isPublicDoc, type Doc } from "@/lib/content";
 import { detailPath, idFromParam, quizPath, type Section } from "@/lib/slug";
@@ -15,13 +16,19 @@ export type DetailSection = Section | "quizzes";
 /** Load one quiz (without questions) for metadata and structured data. */
 export const getQuizMeta = cache(async (id: string): Promise<AnyDoc | null> => {
   if (!/^[a-f0-9]{24}$/i.test(id)) return null;
+  let stage: "connect" | "query" | "serialize" = "connect";
   try {
     await connectToDatabase();
+    stage = "query";
     const quiz = (await Quiz.findById(id).select("-attempts").lean()) as AnyDoc | null;
-    if (!quiz) return null;
+    if (!quiz) {
+      console.info(JSON.stringify({ event: "quiz_metadata_not_found", quizId: id, stage }));
+      return null;
+    }
+    stage = "serialize";
     return JSON.parse(JSON.stringify({ ...quiz, questionCount: quiz.questions?.length ?? 0, questions: undefined }));
   } catch (error) {
-    console.error(`metadata: failed to load quiz ${id}`, error);
+    logMongoError("metadata: failed to load quiz", error, { quizId: id, stage });
     return null;
   }
 });
@@ -32,11 +39,13 @@ export const getQuizMeta = cache(async (id: string): Promise<AnyDoc | null> => {
  */
 export const quizExists = cache(async (id: string): Promise<boolean | null> => {
   if (!/^[a-f0-9]{24}$/i.test(id)) return false;
+  let stage: "connect" | "query" = "connect";
   try {
     await connectToDatabase();
+    stage = "query";
     return (await Quiz.exists({ _id: id })) !== null;
   } catch (error) {
-    console.error(`quizExists: failed to check quiz ${id}`, error);
+    logMongoError("quiz_exists_check_failed", error, { quizId: id, stage });
     return null;
   }
 });
