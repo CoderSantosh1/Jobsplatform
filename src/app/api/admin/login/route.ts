@@ -2,10 +2,8 @@ import { NextResponse } from 'next/server';
 import { createHash, timingSafeEqual } from 'crypto';
 import jwt from 'jsonwebtoken';
 import { clientIp, createRateLimiter } from '@/lib/rate-limit';
-
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
-const JWT_SECRET = process.env.JWT_SECRET;
+import { getCloudflareContext } from '@opennextjs/cloudflare';
+import { getAdminLoginConfig, getMissingAdminLoginConfig } from '@/lib/admin-login-config';
 
 // Slows down password guessing: 5 attempts per IP every 15 minutes (per server instance).
 const allow = createRateLimiter({ limit: 5, windowMs: 15 * 60_000 });
@@ -24,7 +22,24 @@ export async function POST(req: Request) {
   }
 
   const { email, password } = (await req.json().catch(() => ({}))) as { email?: unknown; password?: unknown };
+  // Cloudflare bindings are request-scoped. Read them directly in the Worker; normal
+  // Next.js development has no Cloudflare context and uses its local process.env.
+  let workerEnv: { ADMIN_EMAIL?: string; ADMIN_PASSWORD?: string; JWT_SECRET?: string } = {};
+  try {
+    workerEnv = getCloudflareContext().env as typeof workerEnv;
+  } catch {
+    // Local Next.js runtime without OpenNext's Cloudflare dev context.
+  }
+  const { ADMIN_EMAIL, ADMIN_PASSWORD, JWT_SECRET } = getAdminLoginConfig({
+    ADMIN_EMAIL: workerEnv.ADMIN_EMAIL ?? process.env.ADMIN_EMAIL,
+    ADMIN_PASSWORD: workerEnv.ADMIN_PASSWORD ?? process.env.ADMIN_PASSWORD,
+    JWT_SECRET: workerEnv.JWT_SECRET ?? process.env.JWT_SECRET,
+  });
+  const missingConfig = getMissingAdminLoginConfig({ ADMIN_EMAIL, ADMIN_PASSWORD, JWT_SECRET });
 
+  if (missingConfig.length > 0) {
+    console.error('[admin-login] Required server configuration is missing', { missing: missingConfig });
+  }
   if (!JWT_SECRET || !ADMIN_EMAIL || !ADMIN_PASSWORD) {
     return NextResponse.json(
       { message: 'Server configuration error: admin login is not set up' },
