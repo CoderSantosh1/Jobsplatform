@@ -16,12 +16,13 @@ import { examTestSeries } from "@/lib/exam-links";
 import { examFaqs, faqJsonLd } from "@/lib/faq";
 import JsonLd from "@/components/seo/JsonLd";
 
-// Only the exams in EXAMS get a page; any other top-level path is a normal 404.
-export const dynamicParams = false;
+// Generate exam pages on first request so database-backed content and metadata do not
+// require a live MongoDB connection during every production build. ISR is retained.
+export const dynamicParams = true;
 export const revalidate = 600;
 
 export function generateStaticParams() {
-  return EXAMS.map((e) => ({ exam: e.slug }));
+  return [];
 }
 
 type Props = { params: Promise<{ exam: string }> };
