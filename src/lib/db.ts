@@ -6,15 +6,6 @@ interface MongoDBError extends Error {
   message: string;
 }
 
-interface CachedConnection {
-  conn: typeof mongoose | null;
-  promise: Promise<typeof mongoose> | null;
-}
-
-interface GlobalWithMongoose extends Global {
-  mongoose: CachedConnection;
-}
-
 // Checked when a connection is opened, not when the module loads: `next build` imports every route to read its
 // config, so a module-level throw fails the whole build on a host where the variable is only set at runtime.
 function mongoUri(): string {
@@ -28,73 +19,88 @@ function mongoUri(): string {
   return uri;
 }
 
-let cached: CachedConnection = ((global as unknown) as GlobalWithMongoose).mongoose;
-
-if (!cached) {
-  cached = ((global as unknown) as GlobalWithMongoose).mongoose = { conn: null, promise: null };
+async function closeMongoClient(client: InstanceType<typeof mongoose.mongo.MongoClient>): Promise<void> {
+  try {
+    await client.close();
+  } catch (error) {
+    logMongoError('mongo_client_close_failed', error);
+  }
 }
 
-export default async function connectDB() {
-  if (cached.conn) {
-    return cached.conn;
+const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+function isConnected(connection: mongoose.Connection): boolean {
+  return connection.readyState === 1;
+}
+
+export default async function connectDB(): Promise<typeof mongoose> {
+  const connection = mongoose.connection;
+  if (connection.readyState === 1) {
+    return mongoose;
+  }
+  if (connection.readyState !== 0) {
+    const error = new Error(`MongoDB connection is not ready (state ${connection.readyState})`);
+    logMongoError('mongo_connection_unavailable', error, { readyState: connection.readyState });
+    throw error;
   }
 
-  if (!cached.promise) {
-    let MONGODB_URI: string;
-    try {
-      MONGODB_URI = mongoUri();
-    } catch (error) {
-      logMongoError('mongo_connection_config_failed', error);
-      throw error;
-    }
-    // Each serverless runtime instance keeps its own pool, so a large minPoolSize multiplies
-    // into many idle Atlas connections and can cause resets/timeouts.
-    const opts = {
-      bufferCommands: true,
-      serverSelectionTimeoutMS: 10000,
-      socketTimeoutMS: 45000,
-      // The free Atlas M0 tier allows 500 connections in total, shared by every instance.
-      maxPoolSize: 5,
-      minPoolSize: 0,
-      maxIdleTimeMS: 10000,
-      connectTimeoutMS: 10000,
-      heartbeatFrequencyMS: 10000,
-      autoIndex: true
-    };
-
-    let retries = 1;
-    const connect = async () => {
-      try {
-        console.log('Attempting to connect to MongoDB...');
-        const mongooseInstance = await mongoose.connect(MONGODB_URI, opts);
-        console.log('MongoDB connected successfully');
-        return mongooseInstance;
-      } catch (error) {
-        const dbError = error as MongoDBError;
-        if (dbError.code === 8000 || dbError.message.includes('bad auth')) {
-          throw dbError;
-        } else if (retries > 0 && !dbError.message.includes('bad auth')) {
-          console.warn(`Connection failed, retrying... (${retries} attempts remaining)`);
-          retries--;
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          return connect();
-        } else {
-          throw dbError;
-        }
-      }
-    };
-    cached.promise = connect();
-  }
-
+  let uri: string;
   try {
-    cached.conn = await cached.promise;
-  } catch (e) {
-    cached.promise = null;
-    logMongoError('mongo_connection_failed', e);
-    throw e;
+    uri = mongoUri();
+  } catch (error) {
+    logMongoError('mongo_connection_config_failed', error);
+    throw error;
   }
 
-  return cached.conn;
+  // Each serverless runtime instance keeps its own pool, so a large minPoolSize multiplies
+  // into many idle Atlas connections and can cause resets/timeouts.
+  const opts = {
+    serverSelectionTimeoutMS: 10000,
+    socketTimeoutMS: 45000,
+    // The free Atlas M0 tier allows 500 connections in total, shared by every instance.
+    maxPoolSize: 5,
+    minPoolSize: 0,
+    maxIdleTimeMS: 10000,
+    connectTimeoutMS: 10000,
+    heartbeatFrequencyMS: 10000,
+  };
+
+  for (let attempt = 0; attempt <= 1; attempt++) {
+    const client = new mongoose.mongo.MongoClient(uri, opts);
+    try {
+      console.info(JSON.stringify({ event: 'mongo_connection_attempt' }));
+      await client.connect();
+
+      // Another request may have established its own connection while this one was opening.
+      if (isConnected(connection)) {
+        await closeMongoClient(client);
+        console.info(JSON.stringify({ event: 'mongo_connection_reused' }));
+        return mongoose;
+      }
+
+      if (connection.readyState !== 0) {
+        throw new Error(`MongoDB connection changed state while connecting (${connection.readyState})`);
+      }
+
+      connection.config.bufferCommands = true;
+      connection.config.autoIndex = true;
+      connection.setClient(client);
+      console.info(JSON.stringify({ event: 'mongo_connection_established' }));
+      return mongoose;
+    } catch (error) {
+      await closeMongoClient(client);
+      const dbError = error as MongoDBError;
+      if (dbError.code === 8000 || dbError.message.includes('bad auth') || attempt === 1) {
+        logMongoError('mongo_connection_failed', error);
+        throw error;
+      }
+
+      console.warn(JSON.stringify({ event: 'mongo_connection_retry', attempt: attempt + 1 }));
+      await sleep(1000);
+    }
+  }
+
+  throw new Error('MongoDB connection failed after retries');
 }
 
 export { connectDB as connectToDatabase };
