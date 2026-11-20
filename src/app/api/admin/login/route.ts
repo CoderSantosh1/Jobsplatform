@@ -3,7 +3,7 @@ import { createHash, timingSafeEqual } from 'crypto';
 import jwt from 'jsonwebtoken';
 import { clientIp, createRateLimiter } from '@/lib/rate-limit';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
-import { getAdminLoginConfig, getMissingAdminLoginConfig } from '@/lib/admin-login-config';
+import { getMissingAdminLoginConfig, resolveAdminLoginConfig } from '@/lib/admin-login-config';
 
 // Slows down password guessing: 5 attempts per IP every 15 minutes (per server instance).
 const allow = createRateLimiter({ limit: 5, windowMs: 15 * 60_000 });
@@ -25,20 +25,27 @@ export async function POST(req: Request) {
   // Cloudflare bindings are request-scoped. Read them directly in the Worker; normal
   // Next.js development has no Cloudflare context and uses its local process.env.
   let workerEnv: { ADMIN_EMAIL?: string; ADMIN_PASSWORD?: string; JWT_SECRET?: string } = {};
+  let runtimeContextAvailable = false;
   try {
-    workerEnv = getCloudflareContext().env as typeof workerEnv;
-  } catch {
+    // Async mode also resolves the request-scoped binding context in Node-based
+    // Next/OpenNext runtimes, while production Workers return their active context.
+    workerEnv = (await getCloudflareContext({ async: true })).env as typeof workerEnv;
+    runtimeContextAvailable = true;
+  } catch (error) {
     // Local Next.js runtime without OpenNext's Cloudflare dev context.
+    // Keep diagnostics useful without logging exception text or any secret values.
+    console.warn('[admin-login] Cloudflare runtime context unavailable', {
+      errorName: error instanceof Error ? error.name : 'UnknownError',
+    });
   }
-  const { ADMIN_EMAIL, ADMIN_PASSWORD, JWT_SECRET } = getAdminLoginConfig({
-    ADMIN_EMAIL: workerEnv.ADMIN_EMAIL ?? process.env.ADMIN_EMAIL,
-    ADMIN_PASSWORD: workerEnv.ADMIN_PASSWORD ?? process.env.ADMIN_PASSWORD,
-    JWT_SECRET: workerEnv.JWT_SECRET ?? process.env.JWT_SECRET,
-  });
+  const { ADMIN_EMAIL, ADMIN_PASSWORD, JWT_SECRET } = resolveAdminLoginConfig(workerEnv, process.env);
   const missingConfig = getMissingAdminLoginConfig({ ADMIN_EMAIL, ADMIN_PASSWORD, JWT_SECRET });
 
   if (missingConfig.length > 0) {
-    console.error('[admin-login] Required server configuration is missing', { missing: missingConfig });
+    console.error('[admin-login] Required server configuration is missing', {
+      missing: missingConfig,
+      runtimeContextAvailable,
+    });
   }
   if (!JWT_SECRET || !ADMIN_EMAIL || !ADMIN_PASSWORD) {
     return NextResponse.json(

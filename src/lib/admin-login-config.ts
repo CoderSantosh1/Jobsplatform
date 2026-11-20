@@ -21,6 +21,18 @@ export function getAdminLoginConfig(
   };
 }
 
+/** Prefer request-scoped Cloudflare bindings; process.env is for local Next.js runs. */
+export function resolveAdminLoginConfig(
+  workerEnv: AdminLoginConfig,
+  processEnv: Record<string, string | undefined>,
+): AdminLoginConfig {
+  return getAdminLoginConfig({
+    ADMIN_EMAIL: workerEnv.ADMIN_EMAIL ?? processEnv.ADMIN_EMAIL,
+    ADMIN_PASSWORD: workerEnv.ADMIN_PASSWORD ?? processEnv.ADMIN_PASSWORD,
+    JWT_SECRET: workerEnv.JWT_SECRET ?? processEnv.JWT_SECRET,
+  });
+}
+
 /** Return missing variable names only; never include credential values in diagnostics. */
 export function getMissingAdminLoginConfig(config: AdminLoginConfig): string[] {
   return REQUIRED_ADMIN_LOGIN_CONFIG.filter((name) => !config[name]);
