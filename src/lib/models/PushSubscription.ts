@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import '../mongoose-config';
 
 // One row per browser that opted in to exam alerts. The Firebase Installation ID (FID) is an anonymous,
 // per-browser identifier; nothing else about the visitor is stored.

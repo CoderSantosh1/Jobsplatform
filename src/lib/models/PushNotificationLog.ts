@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import '../mongoose-config';
 
 // History of push notifications sent from the admin dashboard, used to warn before re-sending the same item.
 const pushNotificationLogSchema = new mongoose.Schema(

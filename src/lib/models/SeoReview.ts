@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import '../mongoose-config';
 
 // Admin decisions on SEO recommendations (new, separate collection "seoreviews"; existing content is not touched).
 // A decision is a record only: nothing here changes a public page, the sitemap, robots or redirects.

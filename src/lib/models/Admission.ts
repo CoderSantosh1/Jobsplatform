@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import '../mongoose-config';
 
 const admissionSchema = new mongoose.Schema({
   title: {

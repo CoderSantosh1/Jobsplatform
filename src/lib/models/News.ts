@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import '../mongoose-config';
 
 const newsSchema = new mongoose.Schema({
   title: {

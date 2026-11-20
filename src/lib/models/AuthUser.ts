@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import '../mongoose-config';
 
 // Accounts that log in with Google or email through Firebase. Kept apart from the older `users` collection, whose
 // mobile field is required and unique. Passwords are held by Firebase, never here.
