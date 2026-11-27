@@ -1,184 +1,369 @@
 "use client";
 
-import { useEffect, useState } from "react";
+// Admin Quiz Management: quizzes are loaded one page at a time from the server (no question bodies), filtered by
+// category, subcategory, status and search. The category sidebar comes from one small count query.
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
+import { ChevronDown, ChevronRight, Folder, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import SearchBar from "@/components/ui/SearchBar";
 import { adminFetch } from "@/lib/admin-fetch";
+import { DEFAULT_QUIZ_PAGE_SIZE, QUIZ_PAGE_SIZES, type QuizFacet } from "@/lib/admin-quiz-list";
 
-interface Quiz {
+interface QuizRow {
   _id: string;
   title: string;
-  description: string;
-  timeLimit: number;
-  questions: Array<{
-    _id: string;
-    question: string;
-    options: string[];
-    correctAnswer: string;
-  }>;
-  // optional fields may exist (e.g. organization)
-  [key: string]: any;
+  description?: string;
+  category?: string;
+  subcategory?: string;
+  timeLimit?: number;
+  totalMarks?: number;
+  status?: "published" | "draft";
+  questionCount: number;
+  updatedAt?: string;
+}
+
+type Filters = { category: string; subcategory: string; q: string; status: "" | "published" | "draft"; page: number; limit: number };
+
+const EMPTY: Filters = { category: "", subcategory: "", q: "", status: "", page: 1, limit: DEFAULT_QUIZ_PAGE_SIZE };
+
+/** Filters from the address bar's query string, so Back from the edit page returns to the same list. */
+function filtersFromSearch(search: string): Filters {
+  const s = new URLSearchParams(search);
+  const status = s.get("status");
+  const limit = Number(s.get("limit"));
+  return {
+    category: s.get("category") ?? "",
+    subcategory: s.get("subcategory") ?? "",
+    q: s.get("q") ?? "",
+    status: status === "published" || status === "draft" ? status : "",
+    page: Math.max(1, Number(s.get("page")) || 1),
+    limit: (QUIZ_PAGE_SIZES as readonly number[]).includes(limit) ? limit : DEFAULT_QUIZ_PAGE_SIZE,
+  };
+}
+
+function toQuery(f: Filters): string {
+  const s = new URLSearchParams();
+  s.set("page", String(f.page));
+  s.set("limit", String(f.limit));
+  if (f.category) s.set("category", f.category);
+  if (f.subcategory) s.set("subcategory", f.subcategory);
+  if (f.q) s.set("q", f.q);
+  if (f.status) s.set("status", f.status);
+  return s.toString();
+}
+
+// The address bar is the source of truth for the filters: components read it with useSyncExternalStore and
+// writing goes through setUrlFilters, which notifies them.
+const urlListeners = new Set<() => void>();
+
+function subscribeUrl(callback: () => void) {
+  urlListeners.add(callback);
+  window.addEventListener("popstate", callback);
+  return () => {
+    urlListeners.delete(callback);
+    window.removeEventListener("popstate", callback);
+  };
+}
+
+function setUrlFilters(f: Filters) {
+  window.history.replaceState(null, "", `${window.location.pathname}?${toQuery(f)}`);
+  urlListeners.forEach((listener) => listener());
+}
+
+type PageResult = { query: string; reloadKey: number; rows: QuizRow[]; total: number; pages: number };
+
+async function fetchFacets(): Promise<QuizFacet[]> {
+  const res = await adminFetch("/api/quizzes?facets=1");
+  if (!res.ok) throw new Error(`Quiz categories failed (${res.status})`);
+  const json = await res.json();
+  return Array.isArray(json.data) ? json.data : [];
+}
+
+async function fetchPage(f: Filters, signal: AbortSignal): Promise<{ page: number; rows: QuizRow[]; total: number; pages: number }> {
+  const res = await adminFetch(`/api/quizzes?${toQuery(f)}`, { signal });
+  if (!res.ok) throw new Error(`Quizzes failed (${res.status})`);
+  const json = await res.json();
+  return {
+    page: json.page ?? f.page,
+    rows: Array.isArray(json.data) ? json.data : [],
+    total: json.total ?? 0,
+    pages: json.pages ?? 1,
+  };
+}
+
+/** Page numbers around the current page, with gaps: 1 … 4 5 [6] 7 8 … 20. */
+function pageWindow(page: number, pages: number): (number | "gap")[] {
+  const set = new Set([1, pages, page - 2, page - 1, page, page + 1, page + 2].filter((p) => p >= 1 && p <= pages));
+  const sorted = [...set].sort((a, b) => a - b);
+  const out: (number | "gap")[] = [];
+  sorted.forEach((p, i) => {
+    if (i > 0 && p - sorted[i - 1] > 1) out.push("gap");
+    out.push(p);
+  });
+  return out;
 }
 
 export default function QuizList() {
-  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
-  // you can keep searchFields if you want to parameterize which fields to search
-  // const [searchFields, setSearchFields] = useState<string[]>(["title", "organization", "description"]);
+  // null on the server and during hydration, then the real query string.
+  const search = useSyncExternalStore(subscribeUrl, () => window.location.search, () => null);
+  const ready = search !== null;
+  const filters = useMemo(() => (search === null ? EMPTY : filtersFromSearch(search)), [search]);
+  const query = toQuery(filters);
+
+  const [result, setResult] = useState<PageResult | null>(null);
+  const [facets, setFacets] = useState<QuizFacet[] | null>(null);
+  // undefined = follow the selected category; null = all collapsed; a name = that category open.
+  const [expandedChoice, setExpanded] = useState<string | null | undefined>(undefined);
+  const expanded = expandedChoice === undefined ? filters.category || null : expandedChoice;
+  // Bumped after a delete so both lists load again.
+  const [reloadKey, setReloadKey] = useState(0);
+
+  const loading = !result || result.query !== query || result.reloadKey !== reloadKey;
+  const quizzes = result?.rows ?? [];
+  const total = result?.total ?? 0;
+  const pages = result?.pages ?? 1;
+  const facetsLoading = facets === null;
 
   useEffect(() => {
-    fetchQuizzes();
-  }, []);
+    if (!ready) return;
+    let cancelled = false;
+    fetchFacets()
+      .then((data) => {
+        if (!cancelled) setFacets(data);
+      })
+      .catch((error) => {
+        console.error("Error fetching quiz categories:", error);
+        toast.error("Failed to load quiz categories");
+        if (!cancelled) setFacets((prev) => prev ?? []);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [ready, reloadKey]);
 
-  const fetchQuizzes = async () => {
-    setLoading(true);
-    try {
-      const response = await adminFetch("/api/quizzes");
-      if (!response.ok) {
-        throw new Error("Failed to fetch quizzes");
-      }
-      const data = await response.json();
-      // assume API returns { data: [...] } as in your original code
-      setQuizzes(
-        Array.isArray(data.data) ? data.data : data.data ? [data.data] : []
-      );
-    } catch (error) {
-      console.error("Error fetching quizzes:", error);
-      toast.error("Failed to fetch quizzes");
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    if (!ready) return;
+    const controller = new AbortController();
+    fetchPage(filters, controller.signal)
+      .then((page) => {
+        // The server clamps an out-of-range page; follow it.
+        if (page.page !== filters.page) setUrlFilters({ ...filters, page: page.page });
+        else setResult({ ...page, query: toQuery(filters), reloadKey });
+      })
+      .catch((error) => {
+        if ((error as Error).name === "AbortError") return;
+        console.error("Error fetching quizzes:", error);
+        toast.error("Failed to fetch quizzes");
+        setResult({ query: toQuery(filters), reloadKey, rows: [], total: 0, pages: 1 });
+      });
+    return () => controller.abort();
+  }, [ready, filters, reloadKey]);
+
+  /** Change filters (back to page 1 unless a page is given). */
+  const update = (patch: Partial<Filters>) => setUrlFilters({ ...filters, page: 1, ...patch });
+  const goTo = (page: number) => setUrlFilters({ ...filters, page });
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this quiz?")) {
-      return;
-    }
-
+    if (!confirm("Are you sure you want to delete this quiz?")) return;
     try {
-      const response = await adminFetch(`/api/quizzes/${id}`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to delete quiz");
-      }
-
+      const response = await adminFetch(`/api/quizzes/${id}`, { method: "DELETE" });
+      if (!response.ok) throw new Error("Failed to delete quiz");
       toast.success("Quiz deleted successfully");
-      await fetchQuizzes();
+      setReloadKey((k) => k + 1);
     } catch (error) {
       console.error("Error deleting quiz:", error);
       toast.error("Failed to delete quiz");
     }
   };
 
-  // Debug: uncomment if you want to see searchQuery updates in console
-  // useEffect(() => { console.log("searchQuery:", searchQuery); }, [searchQuery]);
-
-  // compute filtered list from searchQuery
-  const q = (searchQuery || "").trim().toLowerCase();
-  const filteredQuizzes = q
-    ? quizzes.filter((quiz) => {
-        // Combine fields you want to search
-        const haystack = `${quiz.title || ""} ${quiz.description || ""} ${
-          quiz.organization || ""
-        }`.toLowerCase();
-
-        // Also search inside question texts if you like:
-        const questionsText = (quiz.questions || [])
-          .map((qs) => qs.question || "")
-          .join(" ")
-          .toLowerCase();
-
-        return haystack.includes(q) || questionsText.includes(q);
-      })
-    : quizzes;
-
-  if (loading) {
-    return (
-      <div className="container mx-auto py-8">
-        <div className="text-center">Loading...</div>
-      </div>
-    );
-  }
+  const allCount = (facets ?? []).reduce((n, f) => n + f.count, 0);
+  const first = total ? (filters.page - 1) * filters.limit + 1 : 0;
+  const last = Math.min(filters.page * filters.limit, total);
+  const heading = filters.subcategory
+    ? `${filters.category} › ${filters.subcategory}`
+    : filters.category || "All quizzes";
 
   return (
     <div className="container mx-auto py-8">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+      <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-4">
           <h1 className="text-2xl font-bold">Quizzes</h1>
           <Link href="/admin/quizzes/create">
             <Button>Create New Quiz</Button>
           </Link>
         </div>
-
-        <div className="flex items-center space-x-4">
+        <div className="flex flex-wrap items-center gap-3">
           <SearchBar
-            value={searchQuery}
-            onChange={(q) => setSearchQuery(q)}
-            placeholder="Search quizzes by title, description, or question..."
-            delay={250}
+            value={filters.q}
+            onChange={(q) => {
+              if (q !== filters.q) update({ q });
+            }}
+            placeholder="Search quizzes by title or description..."
+            delay={350}
           />
+          <select
+            aria-label="Status"
+            value={filters.status}
+            onChange={(e) => update({ status: e.target.value as Filters["status"] })}
+            className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm"
+          >
+            <option value="">All statuses</option>
+            <option value="published">Published</option>
+            <option value="draft">Draft</option>
+          </select>
         </div>
       </div>
 
-      {/* empty state when there are no quizzes at all */}
-      {quizzes.length === 0 ? (
-        <Card>
-          <CardContent className="py-8">
-            <div className="text-center text-gray-500">
-              No quizzes found. Create your first quiz!
+      <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
+        {/* Category → subcategory tree with quiz counts */}
+        <aside className="h-fit rounded-xl border border-slate-200 bg-white lg:sticky lg:top-4">
+          <div className="border-b border-slate-100 px-4 py-3 text-sm font-semibold text-slate-700">Categories</div>
+          <nav className="max-h-[320px] overflow-y-auto p-2 lg:max-h-[calc(100vh-8rem)]" aria-label="Quiz categories">
+            <button
+              type="button"
+              onClick={() => {
+                setExpanded(null);
+                update({ category: "", subcategory: "" });
+              }}
+              className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm ${
+                !filters.category ? "bg-indigo-50 font-semibold text-indigo-700" : "text-slate-700 hover:bg-slate-50"
+              }`}
+            >
+              <span>All quizzes</span>
+              <span className="text-xs text-slate-400">{facetsLoading ? "…" : allCount}</span>
+            </button>
+            {facetsLoading && (
+              <div className="flex items-center gap-2 px-3 py-3 text-sm text-slate-400">
+                <Loader2 className="h-4 w-4 animate-spin" /> Loading categories…
+              </div>
+            )}
+            {(facets ?? []).map((c) => {
+              const isOpen = expanded === c.name;
+              const active = filters.category === c.name;
+              return (
+                <div key={c.name}>
+                  <button
+                    type="button"
+                    aria-expanded={isOpen}
+                    onClick={() => {
+                      setExpanded(isOpen && active ? null : c.name);
+                      update({ category: c.name, subcategory: "" });
+                    }}
+                    className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm ${
+                      active && !filters.subcategory ? "bg-indigo-50 font-semibold text-indigo-700" : "text-slate-700 hover:bg-slate-50"
+                    }`}
+                  >
+                    {isOpen ? <ChevronDown className="h-4 w-4 shrink-0" /> : <ChevronRight className="h-4 w-4 shrink-0" />}
+                    <Folder className="h-4 w-4 shrink-0 text-slate-400" />
+                    <span className="min-w-0 flex-1 truncate">{c.name}</span>
+                    <span className="text-xs text-slate-400">{c.count}</span>
+                  </button>
+                  {isOpen && (
+                    <div className="mb-1 ml-6 border-l border-slate-100 pl-2">
+                      {c.subcategories.map((s) => (
+                        <button
+                          key={s.name}
+                          type="button"
+                          onClick={() => update({ category: c.name, subcategory: s.name })}
+                          className={`flex w-full items-center justify-between gap-2 rounded-md px-2 py-1.5 text-left text-sm ${
+                            active && filters.subcategory === s.name
+                              ? "bg-indigo-50 font-semibold text-indigo-700"
+                              : "text-slate-600 hover:bg-slate-50"
+                          }`}
+                        >
+                          <span className="min-w-0 flex-1 truncate">{s.name}</span>
+                          <span className="text-xs text-slate-400">{s.count}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </nav>
+        </aside>
+
+        <section className="min-w-0">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-semibold text-slate-800">{heading}</h2>
+              <p className="text-sm text-slate-500">
+                {loading ? "Loading…" : total ? `Showing ${first}–${last} of ${total} quizzes` : "No quizzes"}
+                {filters.q && ` matching “${filters.q}”`}
+              </p>
             </div>
-          </CardContent>
-        </Card>
-      ) : (
-        <>
-          {/* Show message when no quizzes match the search */}
-          {q && filteredQuizzes.length === 0 ? (
+            <label className="flex items-center gap-2 text-sm text-slate-600">
+              Per page
+              <select
+                value={filters.limit}
+                onChange={(e) => update({ limit: Number(e.target.value) })}
+                className="h-9 rounded-md border border-slate-200 bg-white px-2 text-sm"
+              >
+                {QUIZ_PAGE_SIZES.map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          {loading && !quizzes.length ? (
+            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="h-48 animate-pulse rounded-xl bg-slate-100" />
+              ))}
+            </div>
+          ) : !quizzes.length ? (
             <Card>
               <CardContent className="py-8">
                 <div className="text-center text-gray-500">
-                  No quizzes match your search for "
-                  <span className="font-medium">{searchQuery}</span>"
+                  {filters.q || filters.category || filters.status
+                    ? "No quizzes match these filters."
+                    : "No quizzes found. Create your first quiz!"}
                 </div>
               </CardContent>
             </Card>
           ) : (
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {filteredQuizzes.map((quiz) => (
+            <div className={`grid gap-6 md:grid-cols-2 xl:grid-cols-3 ${loading ? "opacity-60" : ""}`}>
+              {quizzes.map((quiz) => (
                 <Card key={quiz._id}>
                   <CardHeader>
-                    <CardTitle>{quiz.title}</CardTitle>
+                    <div className="mb-1 flex flex-wrap items-center gap-2 text-xs">
+                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-slate-600">
+                        {quiz.category || "No category"}
+                        {quiz.subcategory ? ` › ${quiz.subcategory}` : ""}
+                      </span>
+                      <span
+                        className={`rounded-full px-2 py-0.5 ${
+                          quiz.status === "published" ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"
+                        }`}
+                      >
+                        {quiz.status === "published" ? "Published" : "Draft"}
+                      </span>
+                    </div>
+                    <CardTitle className="text-base">{quiz.title}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm text-gray-500 mb-4">
-                      {quiz.description}
-                    </p>
+                    {quiz.description && <p className="mb-4 line-clamp-2 text-sm text-gray-500">{quiz.description}</p>}
                     <div className="space-y-2">
                       <p className="text-sm">
-                        <span className="font-medium">Time Limit:</span>{" "}
-                        {quiz.timeLimit} minutes
+                        <span className="font-medium">Time Limit:</span> {quiz.timeLimit} minutes
                       </p>
                       <p className="text-sm">
-                        <span className="font-medium">Questions:</span>{" "}
-                        {quiz.questions.length}
+                        <span className="font-medium">Questions:</span> {quiz.questionCount}
                       </p>
                     </div>
-                    <div className="flex justify-end gap-2 mt-4">
+                    <div className="mt-4 flex justify-end gap-2">
                       <Link href={`/admin/quizzes/${quiz._id}/edit`}>
                         <Button variant="outline" size="sm">
                           Edit
                         </Button>
                       </Link>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => handleDelete(quiz._id)}
-                      >
+                      <Button variant="destructive" size="sm" onClick={() => handleDelete(quiz._id)}>
                         Delete
                       </Button>
                     </div>
@@ -187,8 +372,37 @@ export default function QuizList() {
               ))}
             </div>
           )}
-        </>
-      )}
+
+          {pages > 1 && (
+            <nav className="mt-6 flex flex-wrap items-center justify-center gap-1" aria-label="Quiz pages">
+              <Button variant="outline" size="sm" disabled={filters.page <= 1 || loading} onClick={() => goTo(filters.page - 1)}>
+                Previous
+              </Button>
+              {pageWindow(filters.page, pages).map((p, i) =>
+                p === "gap" ? (
+                  <span key={`gap-${i}`} className="px-2 text-slate-400">
+                    …
+                  </span>
+                ) : (
+                  <Button
+                    key={p}
+                    variant={p === filters.page ? "default" : "outline"}
+                    size="sm"
+                    aria-current={p === filters.page ? "page" : undefined}
+                    disabled={loading && p !== filters.page}
+                    onClick={() => goTo(p)}
+                  >
+                    {p}
+                  </Button>
+                ),
+              )}
+              <Button variant="outline" size="sm" disabled={filters.page >= pages || loading} onClick={() => goTo(filters.page + 1)}>
+                Next
+              </Button>
+            </nav>
+          )}
+        </section>
+      </div>
     </div>
   );
 }
