@@ -7,6 +7,7 @@ import { requireAdmin } from '@/lib/admin-guard';
 import { verifyAdminAuthorization } from '@/lib/admin-auth';
 import { withoutAnswers } from '@/lib/quiz-public';
 import { logMongoError } from '@/lib/mongo-error';
+import { parseQuizStatus } from '@/lib/admin-quiz-list';
 
 export async function GET(req: any, ctx: any) {
   let quizId: string | undefined;
@@ -60,6 +61,8 @@ export async function PUT(req: any, ctx: any) {
         subcategory: quizData.subcategory,
         timeLimit: quizData.timeLimit,
         totalMarks: quizData.totalMarks || 0,
+        // Only when the form sends one, so older callers never change a quiz's status by accident.
+        ...(parseQuizStatus(quizData.status) ? { status: parseQuizStatus(quizData.status) } : {}),
       },
       { new: true }
     );

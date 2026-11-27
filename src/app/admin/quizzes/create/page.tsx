@@ -24,6 +24,7 @@ export default function CreateQuiz() {
     description: '',
     timeLimit: 30,
     totalMarks: 0,
+    status: 'draft' as 'draft' | 'published',
     questions: [] as Question[]
   });
 
@@ -196,10 +197,26 @@ export default function CreateQuiz() {
                   type="number"
                   value={formData.totalMarks}
                   onChange={handleInputChange}
-  
+
                   min=""
                   required
                 />
+              </div>
+
+              <div>
+                <Label htmlFor="status">Status</Label>
+                <select
+                  id="status"
+                  name="status"
+                  value={formData.status}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, status: e.target.value === 'published' ? 'published' : 'draft' }))
+                  }
+                  className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                >
+                  <option value="draft">Draft</option>
+                  <option value="published">Published</option>
+                </select>
               </div>
             </div>
 

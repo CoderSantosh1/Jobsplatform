@@ -77,26 +77,67 @@ export function quizListPipeline(p: QuizListParams): Record<string, unknown>[] {
   ];
 }
 
+export type QuizStatus = "published" | "draft";
+
+/** "published" or "draft", or null for anything else. */
+export function parseQuizStatus(value: unknown): QuizStatus | null {
+  return value === "published" || value === "draft" ? value : null;
+}
+
+/**
+ * Filter for a bulk status change: either explicit quiz ids, or a whole category (optionally one subcategory).
+ * Never "every quiz": a bulk change must name what it applies to.
+ */
+export function bulkStatusFilter(body: {
+  ids?: unknown;
+  category?: unknown;
+  subcategory?: unknown;
+}): { filter: Record<string, unknown> } | { error: string } {
+  if (Array.isArray(body.ids)) {
+    const ids = body.ids.filter((id): id is string => typeof id === "string" && /^[a-f0-9]{24}$/i.test(id));
+    if (!ids.length || ids.length !== body.ids.length) return { error: "ids must be quiz ids" };
+    if (ids.length > 500) return { error: "At most 500 quizzes at a time" };
+    return { filter: { _id: { $in: ids } } };
+  }
+  const category = typeof body.category === "string" ? body.category.trim() : "";
+  if (!category) return { error: "Choose quizzes or a category" };
+  const subcategory = typeof body.subcategory === "string" ? body.subcategory.trim() : "";
+  return { filter: subcategory ? { category, subcategory } : { category } };
+}
+
 /** Category → subcategory counts, for the filter dropdowns. */
 export const QUIZ_FACETS_PIPELINE: Record<string, unknown>[] = [
-  { $group: { _id: { c: "$category", s: "$subcategory" }, count: { $sum: 1 } } },
+  {
+    $group: {
+      _id: { c: "$category", s: "$subcategory" },
+      count: { $sum: 1 },
+      published: { $sum: { $cond: [{ $eq: ["$status", "published"] }, 1, 0] } },
+    },
+  },
 ];
 
-export type QuizFacet = { name: string; count: number; subcategories: { name: string; count: number }[] };
+export type QuizFacetCount = { name: string; count: number; published: number };
+export type QuizFacet = QuizFacetCount & { subcategories: QuizFacetCount[] };
 
 /** Turn the grouped counts into sorted categories with their subcategories. Blank names are left out. */
-export function buildQuizFacets(rows: { _id: { c?: string | null; s?: string | null }; count: number }[]): QuizFacet[] {
+export function buildQuizFacets(
+  rows: { _id: { c?: string | null; s?: string | null }; count: number; published?: number }[],
+): QuizFacet[] {
   const map = new Map<string, QuizFacet>();
   for (const r of rows) {
     const c = (r._id?.c ?? "").trim();
     if (!c) continue;
-    const facet = map.get(c) ?? { name: c, count: 0, subcategories: [] };
+    const published = r.published ?? 0;
+    const facet = map.get(c) ?? { name: c, count: 0, published: 0, subcategories: [] };
     facet.count += r.count;
+    facet.published += published;
     const s = (r._id?.s ?? "").trim();
     if (s) {
       const sub = facet.subcategories.find((x) => x.name === s);
-      if (sub) sub.count += r.count;
-      else facet.subcategories.push({ name: s, count: r.count });
+      if (sub) {
+        sub.count += r.count;
+        sub.published += published;
+      } else facet.subcategories.push({ name: s, count: r.count, published });
     }
     map.set(c, facet);
   }

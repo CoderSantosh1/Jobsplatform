@@ -118,8 +118,10 @@ export default function QuizList() {
   // undefined = follow the selected category; null = all collapsed; a name = that category open.
   const [expandedChoice, setExpanded] = useState<string | null | undefined>(undefined);
   const expanded = expandedChoice === undefined ? filters.category || null : expandedChoice;
-  // Bumped after a delete so both lists load again.
+  // Bumped after a delete or status change so both lists load again.
   const [reloadKey, setReloadKey] = useState(0);
+  // Which status change is running: a quiz id, "bulk", or null.
+  const [busy, setBusy] = useState<string | null>(null);
 
   const loading = !result || result.query !== query || result.reloadKey !== reloadKey;
   const quizzes = result?.rows ?? [];
@@ -179,7 +181,48 @@ export default function QuizList() {
     }
   };
 
+  /** Publish or unpublish: one quiz (ids) or a whole category / subcategory. */
+  const changeStatus = async (body: Record<string, unknown>, busyKey: string) => {
+    setBusy(busyKey);
+    try {
+      const res = await adminFetch("/api/quizzes", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json.success) throw new Error(json.error || "Failed to update status");
+      const n = json.data?.modified ?? 0;
+      const word = body.status === "published" ? "published" : "moved to draft";
+      toast.success(n === 1 ? `1 quiz ${word}` : `${n} quizzes ${word}`);
+      setReloadKey((k) => k + 1);
+    } catch (error) {
+      console.error("Error updating quiz status:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to update status");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const toggleQuiz = (quiz: QuizRow) =>
+    changeStatus({ ids: [quiz._id], status: quiz.status === "published" ? "draft" : "published" }, quiz._id);
+
+  // Counts for the selected category or subcategory, for the bulk buttons.
+  const selectedFacet = filters.category ? (facets ?? []).find((f) => f.name === filters.category) : undefined;
+  const selected = filters.subcategory ? selectedFacet?.subcategories.find((s) => s.name === filters.subcategory) : selectedFacet;
+  const selectedDrafts = selected ? selected.count - selected.published : 0;
+
+  const bulkChange = (status: "published" | "draft") => {
+    if (!selected) return;
+    const n = status === "published" ? selectedDrafts : selected.published;
+    const where = filters.subcategory ? `${filters.category} › ${filters.subcategory}` : `${filters.category} (all subcategories)`;
+    const what = status === "published" ? `Publish ${n} draft quizzes` : `Move ${n} published quizzes to draft`;
+    if (!confirm(`${what} in ${where}?`)) return;
+    changeStatus({ status, category: filters.category, ...(filters.subcategory ? { subcategory: filters.subcategory } : {}) }, "bulk");
+  };
+
   const allCount = (facets ?? []).reduce((n, f) => n + f.count, 0);
+  const allDrafts = (facets ?? []).reduce((n, f) => n + f.count - f.published, 0);
   const first = total ? (filters.page - 1) * filters.limit + 1 : 0;
   const last = Math.min(filters.page * filters.limit, total);
   const heading = filters.subcategory
@@ -233,7 +276,10 @@ export default function QuizList() {
               }`}
             >
               <span>All quizzes</span>
-              <span className="text-xs text-slate-400">{facetsLoading ? "…" : allCount}</span>
+              <span className="text-xs text-slate-400">
+                {facetsLoading ? "…" : allCount}
+                {!facetsLoading && allDrafts > 0 && <span className="ml-1 text-amber-600">· {allDrafts} draft</span>}
+              </span>
             </button>
             {facetsLoading && (
               <div className="flex items-center gap-2 px-3 py-3 text-sm text-slate-400">
@@ -259,7 +305,10 @@ export default function QuizList() {
                     {isOpen ? <ChevronDown className="h-4 w-4 shrink-0" /> : <ChevronRight className="h-4 w-4 shrink-0" />}
                     <Folder className="h-4 w-4 shrink-0 text-slate-400" />
                     <span className="min-w-0 flex-1 truncate">{c.name}</span>
-                    <span className="text-xs text-slate-400">{c.count}</span>
+                    <span className="whitespace-nowrap text-xs text-slate-400">
+                      {c.count}
+                      {c.count - c.published > 0 && <span className="ml-1 text-amber-600">· {c.count - c.published} draft</span>}
+                    </span>
                   </button>
                   {isOpen && (
                     <div className="mb-1 ml-6 border-l border-slate-100 pl-2">
@@ -275,7 +324,10 @@ export default function QuizList() {
                           }`}
                         >
                           <span className="min-w-0 flex-1 truncate">{s.name}</span>
-                          <span className="text-xs text-slate-400">{s.count}</span>
+                          <span className="whitespace-nowrap text-xs text-slate-400">
+                            {s.count}
+                            {s.count - s.published > 0 && <span className="ml-1 text-amber-600">· {s.count - s.published} draft</span>}
+                          </span>
                         </button>
                       ))}
                     </div>
@@ -310,6 +362,25 @@ export default function QuizList() {
               </select>
             </label>
           </div>
+
+          {selected && (
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3">
+              <p className="text-sm text-slate-600">
+                <span className="font-medium text-emerald-700">{selected.published} published</span>
+                {" · "}
+                <span className="font-medium text-amber-700">{selectedDrafts} draft</span>
+                <span className="text-slate-400"> in {filters.subcategory ? "this subcategory" : "this category"}</span>
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Button size="sm" disabled={busy !== null || selectedDrafts === 0} onClick={() => bulkChange("published")}>
+                  {busy === "bulk" ? "Saving…" : `Publish all drafts (${selectedDrafts})`}
+                </Button>
+                <Button variant="outline" size="sm" disabled={busy !== null || selected.published === 0} onClick={() => bulkChange("draft")}>
+                  Move all to draft ({selected.published})
+                </Button>
+              </div>
+            </div>
+          )}
 
           {loading && !quizzes.length ? (
             <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
@@ -363,6 +434,14 @@ export default function QuizList() {
                           Edit
                         </Button>
                       </Link>
+                      <Button
+                        variant={quiz.status === "published" ? "outline" : "default"}
+                        size="sm"
+                        disabled={busy !== null}
+                        onClick={() => toggleQuiz(quiz)}
+                      >
+                        {busy === quiz._id ? "Saving…" : quiz.status === "published" ? "Unpublish" : "Publish"}
+                      </Button>
                       <Button variant="destructive" size="sm" onClick={() => handleDelete(quiz._id)}>
                         Delete
                       </Button>

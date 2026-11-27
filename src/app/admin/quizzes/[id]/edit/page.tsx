@@ -35,6 +35,7 @@ interface Quiz {
   questions: Question[];
   category?: string;
   subcategory?: string;
+  status?: "published" | "draft";
 }
 
 /* ================= COMPONENT ================= */
@@ -334,6 +335,25 @@ export default function EditQuiz({
                   min="0"
                   required
                 />
+              </div>
+
+              <div>
+                <Label htmlFor="status">Status</Label>
+                <select
+                  id="status"
+                  name="status"
+                  value={quiz.status === "published" ? "published" : "draft"}
+                  onChange={(e) =>
+                    setQuiz((prev) =>
+                      prev ? { ...prev, status: e.target.value === "published" ? "published" : "draft" } : null
+                    )
+                  }
+                  className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                >
+                  <option value="draft">Draft</option>
+                  <option value="published">Published</option>
+                </select>
+                <p className="mt-1 text-xs text-gray-500">Only published quizzes can be sent as push notifications.</p>
               </div>
             </div>
 

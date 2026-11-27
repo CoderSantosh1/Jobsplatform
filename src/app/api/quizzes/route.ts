@@ -3,7 +3,36 @@ import connectDB from '@/lib/mongodb';
 import Quiz from '@/lib/models/Quiz';
 import Question from '@/lib/models/Question';
 import { requireAdmin } from '@/lib/admin-guard';
-import { QUIZ_FACETS_PIPELINE, buildQuizFacets, parseQuizListParams, quizListPipeline } from '@/lib/admin-quiz-list';
+import {
+  QUIZ_FACETS_PIPELINE,
+  buildQuizFacets,
+  bulkStatusFilter,
+  parseQuizListParams,
+  parseQuizStatus,
+  quizListPipeline,
+} from '@/lib/admin-quiz-list';
+
+/**
+ * Publish or unpublish quizzes in bulk. Admin only.
+ * Body: `{ status: "published" | "draft", ids: string[] }` or `{ status, category, subcategory? }`.
+ */
+export async function PATCH(request: Request) {
+  const denied = requireAdmin(request);
+  if (denied) return denied;
+  const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
+  const status = parseQuizStatus(body.status);
+  if (!status) return NextResponse.json({ success: false, error: 'status must be "published" or "draft"' }, { status: 400 });
+  const target = bulkStatusFilter(body);
+  if ('error' in target) return NextResponse.json({ success: false, error: target.error }, { status: 400 });
+  try {
+    await connectDB();
+    const result = await Quiz.updateMany(target.filter, { $set: { status } });
+    return NextResponse.json({ success: true, data: { matched: result.matchedCount, modified: result.modifiedCount, status } });
+  } catch (error) {
+    console.error('Error updating quiz status:', error);
+    return NextResponse.json({ success: false, error: 'Failed to update quiz status' }, { status: 500 });
+  }
+}
 
 export async function POST(request: Request) {
   const denied = requireAdmin(request);
@@ -21,6 +50,7 @@ export async function POST(request: Request) {
       subcategory,
       timeLimit,
       totalMarks,
+      status: parseQuizStatus(body.status) ?? 'draft',
       questions: [], // Initialize with empty questions array
     });
 
