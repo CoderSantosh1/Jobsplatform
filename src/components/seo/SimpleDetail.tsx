@@ -5,6 +5,7 @@ import Breadcrumbs from "./Breadcrumbs";
 import JsonLd from "./JsonLd";
 import PostFooter from "./PostFooter";
 import { SECTION_LABEL, getDetail, getLatest, getRelated, type Doc } from "@/lib/content";
+import { postRedirectTarget } from "@/lib/live-redirects";
 import { getTestLinks } from "@/lib/quizzes";
 import { detailSegment, type Section } from "@/lib/slug";
 import { SITE_NAME, SITE_URL, clip, displayDate, isBlank } from "@/lib/seo";
@@ -78,6 +79,9 @@ const CONFIG: Record<SimpleSection, Config> = {
 };
 
 export default async function SimpleDetail({ section, param }: { section: SimpleSection; param: string }) {
+  // Duplicate or deleted post with a redirect approved in the admin Redirect Manager.
+  const redirectTo = await postRedirectTarget(section, param);
+  if (redirectTo) permanentRedirect(redirectTo);
   const doc = await getDetail(section, param);
   if (!doc) notFound();
   const segment = detailSegment(doc);

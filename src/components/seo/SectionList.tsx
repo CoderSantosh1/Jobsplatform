@@ -12,6 +12,7 @@ import AdmitCard from "@/lib/models/AdmitCard";
 import AnswerKey from "@/lib/models/AnswerKey";
 import Admission from "@/lib/models/Admission";
 import { detailPath, type Section } from "@/lib/slug";
+import { withoutRedirectedPosts } from "@/lib/live-redirects";
 import { SITE_URL, isPastDeadline, parseDate } from "@/lib/seo";
 import { EXAMS } from "@/lib/exams";
 import { SECTION_GUIDES } from "@/lib/section-guides";
@@ -50,7 +51,7 @@ export default async function SectionList({
   intro: string;
 }) {
   await connectToDatabase();
-  const rows: Row[] = JSON.parse(JSON.stringify(await QUERIES[section]()));
+  const rows: Row[] = await withoutRedirectedPosts(section, JSON.parse(JSON.stringify(await QUERIES[section]())));
   const guide = SECTION_GUIDES[section];
 
   return (

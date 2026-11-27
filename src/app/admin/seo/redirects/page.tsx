@@ -8,8 +8,8 @@ import { Btn, Note, Table, useAdminJson } from "../../_components/kit";
 import { DecisionBadge, DecisionControl, useReviews } from "../../_components/review";
 
 type Data = {
-  live: { source: string; destination: string; permanent?: boolean; conditional: boolean }[];
-  suggestions: { from: string; to: string; reason: string }[];
+  live: { source: string; destination: string; permanent?: boolean; conditional: boolean; origin: "code" | "admin" }[];
+  suggestions: { from: string; to: string; reason: string; source: string }[];
 };
 
 export default function RedirectManager() {
@@ -21,7 +21,7 @@ export default function RedirectManager() {
   const [adding, setAdding] = useState(false);
 
   const proposals = useMemo(() => {
-    const list = (data?.suggestions ?? []).map((s) => ({ ...s, source: "Audit: consolidate" }));
+    const list = [...(data?.suggestions ?? [])];
     const known = new Set(list.map((s) => s.from));
     for (const r of reviews.data ?? []) if (!known.has(r.path)) list.push({ from: r.path, to: r.target, reason: r.note || "Added by an admin", source: "Admin" });
     return list;
@@ -29,7 +29,9 @@ export default function RedirectManager() {
 
   const existing = useMemo(
     () => [
-      ...(data?.live ?? []).filter((r) => !r.conditional && !r.source.includes(":")).map((r) => ({ from: r.source, to: r.destination })),
+      ...(data?.live ?? [])
+        .filter((r) => r.origin === "code" && !r.conditional && !r.source.includes(":"))
+        .map((r) => ({ from: r.source, to: r.destination })),
       ...(reviews.data ?? []).filter((r) => r.decision === "approved").map((r) => ({ from: r.path, to: r.target })),
     ],
     [data, reviews.data],
@@ -40,8 +42,11 @@ export default function RedirectManager() {
     <>
       <PageHeader title="Redirect Manager" subtitle="Redirects that are live today, and redirect proposals waiting for a decision." />
       <Note tone="amber">
-        Nothing is redirected from this page. Approved proposals are a list for the next code change; each approval is checked first:
-        no redirect to the homepage, no chains or loops, and the destination must answer 200 on the live site.
+        <strong>Post URLs go live on approval:</strong> approving a redirect for a post URL (/jobs/…, /results/…, /admit-cards/…,
+        /answer-keys/…, /admissions/…, /news/…) makes it a 301 on the live site within a few minutes, matching every old slug of
+        that post, and removes the post from the lists and the sitemap. Withdraw (reject) the approval to undo it. Approvals for
+        other paths are still a list for the next code change. Every approval is checked first: no redirect to the homepage, no
+        chains or loops, and the destination must answer 200 on the live site.
       </Note>
       {error && <ErrorState message={error} onRetry={reload} />}
       {loading && !data && <Skeleton className="h-64" />}
@@ -116,19 +121,25 @@ export default function RedirectManager() {
           </Card>
 
           <Card title={`Live redirects (${data.live.length})`}>
-            <Table head={["Source", "Destination", "Type", "Condition"]}>
+            <Table head={["Source", "Destination", "Type", "Condition", "Managed in"]}>
               {data.live.map((r) => (
                 <tr key={`${r.source}-${r.destination}`}>
-                  <td className="px-5 py-2.5 font-mono text-xs text-slate-700">{r.source}</td>
-                  <td className="break-all px-5 py-2.5 font-mono text-xs text-slate-700">{r.destination}</td>
+                  <td className="max-w-[260px] break-all px-5 py-2.5 font-mono text-xs text-slate-700">{r.source}</td>
+                  <td className="max-w-[260px] break-all px-5 py-2.5 font-mono text-xs text-slate-700">{r.destination}</td>
                   <td className="px-5 py-2.5">
                     <Badge tone={r.permanent ? "indigo" : "amber"}>{r.permanent ? "308 permanent" : "307 temporary"}</Badge>
                   </td>
-                  <td className="px-5 py-2.5 text-slate-500">{r.conditional ? "Host-based" : "Always"}</td>
+                  <td className="px-5 py-2.5 text-slate-500">{r.conditional ? "Host-based" : r.origin === "admin" ? "Any slug of this post" : "Always"}</td>
+                  <td className="px-5 py-2.5">
+                    <Badge tone={r.origin === "admin" ? "emerald" : "slate"}>{r.origin === "admin" ? "Admin (live)" : "Code"}</Badge>
+                  </td>
                 </tr>
               ))}
             </Table>
-            <p className="mt-3 text-xs text-slate-500">From next.config.js. Changing these needs a code change and deploy.</p>
+            <p className="mt-3 text-xs text-slate-500">
+              &quot;Code&quot; rules come from next.config.js and need a code change and deploy. &quot;Admin&quot; rules are the approved post
+              redirects above; withdraw the approval to remove one.
+            </p>
           </Card>
         </div>
       )}

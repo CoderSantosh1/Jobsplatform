@@ -7,6 +7,7 @@ import { faqJsonLd } from "@/lib/faq";
 import JsonLd from "@/components/seo/JsonLd";
 import PostFooter from "@/components/seo/PostFooter";
 import { getDetail, getLatest, getRelated } from "@/lib/content";
+import { postRedirectTarget } from "@/lib/live-redirects";
 import { getTestLinks } from "@/lib/quizzes";
 import { detailMetadata } from "@/lib/seo-server";
 import { detailSegment } from "@/lib/slug";
@@ -47,6 +48,9 @@ function withRupee(fee?: string) {
 
 export default async function JobDetailPage({ params }: Props) {
   const { id } = await params;
+  // Duplicate or deleted post with a redirect approved in the admin Redirect Manager.
+  const redirectTo = await postRedirectTarget("jobs", id);
+  if (redirectTo) permanentRedirect(redirectTo);
   const job = await getDetail("jobs", id);
   if (!job) notFound();
   const segment = detailSegment(job);

@@ -6,6 +6,7 @@ import News from "@/lib/models/News";
 import { pageMetadata } from "@/lib/seo";
 import { detailPath } from "@/lib/slug";
 import { PUBLIC_FILTER } from "@/lib/content";
+import { withoutRedirectedPosts } from "@/lib/live-redirects";
 import { NEWS_GUIDE } from "@/lib/section-guides";
 
 export const revalidate = 300;
@@ -30,7 +31,10 @@ function toPlain<T>(value: T): T {
 
 export default async function NewsListPage() {
   await connectToDatabase();
-  const news = toPlain(await News.find(PUBLIC_FILTER.news).sort({ postedDate: -1 }).select("_id title").lean()) as unknown as NewsItem[];
+  const news = await withoutRedirectedPosts(
+    "news",
+    toPlain(await News.find(PUBLIC_FILTER.news).sort({ postedDate: -1 }).select("_id title").lean()) as unknown as NewsItem[],
+  );
 
   return (
     <>

@@ -1,0 +1,36 @@
+{
+  "auditedAt": "2026-11-27",
+  "source": "Search Console Page Indexing export (23 Nov 2026) and live checks of sarkariresultsnow.com, read-only.",
+  "suggestions": [
+    {
+      "from": "/jobs/tnpsc-group-4-recruitment-2026-6-574-posts-apply-online-6ae2bccef231965137b40335",
+      "to": "/jobs/tnpsc-group-iv-recruitment-2026-6-574-posts-last-date-extended-to-8-november-exa-6aed6b3729fcc67efda37ca6",
+      "reason": "Duplicate post: same TNPSC Group 4 notice. Keep the newer copy, which has the extended last date (8 Nov)."
+    },
+    {
+      "from": "/jobs/rrb-ntpc-undergraduate-recruitment-2026-cen-07-2026-1-688-clerk-posts-apply-onli-6ad99587158e5b1f994fcb04",
+      "to": "/jobs/rrb-ntpc-undergraduate-recruitment-2026-cen-07-2026-6aeab1f3203ed9ea19bdddae",
+      "reason": "Duplicate post: same RRB NTPC UG CEN 07/2026 notice (1,688 posts). Keep the newer, more detailed copy."
+    },
+    {
+      "from": "/jobs/rrb-station-master-recruitment-2026-cen-08-2026-1-250-posts-apply-online-6adac4528347c20672f2b60b",
+      "to": "/jobs/rrb-station-master-recruitment-2026-cen-08-2026-1-265-vacancies-last-date-today-6b0682065003dc8cb4972842",
+      "reason": "Duplicate post: same RRB Station Master CEN 08/2026 notice. Keep the newer copy with the revised count (1,265)."
+    },
+    {
+      "from": "/jobs/ongc-apprentice-recruitment-2026-3-047-posts-apply-online-till-20-november-6ae6d7d5e9da273c38f006e0",
+      "to": "/jobs/ongc-apprentice-recruitment-2026-3-047-posts-6aeea618a9d68ff97ac28510",
+      "reason": "Deleted duplicate of ONGC Apprentice 2026 (3,047 posts); Google knows the URL and it returns 404."
+    },
+    {
+      "from": "/admit-cards/rrb-je-cbt-1-admit-card-2026-out-download-hall-ticket-cen-04-2026-exam-27-and-28-6adc3695f4094f02dc8c561a",
+      "to": "/admit-cards/rrb-je-cbt-1-admit-card-2026-cen-04-2026-hall-ticket-6ae56d2cdc996cfb622afe2f",
+      "reason": "Deleted duplicate of the RRB JE CBT 1 admit card (CEN 04/2026); Google knows the URL and it returns 404."
+    },
+    {
+      "from": "/admit-cards/ukpsc-upper-pcs-prelims-admit-card-2026-out-advt-no-a-1-e-1-2026-27-6af6d78dc6e5cf0ed92300ec",
+      "to": "/admit-cards/ukpsc-upper-pcs-prelims-admit-card-2026-out-advt-no-a-1-e-1-2026-27-6af6da60e48f88e4b12a7670",
+      "reason": "Deleted duplicate of the UKPSC Upper PCS Prelims admit card; Google knows the URL and it returns 404."
+    }
+  ]
+}

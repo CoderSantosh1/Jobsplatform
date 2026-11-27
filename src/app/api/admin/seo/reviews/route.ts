@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { connectToDatabase } from "@/lib/db";
+import { buildPostRedirectMap, parsePostPath, postRedirectFor } from "@/lib/post-redirects";
 import { verifyAdminAuthorization } from "@/lib/admin-auth";
 import SeoReview from "@/lib/models/SeoReview";
 import { isSafePath, redirectProblems } from "@/lib/admin-seo-checks";
@@ -35,7 +37,10 @@ export async function GET(request: Request) {
   }
 }
 
-/** Record (or change) a decision for one URL. Only stores the decision; nothing is applied to the site. */
+/**
+ * Record (or change) a decision for one URL. Approved redirects for post URLs (/jobs/…, /results/…, /admit-cards/…,
+ * /answer-keys/…, /admissions/…, /news/…) are served live from this collection; other decisions are records only.
+ */
 export async function POST(request: Request) {
   const { email, denied } = auth(request);
   if (denied) return denied;
@@ -59,6 +64,14 @@ export async function POST(request: Request) {
       }[];
       const existing = [...(await configRedirects()), ...approved.map((r) => ({ from: r.path, to: r.target }))];
       const problems = redirectProblems({ from: path, to: target }, existing);
+      // Post URLs redirect by id (any slug), so also check chains by id.
+      const posts = buildPostRedirectMap(approved.filter((r) => r.path !== path));
+      const toPost = parsePostPath(target);
+      const fromPost = parsePostPath(path);
+      if (toPost && postRedirectFor(posts, toPost.section, toPost.id)) problems.push("To is itself redirected (would create a chain)");
+      if (fromPost && [...posts.values()].some((t) => parsePostPath(t)?.id === fromPost.id)) {
+        problems.push("Another rule already redirects to From (would create a chain)");
+      }
       if (problems.length) return NextResponse.json({ success: false, error: problems.join(". ") }, { status: 400 });
       // The destination must be a working page today, so the redirect never lands on a 404.
       const page = await inspectPath(target, "live", request.url).catch(() => null);
@@ -77,6 +90,14 @@ export async function POST(request: Request) {
       { $set: { decision, target, note, decidedBy: email } },
       { upsert: true, new: true, runValidators: true },
     ).lean();
+    // An approved (or withdrawn) post redirect is live: refresh the post, its list, the homepage and the sitemap.
+    const post = kind === "redirect" ? parsePostPath(path) : null;
+    if (post) {
+      revalidatePath(`/${post.section}/[id]`, "page");
+      revalidatePath(`/${post.section}`);
+      revalidatePath(`/sitemaps/${post.section}.xml`);
+      revalidatePath("/");
+    }
     return NextResponse.json({ success: true, data: row });
   } catch (error) {
     console.error("admin seo reviews POST failed", error);

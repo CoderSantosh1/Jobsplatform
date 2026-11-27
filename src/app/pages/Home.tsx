@@ -19,6 +19,8 @@ import Admission from "@/lib/models/Admission";
 import QuizCategory from "@/lib/models/QuizCategory";
 import { detailPath } from "@/lib/slug";
 import { PUBLIC_FILTER } from "@/lib/content";
+import { getPostRedirects } from "@/lib/live-redirects";
+import { dropRedirectedPosts } from "@/lib/post-redirects";
 import { pickHomeCategories } from "@/lib/home-categories";
 import { isPastDeadline, parseDate } from "@/lib/seo";
 
@@ -100,13 +102,15 @@ async function getHomeData() {
       Admission.find(PUBLIC_FILTER.admissions).sort({ postedDate: -1 }).select("_id title organization").limit(11).lean(),
       QuizCategory.find().lean(),
     ]);
+  // Posts with an approved redirect (admin Redirect Manager) are not linked.
+  const redirects = await getPostRedirects();
 
   return {
-    jobs: toPlain(jobs) as unknown as JobItem[],
-    results: toPlain(results) as unknown as ResultItem[],
-    admitCards: toPlain(admitCards) as unknown as AdmitCardItem[],
-    answerKeys: toPlain(answerKeys) as unknown as AnswerKeyItem[],
-    admissions: toPlain(admissions) as unknown as AdmissionItem[],
+    jobs: dropRedirectedPosts(redirects, "jobs", toPlain(jobs) as unknown as JobItem[]),
+    results: dropRedirectedPosts(redirects, "results", toPlain(results) as unknown as ResultItem[]),
+    admitCards: dropRedirectedPosts(redirects, "admit-cards", toPlain(admitCards) as unknown as AdmitCardItem[]),
+    answerKeys: dropRedirectedPosts(redirects, "answer-keys", toPlain(answerKeys) as unknown as AnswerKeyItem[]),
+    admissions: dropRedirectedPosts(redirects, "admissions", toPlain(admissions) as unknown as AdmissionItem[]),
     categories: pickHomeCategories(toPlain(categories) as unknown as Category[]),
   };
 }

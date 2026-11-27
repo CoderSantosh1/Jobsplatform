@@ -2,7 +2,8 @@ import mongoose from 'mongoose';
 import '../mongoose-config';
 
 // Admin decisions on SEO recommendations (new, separate collection "seoreviews"; existing content is not touched).
-// A decision is a record only: nothing here changes a public page, the sitemap, robots or redirects.
+// Approved "redirect" decisions for post URLs (/jobs/…, /results/…, /admit-cards/…, /answer-keys/…, /admissions/…,
+// /news/…) are served live by src/lib/live-redirects.ts; every other decision is a record only.
 const seoReviewSchema = new mongoose.Schema(
   {
     kind: { type: String, enum: ['noindex', 'redirect', 'canonical'], required: true },

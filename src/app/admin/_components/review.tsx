@@ -1,7 +1,8 @@
 "use client";
-// Recording admin decisions on SEO recommendations (stored in the seoreviews collection). A decision is a record
-// only; it never changes the public site.
+// Recording admin decisions on SEO recommendations (stored in the seoreviews collection). Approved redirects for post
+// URLs are served live (see live-redirects.ts); every other decision is a record only.
 import { useMemo, useState } from "react";
+import { parsePostPath } from "@/lib/post-redirects";
 import { Check, X } from "lucide-react";
 import { Badge, type Tone } from "./ui";
 import { Btn, adminPost, fmtDate, useAdminJson } from "./kit";
@@ -47,7 +48,11 @@ export function DecisionControl({ kind, path, review, defaultTarget = "", needsT
   const save = async (decision: Decision) => {
     if (decision === "approved") {
       const what = kind === "noindex" ? "noindex" : kind === "redirect" ? `a redirect to ${target}` : `canonical ${target || path}`;
-      if (!window.confirm(`Record approval of ${what} for ${path}?\n\nThis only saves your decision. The live site does not change until the site code is updated and deployed.`)) return;
+      const live = kind === "redirect" && parsePostPath(path) !== null;
+      const effect = live
+        ? "This post URL will 301-redirect on the live site within a few minutes, and the post leaves the lists and the sitemap. Withdraw the approval to undo it."
+        : "This only saves your decision. The live site does not change until the site code is updated and deployed.";
+      if (!window.confirm(`Record approval of ${what} for ${path}?\n\n${effect}`)) return;
     }
     setBusy(true);
     setError("");

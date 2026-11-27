@@ -12,6 +12,7 @@ import { examTestSeries } from "@/lib/exam-links";
 import { getExamContent } from "@/lib/exam-content";
 import { getExamPrep } from "@/lib/exam-prep";
 import { uniqueByTitle } from "@/lib/dedupe";
+import { withoutRedirectedPosts } from "@/lib/live-redirects";
 import { LEGAL_LAST_UPDATED } from "@/lib/legal";
 import { slugify, detailPath, type Section } from "@/lib/slug";
 import { SITE_URL } from "@/lib/seo";
@@ -69,7 +70,8 @@ async function sectionRows(section: Section): Promise<Row[]> {
 
 async function sectionEntries(section: Section): Promise<UrlEntry[]> {
   // A post entered twice is listed once, at its canonical (oldest) copy.
-  const rows = uniqueByTitle(await sectionRows(section));
+  // Posts with an approved redirect (admin Redirect Manager) are not submitted either.
+  const rows = uniqueByTitle(await withoutRedirectedPosts(section, await sectionRows(section)));
   return rows.map((r) => ({ loc: `${SITE_URL}${detailPath(section, { _id: r._id, title: r.title })}`, lastmod: modified(r) }));
 }
 

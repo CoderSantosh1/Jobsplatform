@@ -10,6 +10,7 @@ import News from "@/lib/models/News";
 import { detailPath, idFromParam, type Section } from "@/lib/slug";
 import { canonicalOf, titleKey, titleRegexSource } from "@/lib/dedupe";
 import { titleWordRegexes } from "@/lib/search";
+import { withoutRedirectedPosts } from "@/lib/live-redirects";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export type Doc = Record<string, any> & { _id: string; title: string };
@@ -91,7 +92,7 @@ export const getRelated = cache(async (section: Section, doc: Doc, limit = 8): P
           .sort({ createdAt: -1, postedDate: -1, resultDate: -1 })
           .limit(3)
           .lean<{ _id: unknown; title: string }[]>();
-        return rows.map((r) => ({ href: detailPath(s, r), title: r.title, section: s }));
+        return (await withoutRedirectedPosts(s, rows)).map((r) => ({ href: detailPath(s, r), title: r.title, section: s }));
       }),
     );
     // Other sections first: they are the most useful next step for the reader.
@@ -157,7 +158,7 @@ export const getLatest = cache(async (section: Section, excludeId: string, limit
       .sort({ createdAt: -1 })
       .limit(limit)
       .lean<{ _id: unknown; title: string }[]>();
-    return rows.map((r) => ({ href: detailPath(section, r), title: r.title, section }));
+    return (await withoutRedirectedPosts(section, rows)).map((r) => ({ href: detailPath(section, r), title: r.title, section }));
   } catch (error) {
     console.error("getLatest failed", error);
     return [];
@@ -180,7 +181,7 @@ export const searchPosts = cache(async (term: string, perSection = 5): Promise<R
           .sort({ createdAt: -1 })
           .limit(perSection)
           .lean<{ _id: unknown; title: string }[]>();
-        return [s, rows.map((r) => ({ href: detailPath(s, r), title: r.title, section: s }))] as const;
+        return [s, (await withoutRedirectedPosts(s, rows)).map((r) => ({ href: detailPath(s, r), title: r.title, section: s }))] as const;
       }),
     );
     return Object.fromEntries(entries) as Record<Section, RelatedLink[]>;

@@ -6,6 +6,7 @@ import Breadcrumbs from "@/components/seo/Breadcrumbs";
 import JsonLd from "@/components/seo/JsonLd";
 import PostFooter from "@/components/seo/PostFooter";
 import { getDetail, getLatest, getRelated } from "@/lib/content";
+import { postRedirectTarget } from "@/lib/live-redirects";
 import { getTestLinks } from "@/lib/quizzes";
 import { detailMetadata } from "@/lib/seo-server";
 import { detailSegment } from "@/lib/slug";
@@ -26,6 +27,9 @@ const isUrl = (value: string) => /^https?:\/\//i.test(value);
 
 export default async function ResultDetailPage({ params }: Props) {
   const { id } = await params;
+  // Duplicate or deleted post with a redirect approved in the admin Redirect Manager.
+  const redirectTo = await postRedirectTarget("results", id);
+  if (redirectTo) permanentRedirect(redirectTo);
   const result = await getDetail("results", id);
   if (!result) notFound();
   const segment = detailSegment(result);
