@@ -51,6 +51,9 @@ export async function findQuizzes(match: Record<string, unknown>, limit?: number
   return plain(await Quiz.aggregate(pipeline as never));
 }
 
+/** One exam's quizzes (category + subcategory names), cached per request so metadata and page share one query. */
+export const findSeriesQuizzes = cache((category: string, subcategory: string) => findQuizzes({ category, subcategory }));
+
 /** Every category and subcategory that has quizzes, with counts and URL slugs. */
 export const getCategoryGroups = cache(async (): Promise<CategoryGroup[]> => {
   await connectToDatabase();

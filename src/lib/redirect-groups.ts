@@ -16,7 +16,6 @@ const SECTION_NAMES: Record<string, string> = {
   "admit-cards": "Admit Cards",
   "answer-keys": "Answer Keys",
   admissions: "Admissions",
-  news: "News",
 };
 
 /** "regulatory-body-exams" → "Regulatory Body Exams". */

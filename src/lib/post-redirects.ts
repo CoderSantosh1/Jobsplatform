@@ -4,7 +4,7 @@
 // Pure functions only, so unit tests can load this file directly; the database side is in live-redirects.ts.
 import { idFromParam, type Section } from "./slug.ts";
 
-export const POST_SECTIONS: readonly Section[] = ["jobs", "results", "admit-cards", "answer-keys", "admissions", "news"];
+export const POST_SECTIONS: readonly Section[] = ["jobs", "results", "admit-cards", "answer-keys", "admissions"];
 
 /** "jobs:6ae2…" → target path. */
 export type PostRedirectMap = Map<string, string>;

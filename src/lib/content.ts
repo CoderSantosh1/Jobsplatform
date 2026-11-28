@@ -6,7 +6,6 @@ import Result from "@/lib/models/Result";
 import AdmitCard from "@/lib/models/AdmitCard";
 import AnswerKey from "@/lib/models/AnswerKey";
 import Admission from "@/lib/models/Admission";
-import News from "@/lib/models/News";
 import { detailPath, idFromParam, type Section } from "@/lib/slug";
 import { canonicalOf, titleKey, titleRegexSource } from "@/lib/dedupe";
 import { titleWordRegexes } from "@/lib/search";
@@ -21,7 +20,6 @@ const MODELS: Record<Section, Model<any>> = {
   "admit-cards": AdmitCard,
   "answer-keys": AnswerKey,
   admissions: Admission,
-  news: News,
 };
 
 export const SECTION_LABEL: Record<Section, string> = {
@@ -30,7 +28,6 @@ export const SECTION_LABEL: Record<Section, string> = {
   "admit-cards": "Admit Cards",
   "answer-keys": "Answer Keys",
   admissions: "Admissions",
-  news: "News",
 };
 
 function toPlain<T>(value: T): T {
@@ -45,14 +42,7 @@ export const getDetail = cache(async (section: Section, param: string): Promise<
   const doc = await MODELS[section].findById(id).lean();
   if (!doc) return null;
 
-  const plain = doc as any;
-  // News images are stored inline in Mongo; expose them as a data URL.
-  if (section === "news" && plain.image?.data && plain.image?.contentType) {
-    const base64 = Buffer.from(plain.image.data.buffer ?? plain.image.data).toString("base64");
-    plain.imageUrl = `data:${plain.image.contentType};base64,${base64}`;
-  }
-  delete plain.image;
-  return toPlain(plain) as Doc;
+  return toPlain(doc as unknown) as Doc;
 });
 
 /** Words from a title that identify the exam/organisation, e.g. "UP Police Constable Result 2026" → ["UP", "Police", "Constable"]. */
@@ -110,12 +100,11 @@ export const PUBLIC_FILTER: Record<Section, Record<string, unknown>> = {
   "admit-cards": {},
   "answer-keys": { status: { $ne: "draft" } },
   admissions: { status: { $ne: "draft" } },
-  news: { status: { $ne: "draft" } },
 };
 
 /**
- * Same rule as PUBLIC_FILTER, for one loaded document: unpublished jobs and draft answer keys, admissions and
- * news are not public. Results and admit cards are always listed (their filter is empty), so they always are.
+ * Same rule as PUBLIC_FILTER, for one loaded document: unpublished jobs and draft answer keys and admissions
+ * are not public. Results and admit cards are always listed (their filter is empty), so they always are.
  */
 export function isPublicDoc(section: Section, doc: { status?: unknown }): boolean {
   if (section === "jobs") return doc.status === "published";

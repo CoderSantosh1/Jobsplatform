@@ -11,7 +11,6 @@ import {
   ExternalLink,
   FileText,
   Layers,
-  Newspaper,
   PencilLine,
   PieChart,
   Plus,
@@ -36,7 +35,6 @@ const KIND_LABELS: Record<string, string> = {
   jobs: "Jobs",
   results: "Results",
   "admit-cards": "Admit Cards",
-  news: "News",
   "answer-keys": "Answer Keys",
   admissions: "Admissions",
   quizzes: "Mock Tests",
@@ -188,7 +186,6 @@ const QUICK = [
   { label: "Create Job", href: "/admin/content?tab=jobs", icon: Briefcase },
   { label: "Create Result", href: "/admin/content?tab=results", icon: Trophy },
   { label: "Create Admit Card", href: "/admin/content?tab=admit-cards", icon: CreditCard },
-  { label: "Create News", href: "/admin/content?tab=news", icon: Newspaper },
   { label: "Add Test Series", href: "/admin/quizzes/create", icon: Layers },
   { label: "SEO Audit", href: "/admin/seo/test-series", icon: ClipboardCheck },
 ];
@@ -214,7 +211,7 @@ export default function AdminOverviewPage() {
   }, [load]);
 
   const t = data?.totals;
-  const posts = t ? ["jobs", "results", "admit-cards", "news", "answer-keys", "admissions"].reduce((n, k) => n + (t[k]?.total ?? 0), 0) : 0;
+  const posts = t ? ["jobs", "results", "admit-cards", "answer-keys", "admissions"].reduce((n, k) => n + (t[k]?.total ?? 0), 0) : 0;
   const seoIssues = data ? (data.seo.counts.NOINDEX ?? 0) + (data.seo.counts.CONSOLIDATE ?? 0) + (data.seo.counts.IMPROVE ?? 0) : 0;
 
   return (
@@ -238,11 +235,11 @@ export default function AdminOverviewPage() {
               Array.from({ length: 8 }, (_, i) => <Skeleton key={i} className="h-[92px]" />)
             ) : (
               <>
-                <StatCard label="Total Posts" value={fmt.format(posts)} hint="Jobs, results, admit cards, news, answer keys, admissions" icon={FileText} />
+                <StatCard label="Total Posts" value={fmt.format(posts)} hint="Jobs, results, admit cards, answer keys, admissions" icon={FileText} />
                 <StatCard label="Published Jobs" value={fmt.format(t!.jobs.statuses.published ?? 0)} hint={`${fmt.format(t!.jobs.total)} jobs in total`} icon={Briefcase} tone="blue" />
                 <StatCard label="Results" value={fmt.format(t!.results.total)} icon={Trophy} tone="amber" />
                 <StatCard label="Admit Cards" value={fmt.format(t!["admit-cards"].total)} icon={CreditCard} tone="violet" />
-                <StatCard label="News / Updates" value={fmt.format(t!.news.total)} icon={Newspaper} tone="emerald" />
+                <StatCard label="Answer Keys" value={fmt.format(t!["answer-keys"]?.total ?? 0)} icon={FileText} tone="emerald" />
                 <StatCard label="Test Series Pages" value={fmt.format(data.testSeriesPages)} hint={`${fmt.format(t!.quizzes.total)} mock tests`} icon={Layers} />
                 <StatCard label="Draft Content" value={fmt.format(data.drafts)} hint="Across all content types" icon={PencilLine} tone="slate" />
                 <StatCard label="SEO Issues" value={fmt.format(seoIssues)} hint={`Test-series audit of ${dateFmt(data.seo.auditedAt)}`} icon={AlertTriangle} tone="rose" />

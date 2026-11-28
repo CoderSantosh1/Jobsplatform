@@ -12,7 +12,6 @@ export const PUSH_CONTENT_TYPES = [
   "admit-cards",
   "answer-keys",
   "admissions",
-  "news",
   "quizzes",
 ] as const;
 
@@ -38,10 +37,6 @@ const DEFAULTS: Record<PushContentType, { label: string; body: string }> = {
   admissions: {
     label: "Admission",
     body: "A new admission notice is available. Check eligibility and important dates.",
-  },
-  news: {
-    label: "Exam Update",
-    body: "A new exam update is available. Open the notice for details.",
   },
   quizzes: {
     label: "Free Test Series",

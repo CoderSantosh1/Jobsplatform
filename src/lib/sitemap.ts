@@ -5,7 +5,6 @@ import Result from "@/lib/models/Result";
 import AdmitCard from "@/lib/models/AdmitCard";
 import AnswerKey from "@/lib/models/AnswerKey";
 import Admission from "@/lib/models/Admission";
-import News from "@/lib/models/News";
 import Quiz from "@/lib/models/Quiz";
 import { EXAMS } from "@/lib/exams";
 import { examTestSeries } from "@/lib/exam-links";
@@ -29,7 +28,6 @@ export const SITEMAP_NAMES = [
   "admit-cards",
   "answer-keys",
   "admissions",
-  "news",
   "test-series",
 ] as const;
 export type SitemapName = (typeof SITEMAP_NAMES)[number];
@@ -40,7 +38,6 @@ const SECTION_MODELS: Record<Section, { model: Model<any>; filter: Record<string
   "admit-cards": { model: AdmitCard, filter: {} },
   "answer-keys": { model: AnswerKey, filter: { status: { $ne: "draft" } } },
   admissions: { model: Admission, filter: { status: { $ne: "draft" } } },
-  news: { model: News, filter: { status: { $ne: "draft" } } },
 };
 
 type Row = { _id: unknown; title?: string; updatedAt?: Date; createdAt?: Date; postedDate?: Date; resultDate?: Date };

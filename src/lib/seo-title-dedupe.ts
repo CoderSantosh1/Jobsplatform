@@ -39,7 +39,6 @@ function shortDifferentiator(doc: TitleDedupeCandidate, index: number): string {
     "admit-cards": ["Hall Ticket", "Exam City", "Admit Card"],
     "answer-keys": ["Answer Key", "Response Sheet", "Objection"],
     admissions: ["Admission Form", "Counselling", "Merit List"],
-    news: ["Update", "Notice", "Latest News"],
   };
   const pool = suffixBySection[doc.section] ?? ["Update", "Details", "Notice"];
   return pool[index % pool.length];

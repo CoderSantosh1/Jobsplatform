@@ -15,8 +15,9 @@ export default function AboutPage() {
       <p>
         Sarkari Results Now (SarkariResultsNow.com) is an independent information portal for students
         and job seekers preparing for government exams in India. We publish the latest recruitment
-        notifications, exam results, admit cards, answer keys, admission updates and exam news from
-        central and state bodies such as SSC, UPSC, IBPS, RRB, State PSCs and police recruitment boards.
+        notifications, exam results, admit cards, answer keys and admission updates from central and state
+        bodies such as SSC, UPSC, IBPS, RRB, State PSCs and police recruitment boards, along with free exam
+        preparation pages and mock tests.
       </p>
 
       <h2>What we do</h2>

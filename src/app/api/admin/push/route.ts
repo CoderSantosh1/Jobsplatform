@@ -15,7 +15,6 @@ import Result from '@/lib/models/Result';
 import AdmitCard from '@/lib/models/AdmitCard';
 import AnswerKey from '@/lib/models/AnswerKey';
 import Admission from '@/lib/models/Admission';
-import News from '@/lib/models/News';
 import Quiz from '@/lib/models/Quiz';
 import PushSubscription from '@/lib/models/PushSubscription';
 import PushNotificationLog from '@/lib/models/PushNotificationLog';
@@ -38,7 +37,6 @@ const MODELS: Record<PushContentType, Model<any>> = {
   'admit-cards': AdmitCard,
   'answer-keys': AnswerKey,
   admissions: Admission,
-  news: News,
   quizzes: Quiz,
 };
 

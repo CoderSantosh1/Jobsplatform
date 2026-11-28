@@ -1,6 +1,6 @@
 // Shared by server and client code: builds readable URLs like /jobs/uco-bank-apprentice-2026-6ad059ee984e13945230c1c2.
 
-export type Section = "jobs" | "results" | "admit-cards" | "answer-keys" | "admissions" | "news";
+export type Section = "jobs" | "results" | "admit-cards" | "answer-keys" | "admissions";
 
 /** Lowercase ASCII slug; Hindi or other non-Latin characters are dropped. */
 export function slugify(text: string | undefined | null, maxLength = 80): string {

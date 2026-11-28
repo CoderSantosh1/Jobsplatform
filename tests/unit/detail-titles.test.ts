@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { detailText } from "../../src/lib/detail-titles.ts";
 import { fitTitle } from "../../src/lib/seo.ts";
 
-const SECTIONS = ["jobs", "results", "admit-cards", "answer-keys", "admissions", "news", "quizzes"];
+const SECTIONS = ["jobs", "results", "admit-cards", "answer-keys", "admissions", "quizzes"];
 
 test("titles keep every letter of the original (no lost 's')", () => {
   const title = "SSC GD Constable Mock Tests Series 2026 Basics";
@@ -15,7 +15,7 @@ test("titles keep every letter of the original (no lost 's')", () => {
 });
 
 test("whitespace in titles is collapsed, letters untouched", () => {
-  assert.equal(detailText("news", { title: "  Bihar   Police  Results  " }).title, "Bihar Police Results");
+  assert.equal(detailText("admissions", { title: "  Bihar   Police  Results  " }).title, "Bihar Police Results");
 });
 
 test("job title omits vacancy when the notification gives none", () => {

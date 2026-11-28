@@ -182,7 +182,7 @@ test("sitemap.xml is an index of small child sitemaps with real lastmod", async 
       assert.ok(!/\/quizzes\/[^/]+(\/instructions)?$/.test(u), `${child}: thin quiz page listed: ${u}`);
     }
     // "Duplicate without user-selected canonical": the same post must not be submitted twice.
-    if (/\/(jobs|results|admit-cards|answer-keys|admissions|news)\.xml$/.test(child)) {
+    if (/\/(jobs|results|admit-cards|answer-keys|admissions)\.xml$/.test(child)) {
       const seenSlugs = new Map();
       for (const u of urls) {
         const slug = u.replace(/-?[a-f0-9]{24}$/, "");

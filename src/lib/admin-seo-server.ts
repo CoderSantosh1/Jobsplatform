@@ -7,7 +7,6 @@ import Result from "@/lib/models/Result";
 import AdmitCard from "@/lib/models/AdmitCard";
 import AnswerKey from "@/lib/models/AnswerKey";
 import Admission from "@/lib/models/Admission";
-import News from "@/lib/models/News";
 import { SITEMAP_NAMES, getSitemapEntries } from "@/lib/sitemap";
 import { titleKey } from "@/lib/dedupe";
 import { detailPath, type Section } from "@/lib/slug";
@@ -21,7 +20,6 @@ export const SECTIONS: { section: Section; label: string; model: Model<any> }[] 
   { section: "admit-cards", label: "Admit Cards", model: AdmitCard },
   { section: "answer-keys", label: "Answer Keys", model: AnswerKey },
   { section: "admissions", label: "Admissions", model: Admission },
-  { section: "news", label: "News", model: News },
 ];
 
 // Only the fields the title/description builders read; long body text is cut in the database.

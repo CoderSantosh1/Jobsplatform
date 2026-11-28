@@ -63,9 +63,10 @@ test("pushDestinationUrl only allows HTTPS content pages on this site", () => {
 
 test("parsePushSendInput validates type, id and optional overrides", () => {
   assert.deepEqual(parsePushSendInput({ type: "jobs", id: ID }), { ok: true, value: { type: "jobs", id: ID, resend: false } });
-  const ok = parsePushSendInput({ type: "news", id: ID, title: " <i>Hi</i> ", body: "Body", resend: true });
+  const ok = parsePushSendInput({ type: "admissions", id: ID, title: " <i>Hi</i> ", body: "Body", resend: true });
   assert.ok(ok.ok && ok.value.title === "Hi" && ok.value.body === "Body" && ok.value.resend);
   assert.equal(parsePushSendInput({ type: "users", id: ID }).ok, false);
+  assert.equal(parsePushSendInput({ type: "news", id: ID }).ok, false, "the News section was removed");
   assert.equal(parsePushSendInput({ type: "jobs", id: "not-an-id" }).ok, false);
   assert.equal(parsePushSendInput({ type: "jobs", id: ID, title: "<b></b>" }).ok, false);
   assert.equal(parsePushSendInput({ type: "jobs", id: ID, body: 5 }).ok, false);

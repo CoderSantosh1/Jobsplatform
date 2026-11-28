@@ -17,7 +17,7 @@ import { SITE_URL, isPastDeadline, parseDate } from "@/lib/seo";
 import { EXAMS } from "@/lib/exams";
 import { SECTION_GUIDES } from "@/lib/section-guides";
 
-type ListSection = Exclude<Section, "news">;
+type ListSection = Section;
 
 const OTHER_LINKS = [
   { href: "/jobs", label: "Latest Jobs" },
@@ -25,7 +25,6 @@ const OTHER_LINKS = [
   { href: "/admit-cards", label: "Admit Cards" },
   { href: "/answer-keys", label: "Answer Keys" },
   { href: "/admissions", label: "Admissions" },
-  { href: "/news", label: "Exam News" },
   { href: "/test-series", label: "Free Test Series" },
 ];
 type Row = { _id: string; title: string; lastDateApplyOnline?: string; applicationDeadline?: string };

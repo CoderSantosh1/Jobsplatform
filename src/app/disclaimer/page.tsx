@@ -21,7 +21,7 @@ export default function DisclaimerPage() {
 
       <h2>Accuracy of information</h2>
       <p>
-        We prepare job notifications, results, admit cards, answer keys and news from official sources
+        We prepare job notifications, results, admit cards and answer keys from official sources
         and try to keep them accurate and up to date. Errors can still happen, and organisations often
         change dates, vacancies or rules after publication. The official notification and official
         website are always the final authority. Please verify every detail there before applying, paying

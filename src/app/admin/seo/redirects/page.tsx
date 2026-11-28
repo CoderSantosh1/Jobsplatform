@@ -119,7 +119,7 @@ export default function RedirectManager() {
       <PageHeader title="Redirect Manager" subtitle="Redirects that are live today, and redirect proposals waiting for a decision." />
       <Note tone="amber">
         <strong>Post URLs go live on approval:</strong> approving a redirect for a post URL (/jobs/…, /results/…, /admit-cards/…,
-        /answer-keys/…, /admissions/…, /news/…) makes it a 301 on the live site within a few minutes, matching every old slug of
+        /answer-keys/…, /admissions/…) makes it a 301 on the live site within a few minutes, matching every old slug of
         that post, and removes the post from the lists and the sitemap. Withdraw (reject) the approval to undo it. Approvals for
         other paths are still a list for the next code change. Every approval is checked first: no redirect to the homepage, no
         chains or loops, and the destination must answer 200 on the live site.

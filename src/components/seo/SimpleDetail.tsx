@@ -68,14 +68,6 @@ const CONFIG: Record<SimpleSection, Config> = {
     date: (d) => d.applicationDeadline,
     body: (d) => d.content,
   },
-  news: {
-    link: () => undefined,
-    linkLabel: "",
-    linkText: () => "",
-    dateLabel: "Posted On",
-    date: (d) => d.postedDate ?? d.createdAt,
-    body: (d) => d.content,
-  },
 };
 
 export default async function SimpleDetail({ section, param }: { section: SimpleSection; param: string }) {
@@ -102,7 +94,7 @@ export default async function SimpleDetail({ section, param }: { section: Simple
 
   const article = {
     "@context": "https://schema.org",
-    "@type": section === "news" ? "NewsArticle" : "Article",
+    "@type": "Article",
     headline: clip(doc.title, 110),
     description: clip(body || doc.title, 200),
     datePublished: new Date(doc.createdAt ?? doc.postedDate ?? Date.now()).toISOString(),

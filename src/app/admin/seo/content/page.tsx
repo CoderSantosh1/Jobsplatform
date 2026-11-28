@@ -29,7 +29,6 @@ const SECTIONS = [
   { value: "admit-cards", label: "Admit Cards" },
   { value: "answer-keys", label: "Answer Keys" },
   { value: "admissions", label: "Admissions" },
-  { value: "news", label: "News" },
 ];
 const ISSUE_TONE: Record<ContentIssue, Tone> = {
   "title-cut": "amber",

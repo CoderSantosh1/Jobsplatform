@@ -73,12 +73,6 @@ export default function Header() {
               Admissions
             </Link>
             <Link
-              href="/news"
-              className="text-[#000000] hover:text-blue-800 font-medium"
-            >
-              Latest Sarkari Job News
-            </Link>
-            <Link
               href="/contact"
               className="text-[#000000] hover:text-blue-800 font-medium"
             >
@@ -156,13 +150,6 @@ export default function Header() {
                     onClick={() => setMobileNavOpen(false)}
                   >
                     Admissions
-                  </Link>
-                  <Link
-                    href="/news"
-                    className="px-4 py-2 text-gray-800 hover:bg-gray-100"
-                    onClick={() => setMobileNavOpen(false)}
-                  >
-                    News
                   </Link>
                   <Link
                     href="/contact"

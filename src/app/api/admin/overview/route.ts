@@ -5,7 +5,6 @@ import { requireAdmin } from "@/lib/admin-guard";
 import Job from "@/lib/models/Job";
 import Result from "@/lib/models/Result";
 import AdmitCard from "@/lib/models/AdmitCard";
-import News from "@/lib/models/News";
 import AnswerKey from "@/lib/models/AnswerKey";
 import Admission from "@/lib/models/Admission";
 import Quiz from "@/lib/models/Quiz";
@@ -22,7 +21,6 @@ const KINDS: { kind: Kind; label: string; model: Model<any>; adminTab: string }[
   { kind: "jobs", label: "Job", model: Job, adminTab: "jobs" },
   { kind: "results", label: "Result", model: Result, adminTab: "results" },
   { kind: "admit-cards", label: "Admit Card", model: AdmitCard, adminTab: "admit-cards" },
-  { kind: "news", label: "News", model: News, adminTab: "news" },
   { kind: "answer-keys", label: "Answer Key", model: AnswerKey, adminTab: "answer-keys" },
   { kind: "admissions", label: "Admission", model: Admission, adminTab: "admissions" },
   { kind: "quizzes", label: "Mock Test", model: Quiz, adminTab: "quizzes" },

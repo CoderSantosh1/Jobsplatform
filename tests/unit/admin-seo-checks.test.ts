@@ -15,7 +15,7 @@ test("content row uses the public title builder and flags problems", () => {
   assert.ok(long.issues.includes("title-cut"));
   assert.ok(long.metaTitle.length <= 60);
 
-  const bad = contentSeoRow("news", { _id: "a3", title: "News", content: "", status: "draft" }, true);
+  const bad = contentSeoRow("admissions", { _id: "a3", title: "News", content: "", status: "draft" }, true);
   assert.deepEqual(bad.issues.sort(), ["description-short", "draft", "duplicate", "no-organization", "title-short"].sort());
 });
 
@@ -130,5 +130,5 @@ test("utility pages are not flagged as low content", async () => {
   const { pageHealthIssues } = await import("../../src/lib/admin-seo-checks.ts");
   const page = parsePageSeo(`<meta name="viewport" content="width=device-width, initial-scale=1"><title>Contact Us | SRN</title><meta name="description" content="${"word ".repeat(20)}"><link rel="canonical" href="/contact"><main><h1>Contact</h1>${"<p>w</p>".repeat(200)}</main>`, { status: 200, origin: ORIGIN });
   assert.deepEqual(pageHealthIssues("/contact", page, ORIGIN), []);
-  assert.deepEqual(pageHealthIssues("/news/x", { ...page, canonical: "/news/x" }, ORIGIN), ["low-content"]);
+  assert.deepEqual(pageHealthIssues("/results/x", { ...page, canonical: "/results/x" }, ORIGIN), ["low-content"]);
 });

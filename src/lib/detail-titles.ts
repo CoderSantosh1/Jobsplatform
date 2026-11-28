@@ -47,8 +47,6 @@ export function detailText(section: string, doc: AnyDoc): { title: string; descr
         title,
         description: `${org}${title}${doc.applicationDeadline ? `, last date ${formatDate(doc.applicationDeadline)}` : ""}. Check eligibility, application process and the official link.`,
       };
-    case "news":
-      return { title, description: `${org}${clip(doc.content, 200)}` };
     case "quizzes": {
       const facts = [doc.timeLimit && `${doc.timeLimit} minutes`, doc.totalMarks && `${doc.totalMarks} marks`].filter(Boolean);
       return {

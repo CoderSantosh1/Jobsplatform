@@ -67,7 +67,6 @@ const FALLBACK: Record<string, string> = {
   "admit-cards": "Admit Card Details",
   "answer-keys": "Answer Key Details",
   admissions: "Admission Details",
-  news: "Exam News",
   quizzes: "Free Mock Test",
 };
 

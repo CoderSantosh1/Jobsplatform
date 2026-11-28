@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import JobList from "../components/JobList";
 import ResultList from "../components/ResultList";
 import AdmitCard from "../components/AdmitCardList";
-import NewsList from "../components/NewsList";
 import AnswerKeyForm from "../components/AnswerKeyForm";
 import AnswerKeyList from "../components/AnswerKeyList";
 import AdmissionForm, {
@@ -20,17 +19,6 @@ import CategoryManager from "../components/CategoryManager";
 import PushComposer from "../components/PushComposer";
 import { off } from "process";
 import { adminFetch } from "@/lib/admin-fetch";
-
-interface NewsFormData {
-  title: string;
-  content: string;
-  organization: string;
-  category: string;
-  status: string;
-  publishDate: string;
-  image?: File;
-  imagePreview?: string;
-}
 
 interface JobFormData {
   title: string;
@@ -88,20 +76,18 @@ type TabType =
   | "jobs"
   | "results"
   | "admit-cards"
-  | "news"
   | "answer-keys"
   | "admissions"
   | "quizzes"
   | "categories"
   | "notifications";
 
-const TAB_IDS: TabType[] = ["jobs", "results", "admit-cards", "news", "answer-keys", "admissions", "quizzes", "categories", "notifications"];
+const TAB_IDS: TabType[] = ["jobs", "results", "admit-cards", "answer-keys", "admissions", "quizzes", "categories", "notifications"];
 
 const TAB_LABELS: Record<TabType, string> = {
   jobs: "Jobs",
   results: "Results",
   "admit-cards": "Admit Cards",
-  news: "News / Exam Preparation",
   "answer-keys": "Answer Keys",
   admissions: "Admissions",
   quizzes: "Create Test",
@@ -173,15 +159,6 @@ function ContentManager() {
       downloadAdmitcardLink: "",
     }
   );
-
-  const [newsFormData, setNewsFormData] = useState<NewsFormData>({
-    title: "",
-    content: "",
-    organization: "",
-    category: "",
-    status: "published",
-    publishDate: new Date().toISOString().split("T")[0],
-  });
 
   const [resultsFormData, setResultsFormData] = useState<ResultFormData>({
     title: "",
@@ -302,47 +279,6 @@ function ContentManager() {
     } catch (error) {
       console.error("Error posting admit card:", error);
       alert("Error posting admit card");
-    }
-  };
-
-  const handleNewsSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const formData = new FormData();
-      formData.append("title", newsFormData.title);
-      formData.append("content", newsFormData.content);
-      formData.append("organization", newsFormData.organization);
-      formData.append("category", newsFormData.category);
-      formData.append("status", newsFormData.status);
-      formData.append("publishDate", newsFormData.publishDate);
-      if (newsFormData.image && newsFormData.image instanceof File) {
-        formData.append("image", newsFormData.image);
-      }
-
-      const response = await adminFetch("/api/news", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (response.ok) {
-        alert("News posted successfully!");
-        setNewsFormData({
-          title: "",
-          content: "",
-          organization: "",
-          category: "",
-          status: "published",
-          publishDate: new Date().toISOString().split("T")[0],
-          image: undefined,
-          imagePreview: undefined,
-        });
-        setImagePreview(null);
-      } else {
-        alert("Failed to post news");
-      }
-    } catch (error) {
-      console.error("Error posting news:", error);
-      alert("Error posting news");
     }
   };
 
@@ -695,163 +631,6 @@ function ContentManager() {
               </form>
             </div>
             <ResultList />
-          </div>
-        </>
-      )}
-
-      {activeTab === "news" && (
-        <>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <h2 className="text-2xl font-semibold mb-6">Post News</h2>
-              <form onSubmit={handleNewsSubmit} className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Title
-                  </label>
-                  <input
-                    type="text"
-                    value={newsFormData.title}
-                    onChange={(e) =>
-                      setNewsFormData({
-                        ...newsFormData,
-                        title: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 border rounded-md"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Organization
-                  </label>
-                  <input
-                    type="text"
-                    value={newsFormData.organization}
-                    onChange={(e) =>
-                      setNewsFormData({
-                        ...newsFormData,
-                        organization: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 border rounded-md"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Content
-                  </label>
-                  <textarea
-                    value={newsFormData.content}
-                    onChange={(e) =>
-                      setNewsFormData({
-                        ...newsFormData,
-                        content: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 border rounded-md h-32"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Category
-                  </label>
-                  <select
-                    value={newsFormData.category}
-                    onChange={(e) =>
-                      setNewsFormData({
-                        ...newsFormData,
-                        category: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 border rounded-md"
-                    required
-                  >
-                    <option value="">Select a category</option>
-                    <option value="government">Government</option>
-                    <option value="private">Private</option>
-                    <option value="education">Education</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Publish Date
-                  </label>
-                  <input
-                    type="date"
-                    value={newsFormData.publishDate}
-                    onChange={(e) =>
-                      setNewsFormData({
-                        ...newsFormData,
-                        publishDate: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 border rounded-md"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Status
-                  </label>
-                  <select
-                    className="w-full p-2 border rounded-md"
-                    value={newsFormData.status}
-                    onChange={(e) =>
-                      setNewsFormData({
-                        ...newsFormData,
-                        status: e.target.value,
-                      })
-                    }
-                    required
-                  >
-                    <option value="published">Published</option>
-                    <option value="draft">Draft</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Image (optional)
-                  </label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        setNewsFormData({ ...newsFormData, image: file });
-                        setImagePreview(URL.createObjectURL(file));
-                      }
-                    }}
-                    className="w-full p-2 border rounded-md"
-                  />
-                  {imagePreview && (
-                    <div className="mt-2">
-                      <img
-                        src={imagePreview}
-                        alt="Preview"
-                        className="max-h-40 rounded border"
-                      />
-                    </div>
-                  )}
-                </div>
-
-                <Button type="submit" className="w-full">
-                  Post News
-                </Button>
-              </form>
-            </div>
-            <NewsList />
           </div>
         </>
       )}

@@ -4,7 +4,7 @@ import { HIDE_ADS_CSS } from "@/lib/ads";
 
 export const metadata: Metadata = {
   title: "Admin Dashboard - Job Management & Content Administration | Sarkari Results Now",
-  description: "Admin dashboard for managing jobs, results, admit cards, news, answer keys, admissions, quizzes, and categories. Comprehensive job posting and content management system for government and private sector opportunities.",
+  description: "Admin dashboard for managing jobs, results, admit cards, answer keys, admissions, quizzes, and categories. Comprehensive job posting and content management system for government and private sector opportunities.",
   keywords: [
     "admin dashboard",
     "job management",
@@ -17,7 +17,6 @@ export const metadata: Metadata = {
     "government jobs management",
     "admit card management",
     "results management",
-    "news management",
     "quiz management",
     "admission management",
     "category management"

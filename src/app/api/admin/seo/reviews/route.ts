@@ -39,7 +39,7 @@ export async function GET(request: Request) {
 
 /**
  * Record (or change) a decision for one URL. Approved redirects for post URLs (/jobs/…, /results/…, /admit-cards/…,
- * /answer-keys/…, /admissions/…, /news/…) are served live from this collection; other decisions are records only.
+ * /answer-keys/…, /admissions/…) are served live from this collection; other decisions are records only.
  */
 export async function POST(request: Request) {
   const { email, denied } = auth(request);

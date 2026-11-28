@@ -8,24 +8,7 @@ export type SectionGuide = {
   faqs: { q: string; a: string }[];
 };
 
-/** Guide shown under /news. */
-export const NEWS_GUIDE: SectionGuide = {
-  heading: "How to Use Exam News",
-  steps: [
-    "Open a news post to read the update: a new notification, a date change, a vacancy change or an exam announcement.",
-    "Check the date the news was posted; older updates may have been replaced by a newer notice.",
-    "Confirm every date, fee and vacancy on the official website or notification before you act on it.",
-    "For an open recruitment, follow the link to the job post on this site to find the eligibility and the official apply link.",
-    "Bookmark the official website of the exams you are preparing for and check it regularly.",
-  ],
-  faqs: [
-    { q: "Is the news on this page official?", a: "No. We summarise announcements from official notices and websites. The official notice is always the final source." },
-    { q: "An exam date in the news has changed. Which one is right?", a: "The latest official notice. Exam bodies often revise schedules, so check the official website for the current date." },
-    { q: "Can I apply for a job from a news post?", a: "No. Applications are made only on the official website of the recruiting body." },
-  ],
-};
-
-export const SECTION_GUIDES: Record<Exclude<Section, "news">, SectionGuide> = {
+export const SECTION_GUIDES: Record<Section, SectionGuide> = {
   jobs: {
     heading: "How to Apply for a Government Job",
     steps: [
